@@ -11,7 +11,7 @@ interface ExtractionProgressProps {
 }
 
 const PIPELINE_STEPS = [
-  { phase: "extracting", label: "Extracting text from PDFs", icon: FileText },
+  { phase: "extracting", label: "Extracting text from documents", icon: FileText },
   { phase: "analyzing", label: "Analyzing document structure", icon: FileSearch },
   { phase: "matching_precedents", label: "Searching precedent database", icon: Database },
   { phase: "generating_sections", label: "Generating brief sections", icon: Sparkles },

@@ -19,6 +19,7 @@ const DOCUMENT_TYPES: UploadDocumentType[] = [
   "FIR",
   "Statutory Extract",
   "Contract",
+  "Spreadsheet",
   "Other",
 ];
 

@@ -168,6 +168,17 @@ export interface DashboardStats {
 // Enhanced Brief Pipeline Types
 // =====================================================================
 
+export type FileFormat =
+  | "pdf"
+  | "docx"
+  | "xlsx"
+  | "xls"
+  | "csv"
+  | "txt"
+  | "rtf"
+  | "image"
+  | "unsupported";
+
 export type UploadDocumentType =
   | "Petition"
   | "Written Arguments"
@@ -178,6 +189,7 @@ export type UploadDocumentType =
   | "FIR"
   | "Statutory Extract"
   | "Contract"
+  | "Spreadsheet"
   | "Other";
 
 export interface UploadedDocument {
@@ -186,7 +198,8 @@ export interface UploadedDocument {
   fileName: string;
   fileSize: number;
   documentType: UploadDocumentType;
-  status: "pending" | "extracting" | "extracted" | "error";
+  fileFormat: FileFormat;
+  status: "pending" | "extracting" | "extracted" | "skipped" | "error";
   progress: number;
   totalPages: number;
   extractedText: string;

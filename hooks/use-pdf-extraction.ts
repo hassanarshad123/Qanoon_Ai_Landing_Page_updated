@@ -1,38 +1,48 @@
 "use client";
 
 import { useState, useCallback } from "react";
-import type { UploadedDocument, UploadDocumentType } from "@/lib/mock/types";
-import { extractTextFromPDF } from "@/lib/brief-pipeline/pdf-extractor";
+import type { UploadedDocument, UploadDocumentType, FileFormat } from "@/lib/mock/types";
+import { detectFileFormat, extractTextFromFile } from "@/lib/brief-pipeline/file-extractor";
 
-export function usePdfExtraction() {
+export function useDocumentExtraction() {
   const [documents, setDocuments] = useState<UploadedDocument[]>([]);
 
   const addFiles = useCallback(async (files: File[]) => {
-    const newDocs: UploadedDocument[] = files.map((file) => ({
-      id: `doc-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
-      file,
-      fileName: file.name,
-      fileSize: file.size,
-      documentType: guessDocumentType(file.name),
-      status: "pending" as const,
-      progress: 0,
-      totalPages: 0,
-      extractedText: "",
-      pages: [],
-    }));
+    const newDocs: UploadedDocument[] = files.map((file) => {
+      const format = detectFileFormat(file);
+      return {
+        id: `doc-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
+        file,
+        fileName: file.name,
+        fileSize: file.size,
+        fileFormat: format,
+        documentType: guessDocumentType(file.name, format),
+        status: "pending" as const,
+        progress: 0,
+        totalPages: 0,
+        extractedText: "",
+        pages: [],
+      };
+    });
 
     setDocuments((prev) => [...prev, ...newDocs]);
 
-    // Extract each file
-    for (const doc of newDocs) {
-      setDocuments((prev) =>
-        prev.map((d) =>
-          d.id === doc.id ? { ...d, status: "extracting" as const, progress: 10 } : d
-        )
-      );
+    // Mark all as extracting
+    setDocuments((prev) =>
+      prev.map((d) => {
+        const isNew = newDocs.some((nd) => nd.id === d.id);
+        if (!isNew) return d;
+        if (d.fileFormat === "image") return { ...d, status: "skipped" as const, progress: 100 };
+        return { ...d, status: "extracting" as const, progress: 10 };
+      })
+    );
+
+    // Extract all files in parallel
+    const extractions = newDocs.map(async (doc) => {
+      if (doc.fileFormat === "image") return; // already marked skipped
 
       try {
-        const result = await extractTextFromPDF(doc.file);
+        const result = await extractTextFromFile(doc.file, doc.fileFormat);
 
         setDocuments((prev) =>
           prev.map((d) =>
@@ -62,7 +72,9 @@ export function usePdfExtraction() {
           )
         );
       }
-    }
+    });
+
+    await Promise.allSettled(extractions);
   }, []);
 
   const removeFile = useCallback((id: string) => {
@@ -82,7 +94,13 @@ export function usePdfExtraction() {
   return { documents, addFiles, removeFile, updateDocumentType, reset };
 }
 
-function guessDocumentType(fileName: string): UploadDocumentType {
+// Backward-compatible alias
+export const usePdfExtraction = useDocumentExtraction;
+
+function guessDocumentType(fileName: string, format: FileFormat): UploadDocumentType {
+  // Spreadsheet formats
+  if (format === "xlsx" || format === "xls" || format === "csv") return "Spreadsheet";
+
   const lower = fileName.toLowerCase();
   if (lower.includes("petition")) return "Petition";
   if (lower.includes("argument")) return "Written Arguments";

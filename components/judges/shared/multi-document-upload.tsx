@@ -1,29 +1,110 @@
 "use client";
 
-import { useState, useCallback, useRef } from "react";
-import { Upload, FileText, X, CheckCircle2, AlertCircle, Loader2 } from "lucide-react";
+import { useState, useCallback, useRef, useEffect } from "react";
+import {
+  Upload,
+  FileText,
+  FileSpreadsheet,
+  ImageIcon,
+  FolderOpen,
+  X,
+  CheckCircle2,
+  AlertCircle,
+  AlertTriangle,
+  Loader2,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { DocumentTypeSelector } from "./document-type-selector";
-import { usePdfExtraction } from "@/hooks/use-pdf-extraction";
+import { useDocumentExtraction } from "@/hooks/use-pdf-extraction";
 import { cn } from "@/lib/utils";
-import type { UploadedDocument } from "@/lib/mock/types";
+import type { UploadedDocument, FileFormat } from "@/lib/mock/types";
+
+const ACCEPTED_EXTENSIONS = [
+  ".pdf", ".docx", ".doc", ".xlsx", ".xls", ".csv", ".txt", ".rtf",
+  ".jpg", ".jpeg", ".png", ".gif", ".tiff", ".bmp", ".webp",
+];
+
+const ACCEPT_STRING = ACCEPTED_EXTENSIONS.join(",");
+
+const HIDDEN_FILES = new Set([".ds_store", "thumbs.db", "desktop.ini", ".gitkeep"]);
+
+function isAcceptedFile(file: File): boolean {
+  const ext = "." + file.name.split(".").pop()?.toLowerCase();
+  if (HIDDEN_FILES.has(file.name.toLowerCase())) return false;
+  if (file.name.startsWith(".")) return false;
+  return ACCEPTED_EXTENSIONS.includes(ext);
+}
 
 interface MultiDocumentUploadProps {
   onDocumentsReady: (docs: UploadedDocument[]) => void;
 }
 
+// Recursively traverse folder entries from drag-drop
+async function traverseEntries(entries: FileSystemEntry[]): Promise<File[]> {
+  const files: File[] = [];
+
+  async function readEntry(entry: FileSystemEntry): Promise<void> {
+    if (entry.isFile) {
+      const file = await new Promise<File>((resolve, reject) => {
+        (entry as FileSystemFileEntry).file(resolve, reject);
+      });
+      if (isAcceptedFile(file)) {
+        files.push(file);
+      }
+    } else if (entry.isDirectory) {
+      const reader = (entry as FileSystemDirectoryEntry).createReader();
+      const dirEntries = await new Promise<FileSystemEntry[]>((resolve, reject) => {
+        reader.readEntries(resolve, reject);
+      });
+      for (const dirEntry of dirEntries) {
+        await readEntry(dirEntry);
+      }
+    }
+  }
+
+  for (const entry of entries) {
+    await readEntry(entry);
+  }
+
+  return files;
+}
+
 export function MultiDocumentUpload({ onDocumentsReady }: MultiDocumentUploadProps) {
-  const { documents, addFiles, removeFile, updateDocumentType } = usePdfExtraction();
+  const { documents, addFiles, removeFile, updateDocumentType } = useDocumentExtraction();
   const [isDragging, setIsDragging] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const folderInputRef = useRef<HTMLInputElement>(null);
+
+  // Set webkitdirectory imperatively (not in React's type definitions)
+  useEffect(() => {
+    if (folderInputRef.current) {
+      folderInputRef.current.setAttribute("webkitdirectory", "");
+    }
+  }, []);
 
   const handleDrop = useCallback(
-    (e: React.DragEvent) => {
+    async (e: React.DragEvent) => {
       e.preventDefault();
       setIsDragging(false);
-      const files = Array.from(e.dataTransfer.files).filter(
-        (f) => f.type === "application/pdf"
-      );
+
+      // Check for folder/entry-based drops (supports recursive traversal)
+      const items = e.dataTransfer.items;
+      if (items && items.length > 0) {
+        const entries: FileSystemEntry[] = [];
+        for (let i = 0; i < items.length; i++) {
+          const entry = items[i].webkitGetAsEntry?.();
+          if (entry) entries.push(entry);
+        }
+
+        if (entries.length > 0) {
+          const files = await traverseEntries(entries);
+          if (files.length > 0) addFiles(files);
+          return;
+        }
+      }
+
+      // Fallback: plain file drop
+      const files = Array.from(e.dataTransfer.files).filter(isAcceptedFile);
       if (files.length > 0) addFiles(files);
     },
     [addFiles]
@@ -31,14 +112,26 @@ export function MultiDocumentUpload({ onDocumentsReady }: MultiDocumentUploadPro
 
   const handleFileSelect = useCallback(
     (e: React.ChangeEvent<HTMLInputElement>) => {
-      const files = Array.from(e.target.files || []);
+      const files = Array.from(e.target.files || []).filter(isAcceptedFile);
       if (files.length > 0) addFiles(files);
       if (fileInputRef.current) fileInputRef.current.value = "";
     },
     [addFiles]
   );
 
-  const allExtracted = documents.length > 0 && documents.every((d) => d.status === "extracted");
+  const handleFolderSelect = useCallback(
+    (e: React.ChangeEvent<HTMLInputElement>) => {
+      const files = Array.from(e.target.files || []).filter(isAcceptedFile);
+      if (files.length > 0) addFiles(files);
+      if (folderInputRef.current) folderInputRef.current.value = "";
+    },
+    [addFiles]
+  );
+
+  const allReady =
+    documents.length > 0 &&
+    documents.every((d) => d.status === "extracted" || d.status === "skipped" || d.status === "error") &&
+    documents.some((d) => d.status === "extracted");
   const hasErrors = documents.some((d) => d.status === "error");
   const isProcessing = documents.some((d) => d.status === "extracting" || d.status === "pending");
 
@@ -46,11 +139,26 @@ export function MultiDocumentUpload({ onDocumentsReady }: MultiDocumentUploadPro
     switch (status) {
       case "extracted":
         return <CheckCircle2 className="h-4 w-4 text-emerald-500" />;
+      case "skipped":
+        return <AlertTriangle className="h-4 w-4 text-amber-500" />;
       case "extracting":
       case "pending":
         return <Loader2 className="h-4 w-4 text-[#A21CAF] animate-spin" />;
       case "error":
         return <AlertCircle className="h-4 w-4 text-red-500" />;
+    }
+  };
+
+  const fileIcon = (format: FileFormat) => {
+    switch (format) {
+      case "xlsx":
+      case "xls":
+      case "csv":
+        return <FileSpreadsheet className="h-4 w-4 text-[#A21CAF]" />;
+      case "image":
+        return <ImageIcon className="h-4 w-4 text-[#A21CAF]" />;
+      default:
+        return <FileText className="h-4 w-4 text-[#A21CAF]" />;
     }
   };
 
@@ -67,7 +175,6 @@ export function MultiDocumentUpload({ onDocumentsReady }: MultiDocumentUploadPro
         onDragOver={(e) => { e.preventDefault(); setIsDragging(true); }}
         onDragLeave={() => setIsDragging(false)}
         onDrop={handleDrop}
-        onClick={() => fileInputRef.current?.click()}
         className={cn(
           "rounded-xl border-2 border-dashed transition-colors cursor-pointer p-6",
           isDragging
@@ -78,19 +185,48 @@ export function MultiDocumentUpload({ onDocumentsReady }: MultiDocumentUploadPro
         <div className="flex flex-col items-center text-center">
           <Upload className="h-8 w-8 text-gray-400 mb-2" />
           <p className="text-sm font-medium text-gray-700">
-            {isDragging ? "Drop your PDFs here" : "Drag & drop PDF documents here"}
+            {isDragging ? "Drop your files or folders here" : "Drag & drop documents or folders here"}
           </p>
           <p className="text-xs text-gray-400 mt-1">
-            Upload multiple files — petitions, FIRs, evidence, arguments
+            PDF, DOCX, XLSX, TXT, CSV, RTF, and images
           </p>
+          <div className="flex items-center gap-2 mt-3">
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              className="text-xs h-7"
+              onClick={(e) => { e.stopPropagation(); fileInputRef.current?.click(); }}
+            >
+              <FileText className="h-3.5 w-3.5 mr-1" />
+              Select Files
+            </Button>
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              className="text-xs h-7"
+              onClick={(e) => { e.stopPropagation(); folderInputRef.current?.click(); }}
+            >
+              <FolderOpen className="h-3.5 w-3.5 mr-1" />
+              Select Folder
+            </Button>
+          </div>
         </div>
         <input
           ref={fileInputRef}
           type="file"
-          accept=".pdf"
+          accept={ACCEPT_STRING}
           multiple
           className="hidden"
           onChange={handleFileSelect}
+        />
+        <input
+          ref={folderInputRef}
+          type="file"
+          multiple
+          className="hidden"
+          onChange={handleFolderSelect}
         />
       </div>
 
@@ -103,7 +239,7 @@ export function MultiDocumentUpload({ onDocumentsReady }: MultiDocumentUploadPro
               className="flex items-center gap-3 rounded-lg border border-gray-200 bg-white p-3"
             >
               <div className="h-9 w-9 rounded-lg bg-[#A21CAF]/10 flex items-center justify-center shrink-0">
-                <FileText className="h-4 w-4 text-[#A21CAF]" />
+                {fileIcon(doc.fileFormat)}
               </div>
               <div className="flex-1 min-w-0 space-y-1">
                 <div className="flex items-center gap-2">
@@ -116,6 +252,9 @@ export function MultiDocumentUpload({ onDocumentsReady }: MultiDocumentUploadPro
                   <span>{formatSize(doc.fileSize)}</span>
                   {doc.totalPages > 0 && <span>{doc.totalPages} pages</span>}
                   {doc.status === "extracting" && <span>Extracting text...</span>}
+                  {doc.status === "skipped" && (
+                    <span className="text-amber-600">Image — no text extracted</span>
+                  )}
                   {doc.status === "error" && (
                     <span className="text-red-500">{doc.error}</span>
                   )}
@@ -149,9 +288,11 @@ export function MultiDocumentUpload({ onDocumentsReady }: MultiDocumentUploadPro
             <span>
               {documents.length} document{documents.length !== 1 ? "s" : ""} —{" "}
               {documents.filter((d) => d.status === "extracted").length} extracted
+              {documents.some((d) => d.status === "skipped") &&
+                `, ${documents.filter((d) => d.status === "skipped").length} skipped`}
               {hasErrors && `, ${documents.filter((d) => d.status === "error").length} failed`}
             </span>
-            {allExtracted && (
+            {allReady && (
               <Button
                 size="sm"
                 className="bg-[#A21CAF] hover:bg-[#86198F] text-xs h-7"
