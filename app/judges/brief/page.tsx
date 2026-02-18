@@ -14,7 +14,7 @@ import { CaseSelector } from "@/components/judges/shared/case-selector";
 import { EmptyState } from "@/components/judges/shared/empty-state";
 import { ExtractionProgress } from "@/components/judges/shared/extraction-progress";
 import { useBriefPipeline } from "@/hooks/use-brief-pipeline";
-import { getBriefs, createBrief } from "@/lib/mock/api";
+import { listBriefs, saveBrief } from "@/lib/brief/actions";
 import type { Brief, EnhancedBrief, UploadedDocument } from "@/lib/mock/types";
 
 export default function BriefListPage() {
@@ -23,30 +23,33 @@ export default function BriefListPage() {
   const [loading, setLoading] = useState(true);
   const [selectedCase, setSelectedCase] = useState<string>("");
   const [documentsReady, setDocumentsReady] = useState<UploadedDocument[] | null>(null);
+  const [saving, setSaving] = useState(false);
 
   const pipeline = useBriefPipeline();
 
   useEffect(() => {
-    getBriefs().then((data) => {
+    listBriefs().then((data) => {
       setBriefs(data);
+      setLoading(false);
+    }).catch(() => {
       setLoading(false);
     });
   }, []);
 
-  // When pipeline completes, create the brief and navigate
+  // When pipeline completes, save to DB and navigate
   useEffect(() => {
-    if (pipeline.phase === "complete" && pipeline.generatedSections.length > 0 && documentsReady) {
-      const newBrief: EnhancedBrief = {
-        id: `brief-${Date.now()}`,
-        caseId: selectedCase || `case-new-${Date.now()}`,
-        caseTitle: pipeline.extractedData?.courtInfo?.caseNumber
-          ? `Case ${pipeline.extractedData.courtInfo.caseNumber}`
-          : `Generated Brief — ${new Date().toLocaleDateString()}`,
-        status: "in_review",
-        createdAt: new Date().toISOString().split("T")[0],
-        sections: pipeline.generatedSections,
-        conversation: [],
-        extractedData: pipeline.extractedData || undefined,
+    if (pipeline.phase === "complete" && pipeline.generatedSections.length > 0 && documentsReady && !saving) {
+      setSaving(true);
+
+      const caseTitle = pipeline.extractedData?.courtInfo?.caseNumber
+        ? `Case ${pipeline.extractedData.courtInfo.caseNumber}`
+        : `Generated Brief — ${new Date().toLocaleDateString()}`;
+
+      saveBrief({
+        caseTitle,
+        caseNumber: pipeline.extractedData?.courtInfo?.caseNumber || undefined,
+        court: pipeline.extractedData?.courtInfo?.courtName || undefined,
+        extractedData: pipeline.extractedData,
         uploadedDocuments: documentsReady.map(d => ({
           id: d.id,
           fileName: d.fileName,
@@ -54,18 +57,15 @@ export default function BriefListPage() {
           totalPages: d.totalPages,
         })),
         ragResults: pipeline.ragResults,
-        reviewProgress: {
-          total: pipeline.generatedSections.length,
-          approved: 0,
-          flagged: 0,
-        },
-      };
-
-      createBrief(newBrief).then((created) => {
-        router.push(`/judges/brief/${created.id}`);
+        sections: pipeline.generatedSections,
+      }).then((briefId) => {
+        router.push(`/judges/brief/${briefId}`);
+      }).catch((err) => {
+        console.error("Failed to save brief:", err);
+        setSaving(false);
       });
     }
-  }, [pipeline.phase, pipeline.generatedSections, documentsReady]);
+  }, [pipeline.phase, pipeline.generatedSections, documentsReady, saving]);
 
   const handleDocumentsReady = (docs: UploadedDocument[]) => {
     setDocumentsReady(docs);
@@ -108,14 +108,14 @@ export default function BriefListPage() {
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-5">
-          {isPipelineRunning ? (
+          {isPipelineRunning || saving ? (
             /* Pipeline progress display */
             <Card className="border-[#A21CAF]/20 bg-gradient-to-br from-[#A21CAF]/[0.02] to-purple-50/30">
               <CardContent className="pt-6">
                 <div className="flex items-center gap-2 mb-4">
                   <Sparkles className="h-5 w-5 text-[#A21CAF] animate-pulse" />
                   <h3 className="text-base font-semibold text-gray-900">
-                    Generating Brief...
+                    {saving ? "Saving Brief..." : "Generating Brief..."}
                   </h3>
                 </div>
                 <ExtractionProgress

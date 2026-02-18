@@ -7,9 +7,6 @@ import type {
   RAGSearchResult,
   EnhancedBriefSection,
 } from "@/lib/mock/types";
-import { analyzeDocuments } from "@/lib/brief-pipeline/document-analyzer";
-import { matchPrecedents } from "@/lib/brief-pipeline/precedent-matcher";
-import { generateAllSections } from "@/lib/brief-pipeline/section-renderers";
 
 export type PipelinePhase =
   | "idle"
@@ -30,13 +27,33 @@ interface PipelineProgress {
 const PHASE_LABELS: Record<string, string> = {
   uploading: "Uploading documents...",
   extracting: "Extracting text from PDFs...",
-  analyzing: "Analyzing document structure...",
-  matching_precedents: "Searching precedent database...",
-  generating_sections: "Generating brief sections...",
+  analyzing: "AI is analyzing document structure...",
+  matching_precedents: "Searching precedent database with AI...",
+  generating_sections: "AI is generating brief sections...",
   complete: "Brief generation complete",
 };
 
-const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
+// ---------------------------------------------------------------------------
+// Parse streamed sections from Claude's XML-delimited output
+// ---------------------------------------------------------------------------
+function parseSections(fullText: string): EnhancedBriefSection[] {
+  const sections: EnhancedBriefSection[] = [];
+  const regex = /<section\s+id="([^"]+)"\s+title="([^"]+)">([\s\S]*?)<\/section>/g;
+  let match: RegExpExecArray | null;
+
+  while ((match = regex.exec(fullText)) !== null) {
+    sections.push({
+      id: match[1],
+      title: match[2],
+      content: match[3].trim(),
+      sources: [],
+      reviewStatus: "pending_review",
+      regenerationCount: 0,
+    });
+  }
+
+  return sections;
+}
 
 export function useBriefPipeline() {
   const [phase, setPhase] = useState<PipelinePhase>("idle");
@@ -57,25 +74,115 @@ export function useBriefPipeline() {
         return;
       }
 
-      // Phase 1: Analyzing documents
+      // Phase 1: Analyze documents with Claude
       setPhase("analyzing");
       setProgress({ step: 1, total: 5, label: PHASE_LABELS.analyzing });
-      await delay(800); // Simulate processing time for UX
-      const data = analyzeDocuments(extractedDocs);
+
+      const analyzeRes = await fetch("/api/brief/analyze", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          documents: extractedDocs.map(d => ({
+            fileName: d.fileName,
+            text: d.extractedText,
+          })),
+        }),
+      });
+
+      if (!analyzeRes.ok) {
+        const err = await analyzeRes.json().catch(() => ({ error: "Analysis failed" }));
+        throw new Error(err.error || "Document analysis failed");
+      }
+
+      const data: ExtractedCaseData = await analyzeRes.json();
+      // Attach raw document info
+      data.rawDocuments = extractedDocs.map(d => ({
+        id: d.id,
+        fileName: d.fileName,
+        documentType: d.documentType,
+        totalPages: d.totalPages,
+      }));
       setExtractedData(data);
 
-      // Phase 2: Matching precedents
+      // Phase 2: Match precedents with AI-ranked search
       setPhase("matching_precedents");
       setProgress({ step: 2, total: 5, label: PHASE_LABELS.matching_precedents });
-      const results = await matchPrecedents(data);
+
+      const precedentRes = await fetch("/api/brief/precedents", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ extractedData: data }),
+      });
+
+      let results: RAGSearchResult[] = [];
+      if (precedentRes.ok) {
+        results = await precedentRes.json();
+      }
       setRagResults(results);
 
-      // Phase 3: Generating sections
+      // Phase 3: Generate sections with Claude (streaming)
       setPhase("generating_sections");
       setProgress({ step: 3, total: 5, label: PHASE_LABELS.generating_sections });
-      await delay(600);
-      const sections = generateAllSections(data, results);
-      setGeneratedSections(sections);
+
+      const generateRes = await fetch("/api/brief/generate", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ extractedData: data, ragResults: results }),
+      });
+
+      if (!generateRes.ok) {
+        throw new Error("Section generation failed");
+      }
+
+      // Read the SSE stream
+      const reader = generateRes.body?.getReader();
+      if (!reader) throw new Error("No response stream");
+
+      const decoder = new TextDecoder();
+      let fullText = "";
+
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+
+        const chunk = decoder.decode(value, { stream: true });
+        const lines = chunk.split("\n");
+
+        for (const line of lines) {
+          if (line.startsWith("data: ")) {
+            const payload = line.slice(6);
+            if (payload === "[DONE]") break;
+            try {
+              const parsed = JSON.parse(payload);
+              if (parsed.text) {
+                fullText += parsed.text;
+                // Parse sections progressively
+                const currentSections = parseSections(fullText);
+                if (currentSections.length > 0) {
+                  setGeneratedSections(currentSections);
+                  setProgress({
+                    step: 3,
+                    total: 5,
+                    label: `Generating sections... (${currentSections.length}/10)`,
+                  });
+                }
+              }
+              if (parsed.error) {
+                throw new Error(parsed.error);
+              }
+            } catch (e) {
+              // Ignore parse errors from partial chunks
+            }
+          }
+        }
+      }
+
+      // Final parse of complete text
+      const finalSections = parseSections(fullText);
+      if (finalSections.length === 0) {
+        throw new Error("No sections were generated");
+      }
+      setGeneratedSections(finalSections);
 
       // Complete
       setPhase("complete");
