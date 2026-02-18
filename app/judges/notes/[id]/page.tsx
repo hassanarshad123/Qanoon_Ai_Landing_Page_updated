@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import {
@@ -35,7 +35,16 @@ import {
 } from "@/components/ui/alert-dialog";
 import { Card, CardContent } from "@/components/ui/card";
 import { toast } from "sonner";
-import { getNoteById, getFolders, getTags } from "@/lib/mock/api";
+import {
+  getNote,
+  getFolderCounts,
+  getTags,
+  updateNoteContent,
+  updateNoteTitle,
+  updateNoteMetadata,
+  deleteNote,
+} from "@/lib/notes/actions";
+import { useAutoSave, type SaveStatus } from "@/hooks/use-auto-save";
 import type { Note, Folder, Tag } from "@/lib/mock/types";
 
 function getSourceHref(note: Note): string | null {
@@ -52,6 +61,33 @@ function getSourceHref(note: Note): string | null {
   }
 }
 
+function SaveStatusIndicator({ status }: { status: SaveStatus }) {
+  if (status === "idle") return null;
+
+  return (
+    <span className="text-xs text-gray-400 flex items-center gap-1.5">
+      {status === "saving" && (
+        <>
+          <span className="h-1.5 w-1.5 rounded-full bg-amber-400 animate-pulse" />
+          Saving...
+        </>
+      )}
+      {status === "saved" && (
+        <>
+          <span className="h-1.5 w-1.5 rounded-full bg-green-500" />
+          Saved
+        </>
+      )}
+      {status === "error" && (
+        <>
+          <span className="h-1.5 w-1.5 rounded-full bg-red-500" />
+          Save failed
+        </>
+      )}
+    </span>
+  );
+}
+
 export default function NoteDetailPage() {
   const params = useParams();
   const router = useRouter();
@@ -61,21 +97,52 @@ export default function NoteDetailPage() {
   const [folders, setFolders] = useState<Folder[]>([]);
   const [allTags, setAllTags] = useState<Tag[]>([]);
   const [title, setTitle] = useState("");
+  const [content, setContent] = useState("");
   const [selectedFolder, setSelectedFolder] = useState("");
   const [noteTags, setNoteTags] = useState<string[]>([]);
   const [showTagPicker, setShowTagPicker] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
 
+  // Auto-save for content
+  const handleSaveContent = useCallback(
+    async (value: string) => {
+      return updateNoteContent(id, value);
+    },
+    [id]
+  );
+
+  const { saveStatus } = useAutoSave(content, {
+    onSave: handleSaveContent,
+    delay: 1000,
+  });
+
+  // Load initial data
   useEffect(() => {
-    getNoteById(id).then((data) => {
-      if (data) {
-        setNote(data);
-        setTitle(data.title);
-        setSelectedFolder(data.folder);
-        setNoteTags(data.tags);
+    async function loadData() {
+      try {
+        const [noteData, foldersData, tagsData] = await Promise.all([
+          getNote(id),
+          getFolderCounts(),
+          getTags(),
+        ]);
+
+        if (noteData) {
+          setNote(noteData);
+          setTitle(noteData.title);
+          setContent(noteData.content);
+          setSelectedFolder(noteData.folder);
+          setNoteTags(noteData.tags);
+        }
+        setFolders(foldersData);
+        setAllTags(tagsData);
+      } catch (error) {
+        console.error("Failed to load note:", error);
+        toast.error("Failed to load note");
+      } finally {
+        setIsLoading(false);
       }
-    });
-    getFolders().then(setFolders);
-    getTags().then(setAllTags);
+    }
+    loadData();
   }, [id]);
 
   const tagMap = allTags.reduce<Record<string, Tag>>((acc, t) => {
@@ -85,30 +152,95 @@ export default function NoteDetailPage() {
 
   const availableTags = allTags.filter((t) => !noteTags.includes(t.id));
 
-  const removeTag = (tagId: string) => {
-    setNoteTags((prev) => prev.filter((t) => t !== tagId));
-    toast.success("Tag removed");
+  // Debounced title save
+  const titleTimeoutRef = useState<NodeJS.Timeout | null>(null);
+
+  const handleTitleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const newTitle = e.target.value;
+    setTitle(newTitle);
+
+    // Debounce title save
+    if (titleTimeoutRef[0]) {
+      clearTimeout(titleTimeoutRef[0]);
+    }
+    const timeout = setTimeout(async () => {
+      try {
+        await updateNoteTitle(id, newTitle);
+      } catch (error) {
+        console.error("Failed to save title:", error);
+      }
+    }, 500);
+    titleTimeoutRef[1](timeout);
   };
 
-  const addTag = (tagId: string) => {
-    setNoteTags((prev) => [...prev, tagId]);
+  const handleFolderChange = async (newFolder: string) => {
+    setSelectedFolder(newFolder);
+    try {
+      await updateNoteMetadata(id, { folder: newFolder });
+    } catch (error) {
+      console.error("Failed to update folder:", error);
+      toast.error("Failed to update folder");
+    }
+  };
+
+  const removeTag = async (tagId: string) => {
+    const newTags = noteTags.filter((t) => t !== tagId);
+    setNoteTags(newTags);
+    try {
+      await updateNoteMetadata(id, { tags: newTags });
+      toast.success("Tag removed");
+    } catch (error) {
+      console.error("Failed to remove tag:", error);
+      toast.error("Failed to remove tag");
+    }
+  };
+
+  const addTag = async (tagId: string) => {
+    const newTags = [...noteTags, tagId];
+    setNoteTags(newTags);
     setShowTagPicker(false);
-    toast.success("Tag added");
+    try {
+      await updateNoteMetadata(id, { tags: newTags });
+      toast.success("Tag added");
+    } catch (error) {
+      console.error("Failed to add tag:", error);
+      toast.error("Failed to add tag");
+    }
   };
 
-  const handleDelete = () => {
-    toast.success("Note deleted");
-    router.push("/judges/notes");
+  const handleDelete = async () => {
+    try {
+      await deleteNote(id);
+      toast.success("Note deleted");
+      router.push("/judges/notes");
+    } catch (error) {
+      console.error("Failed to delete note:", error);
+      toast.error("Failed to delete note");
+    }
   };
 
   const handlePrint = () => {
     window.print();
   };
 
-  if (!note) {
+  if (isLoading) {
     return (
       <div className="flex items-center justify-center min-h-[400px]">
         <p className="text-gray-500">Loading note...</p>
+      </div>
+    );
+  }
+
+  if (!note) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-[400px] gap-4">
+        <p className="text-gray-500">Note not found</p>
+        <Link href="/judges/notes">
+          <Button variant="outline">
+            <ArrowLeft className="h-4 w-4 mr-2" />
+            Back to Notes
+          </Button>
+        </Link>
       </div>
     );
   }
@@ -128,16 +260,21 @@ export default function NoteDetailPage() {
 
       {/* Toolbar */}
       <div className="flex items-center justify-between">
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-3">
           <Button variant="outline" size="sm" onClick={handlePrint}>
             <Printer className="h-4 w-4 mr-2" />
             Print
           </Button>
+          <SaveStatusIndicator status={saveStatus} />
         </div>
 
         <AlertDialog>
           <AlertDialogTrigger asChild>
-            <Button variant="outline" size="sm" className="text-red-600 hover:text-red-700 hover:bg-red-50">
+            <Button
+              variant="outline"
+              size="sm"
+              className="text-red-600 hover:text-red-700 hover:bg-red-50"
+            >
               <Trash2 className="h-4 w-4 mr-2" />
               Delete
             </Button>
@@ -171,7 +308,7 @@ export default function NoteDetailPage() {
           {/* Editable Title */}
           <Input
             value={title}
-            onChange={(e) => setTitle(e.target.value)}
+            onChange={handleTitleChange}
             className="font-serif text-2xl font-bold border-none shadow-none px-0 focus-visible:ring-0 text-gray-900 h-auto"
             placeholder="Note title..."
           />
@@ -179,7 +316,7 @@ export default function NoteDetailPage() {
           {/* Folder Selector */}
           <div className="flex items-center gap-3">
             <span className="text-sm font-medium text-gray-500">Folder:</span>
-            <Select value={selectedFolder} onValueChange={setSelectedFolder}>
+            <Select value={selectedFolder} onValueChange={handleFolderChange}>
               <SelectTrigger className="w-[200px]">
                 <SelectValue placeholder="Select folder" />
               </SelectTrigger>
@@ -258,11 +395,16 @@ export default function NoteDetailPage() {
 
           <Separator />
 
-          {/* Note Content */}
+          {/* Editable Note Content */}
           <div className="prose prose-gray max-w-none">
-            <div className="whitespace-pre-wrap text-gray-800 leading-relaxed text-[15px]">
-              {note.content}
-            </div>
+            <textarea
+              value={content}
+              onChange={(e) => setContent(e.target.value)}
+              className="w-full min-h-[400px] resize-none border-none shadow-none
+                         focus:ring-0 focus:outline-none text-gray-800
+                         leading-relaxed text-[15px] bg-transparent p-0"
+              placeholder="Start typing your note..."
+            />
           </div>
 
           {/* Source Link */}

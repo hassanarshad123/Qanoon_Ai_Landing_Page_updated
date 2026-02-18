@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import { BookmarkPlus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -23,19 +24,42 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
-import { folders, tags } from "@/lib/mock/folders";
+import { createNote, getTags } from "@/lib/notes/actions";
+import { folders } from "@/lib/mock/folders";
+import { useEffect } from "react";
+import type { Tag } from "@/lib/mock/types";
 
 interface SaveToNotesDialogProps {
   title?: string;
+  content?: string;
+  sourceId?: string;
+  sourceType?: "brief" | "judgment" | "research";
   sourceLabel?: string;
   children?: React.ReactNode;
 }
 
-export function SaveToNotesDialog({ title = "Save to Notes", sourceLabel, children }: SaveToNotesDialogProps) {
+export function SaveToNotesDialog({
+  title = "Save to Notes",
+  content = "",
+  sourceId,
+  sourceType,
+  sourceLabel,
+  children,
+}: SaveToNotesDialogProps) {
+  const router = useRouter();
   const [open, setOpen] = useState(false);
   const [selectedFolder, setSelectedFolder] = useState("");
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
   const [noteTitle, setNoteTitle] = useState("");
+  const [isSaving, setIsSaving] = useState(false);
+  const [tags, setTags] = useState<Tag[]>([]);
+
+  // Load tags when dialog opens
+  useEffect(() => {
+    if (open) {
+      getTags().then(setTags).catch(console.error);
+    }
+  }, [open]);
 
   const toggleTag = (tagId: string) => {
     setSelectedTags((prev) =>
@@ -43,14 +67,38 @@ export function SaveToNotesDialog({ title = "Save to Notes", sourceLabel, childr
     );
   };
 
-  const handleSave = () => {
-    toast.success("Saved to Notes", {
-      description: `Note saved to ${selectedFolder || "General"} folder`,
-    });
-    setOpen(false);
-    setSelectedFolder("");
-    setSelectedTags([]);
-    setNoteTitle("");
+  const handleSave = async () => {
+    setIsSaving(true);
+    try {
+      const noteId = await createNote({
+        title: noteTitle || "Untitled Note",
+        content: content,
+        folder: selectedFolder || "General",
+        tags: selectedTags,
+        sourceId: sourceId,
+        sourceType: sourceType,
+        sourceLabel: sourceLabel,
+      });
+
+      toast.success("Saved to Notes", {
+        description: `Note saved to ${selectedFolder || "General"} folder`,
+        action: {
+          label: "View",
+          onClick: () => router.push(`/judges/notes/${noteId}`),
+        },
+      });
+
+      setOpen(false);
+      // Reset form
+      setSelectedFolder("");
+      setSelectedTags([]);
+      setNoteTitle("");
+    } catch (error) {
+      console.error("Failed to save note:", error);
+      toast.error("Failed to save note");
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   return (
@@ -124,9 +172,10 @@ export function SaveToNotesDialog({ title = "Save to Notes", sourceLabel, childr
           </Button>
           <Button
             onClick={handleSave}
+            disabled={isSaving}
             className="bg-[#A21CAF] hover:bg-[#86198F]"
           >
-            Save Note
+            {isSaving ? "Saving..." : "Save Note"}
           </Button>
         </DialogFooter>
       </DialogContent>
