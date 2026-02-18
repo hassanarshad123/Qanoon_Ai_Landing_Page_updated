@@ -54,14 +54,22 @@ export function useOnboarding() {
           ? state.lawyerData.personalInfo.email
           : state.judgeData.personalInfo.email;
 
-      const result = await submitOnboarding(role, email, formData as unknown as Record<string, unknown>);
-      setIsSubmitting(false);
+      try {
+        const result = await submitOnboarding(role, email, formData as unknown as Record<string, unknown>);
 
-      if (!result.success) {
-        setSubmitError(result.error ?? "Submission failed. Please try again.");
+        if (!result.success) {
+          setSubmitError(result.error ?? "Submission failed. Please try again.");
+          setIsSubmitting(false);
+          return;
+        }
+      } catch (err) {
+        const message = err instanceof Error ? err.message : "Something went wrong";
+        setSubmitError(message);
+        setIsSubmitting(false);
         return;
       }
 
+      setIsSubmitting(false);
       const redirectTo = role === "judge" ? "/judges" : "/lawyers";
       clearOnboardingState();
       router.push(redirectTo);
