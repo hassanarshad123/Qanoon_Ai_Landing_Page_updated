@@ -171,6 +171,7 @@ export interface DashboardStats {
 export type FileFormat =
   | "pdf"
   | "docx"
+  | "doc"
   | "xlsx"
   | "xls"
   | "csv"

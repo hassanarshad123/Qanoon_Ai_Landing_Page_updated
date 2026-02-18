@@ -11,7 +11,7 @@ export interface ExtractionResult {
 const EXTENSION_MAP: Record<string, FileFormat> = {
   ".pdf": "pdf",
   ".docx": "docx",
-  ".doc": "docx",
+  ".doc": "doc",
   ".xlsx": "xlsx",
   ".xls": "xls",
   ".csv": "csv",
@@ -34,7 +34,7 @@ export function detectFileFormat(file: File): FileFormat {
   // Fallback to MIME type
   if (file.type === "application/pdf") return "pdf";
   if (file.type === "application/vnd.openxmlformats-officedocument.wordprocessingml.document") return "docx";
-  if (file.type === "application/msword") return "docx";
+  if (file.type === "application/msword") return "doc";
   if (file.type === "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet") return "xlsx";
   if (file.type === "application/vnd.ms-excel") return "xls";
   if (file.type === "text/csv") return "csv";
@@ -131,6 +131,12 @@ export async function extractTextFromFile(
       return extractTextFromPDF(file);
     case "docx":
       return extractDocx(file);
+    case "doc":
+      return {
+        totalPages: 0,
+        pages: [],
+        fullText: `[Legacy .doc file: ${file.name} — please convert to .docx for text extraction]`,
+      };
     case "xlsx":
     case "xls":
     case "csv":

@@ -32,14 +32,14 @@ export function useDocumentExtraction() {
       prev.map((d) => {
         const isNew = newDocs.some((nd) => nd.id === d.id);
         if (!isNew) return d;
-        if (d.fileFormat === "image") return { ...d, status: "skipped" as const, progress: 100 };
+        if (d.fileFormat === "image" || d.fileFormat === "doc") return { ...d, status: "skipped" as const, progress: 100 };
         return { ...d, status: "extracting" as const, progress: 10 };
       })
     );
 
     // Extract all files in parallel
     const extractions = newDocs.map(async (doc) => {
-      if (doc.fileFormat === "image") return; // already marked skipped
+      if (doc.fileFormat === "image" || doc.fileFormat === "doc") return; // already marked skipped
 
       try {
         const result = await extractTextFromFile(doc.file, doc.fileFormat);
