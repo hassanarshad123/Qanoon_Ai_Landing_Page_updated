@@ -37,7 +37,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { toast } from "sonner";
 import {
   getNote,
-  getFolderCounts,
+  listFolders,
   getTags,
   updateNoteContent,
   updateNoteTitle,
@@ -122,7 +122,7 @@ export default function NoteDetailPage() {
       try {
         const [noteData, foldersData, tagsData] = await Promise.all([
           getNote(id),
-          getFolderCounts(),
+          listFolders(),
           getTags(),
         ]);
 
@@ -309,7 +309,7 @@ export default function NoteDetailPage() {
           <Input
             value={title}
             onChange={handleTitleChange}
-            className="font-serif text-2xl font-bold border-none shadow-none px-0 focus-visible:ring-0 text-gray-900 h-auto"
+            className="text-2xl font-semibold border-none shadow-none px-0 focus-visible:ring-0 text-gray-900 h-auto"
             placeholder="Note title..."
           />
 
@@ -352,7 +352,7 @@ export default function NoteDetailPage() {
 
               {/* Add Tag Button / Picker */}
               {showTagPicker ? (
-                <div className="flex flex-wrap items-center gap-1 p-2 rounded-md border bg-gray-50">
+                <div className="flex flex-wrap items-center gap-1.5 p-3 rounded-md border bg-gray-50">
                   {availableTags.length > 0 ? (
                     availableTags.map((tag) => (
                       <Badge
@@ -373,7 +373,7 @@ export default function NoteDetailPage() {
                   <Button
                     variant="ghost"
                     size="sm"
-                    className="h-6 px-2 text-xs"
+                    className="h-8 px-2 text-xs"
                     onClick={() => setShowTagPicker(false)}
                   >
                     Done
@@ -383,7 +383,7 @@ export default function NoteDetailPage() {
                 <Button
                   variant="outline"
                   size="sm"
-                  className="h-6 text-xs"
+                  className="h-8 text-xs"
                   onClick={() => setShowTagPicker(true)}
                 >
                   <Plus className="h-3 w-3 mr-1" />
@@ -402,7 +402,7 @@ export default function NoteDetailPage() {
               onChange={(e) => setContent(e.target.value)}
               className="w-full min-h-[400px] resize-none border-none shadow-none
                          focus:ring-0 focus:outline-none text-gray-800
-                         leading-relaxed text-[15px] bg-transparent p-0"
+                         leading-relaxed text-[15px] bg-transparent px-1 py-2"
               placeholder="Start typing your note..."
             />
           </div>

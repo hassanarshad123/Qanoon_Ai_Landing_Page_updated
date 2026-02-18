@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Sparkles } from "lucide-react";
+import { RefreshCw } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import {
@@ -39,7 +39,7 @@ export function RegenerateDialog({
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2 text-base">
-            <Sparkles className="h-4 w-4 text-[#A21CAF]" />
+            <RefreshCw className="h-4 w-4 text-[#A21CAF]" />
             Regenerate Section
           </DialogTitle>
           <DialogDescription>
@@ -64,7 +64,7 @@ export function RegenerateDialog({
             className="bg-[#A21CAF] hover:bg-[#86198F] gap-1.5"
             onClick={handleRegenerate}
           >
-            <Sparkles className="h-3.5 w-3.5" />
+            <RefreshCw className="h-3.5 w-3.5" />
             Regenerate
           </Button>
         </DialogFooter>

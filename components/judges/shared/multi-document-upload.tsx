@@ -195,7 +195,7 @@ export function MultiDocumentUpload({ onDocumentsReady }: MultiDocumentUploadPro
               type="button"
               variant="outline"
               size="sm"
-              className="text-xs h-7"
+              className="text-xs h-8"
               onClick={(e) => { e.stopPropagation(); fileInputRef.current?.click(); }}
             >
               <FileText className="h-3.5 w-3.5 mr-1" />
@@ -205,7 +205,7 @@ export function MultiDocumentUpload({ onDocumentsReady }: MultiDocumentUploadPro
               type="button"
               variant="outline"
               size="sm"
-              className="text-xs h-7"
+              className="text-xs h-8"
               onClick={(e) => { e.stopPropagation(); folderInputRef.current?.click(); }}
             >
               <FolderOpen className="h-3.5 w-3.5 mr-1" />
@@ -236,7 +236,7 @@ export function MultiDocumentUpload({ onDocumentsReady }: MultiDocumentUploadPro
           {documents.map((doc) => (
             <div
               key={doc.id}
-              className="flex items-center gap-3 rounded-lg border border-gray-200 bg-white p-3"
+              className="flex items-center gap-3 rounded-lg border border-gray-200 bg-white p-4"
             >
               <div className="h-9 w-9 rounded-lg bg-[#A21CAF]/10 flex items-center justify-center shrink-0">
                 {fileIcon(doc.fileFormat)}

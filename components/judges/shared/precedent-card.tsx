@@ -9,10 +9,11 @@ import type { Precedent } from "@/lib/mock/types";
 
 interface PrecedentCardProps {
   precedent: Precedent;
+  href?: string;
   onSaveToNotes?: () => void;
 }
 
-export function PrecedentCard({ precedent, onSaveToNotes }: PrecedentCardProps) {
+export function PrecedentCard({ precedent, href, onSaveToNotes }: PrecedentCardProps) {
   const relevanceColor =
     precedent.relevanceScore >= 80
       ? "bg-emerald-100 text-emerald-700"
@@ -22,7 +23,7 @@ export function PrecedentCard({ precedent, onSaveToNotes }: PrecedentCardProps) 
 
   return (
     <Card className="hover:shadow-md transition-shadow">
-      <CardContent className="pt-4 pb-4">
+      <CardContent className="p-5">
         <div className="flex items-start justify-between gap-3">
           <div className="flex items-start gap-3 min-w-0">
             <div className="h-8 w-8 rounded-lg bg-[#A21CAF]/10 flex items-center justify-center shrink-0">
@@ -32,8 +33,8 @@ export function PrecedentCard({ precedent, onSaveToNotes }: PrecedentCardProps) 
               <p className="text-sm font-medium text-gray-900 truncate">
                 {precedent.caseName}
               </p>
-              <p className="text-xs font-mono text-gray-500 mt-0.5">{precedent.citation}</p>
-              <p className="text-xs text-gray-500 mt-0.5">
+              <p className="text-xs font-mono text-gray-500 mt-1">{precedent.citation}</p>
+              <p className="text-xs text-gray-500 mt-1">
                 {precedent.court} &middot; {precedent.year}
               </p>
             </div>
@@ -42,17 +43,17 @@ export function PrecedentCard({ precedent, onSaveToNotes }: PrecedentCardProps) 
             {precedent.relevanceScore}%
           </Badge>
         </div>
-        <p className="text-xs text-gray-600 mt-2 line-clamp-2">{precedent.summary}</p>
-        <p className="text-xs text-gray-500 mt-1 italic">{precedent.relevance}</p>
+        <p className="text-xs text-gray-600 mt-3 line-clamp-2">{precedent.summary}</p>
+        <p className="text-xs text-gray-500 mt-1.5 italic">{precedent.relevance}</p>
         <div className="flex items-center gap-2 mt-3">
-          <Button variant="ghost" size="sm" className="h-7 text-xs" asChild>
-            <Link href={`/judges/research/conv-001`}>
+          <Button variant="ghost" size="sm" className="h-8 text-xs" asChild>
+            <Link href={href || `/judges/research`}>
               <ExternalLink className="h-3 w-3 mr-1" />
               View Full Case
             </Link>
           </Button>
           {onSaveToNotes && (
-            <Button variant="ghost" size="sm" className="h-7 text-xs" onClick={onSaveToNotes}>
+            <Button variant="ghost" size="sm" className="h-8 text-xs" onClick={onSaveToNotes}>
               <BookmarkPlus className="h-3 w-3 mr-1" />
               Save
             </Button>

@@ -13,9 +13,10 @@ import type { Citation } from "@/lib/mock/types";
 interface CitationBadgeProps {
   citation: Citation;
   linkToResearch?: boolean;
+  conversationId?: string;
 }
 
-export function CitationBadge({ citation, linkToResearch }: CitationBadgeProps) {
+export function CitationBadge({ citation, linkToResearch, conversationId }: CitationBadgeProps) {
   const badge = (
     <Badge
       variant="outline"
@@ -29,7 +30,7 @@ export function CitationBadge({ citation, linkToResearch }: CitationBadgeProps) 
     <HoverCard>
       <HoverCardTrigger asChild>
         {linkToResearch ? (
-          <Link href={`/judges/research/conv-001`}>{badge}</Link>
+          <Link href={`/judges/research/${conversationId || "conv-001"}`}>{badge}</Link>
         ) : (
           badge
         )}

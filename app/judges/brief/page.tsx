@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { FileText, Plus, Sparkles, Loader2 } from "lucide-react";
+import { FileText, Plus, Loader2 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
@@ -98,7 +98,7 @@ export default function BriefListPage() {
       />
 
       {/* New Brief Card */}
-      <Card className="border-dashed border-2 border-gray-200 bg-gradient-to-br from-white to-gray-50/50">
+      <Card className="border border-dashed border-gray-300 bg-white">
         <CardHeader className="pb-4">
           <CardTitle className="flex items-center gap-2 text-base">
             <div className="h-8 w-8 rounded-lg bg-[#A21CAF]/10 flex items-center justify-center">
@@ -107,13 +107,13 @@ export default function BriefListPage() {
             Create New Brief
           </CardTitle>
         </CardHeader>
-        <CardContent className="space-y-5">
+        <CardContent className="space-y-6">
           {isPipelineRunning || saving ? (
             /* Pipeline progress display */
             <Card className="border-[#A21CAF]/20 bg-gradient-to-br from-[#A21CAF]/[0.02] to-purple-50/30">
               <CardContent className="pt-6">
                 <div className="flex items-center gap-2 mb-4">
-                  <Sparkles className="h-5 w-5 text-[#A21CAF] animate-pulse" />
+                  <Loader2 className="h-5 w-5 text-[#A21CAF] animate-spin" />
                   <h3 className="text-base font-semibold text-gray-900">
                     {saving ? "Saving Brief..." : "Generating Brief..."}
                   </h3>
@@ -184,7 +184,7 @@ export default function BriefListPage() {
                     {isPipelineRunning ? (
                       <Loader2 className="h-4 w-4 animate-spin" />
                     ) : (
-                      <Sparkles className="h-4 w-4" />
+                      <FileText className="h-4 w-4" />
                     )}
                     Generate Brief
                   </Button>
@@ -233,7 +233,7 @@ export default function BriefListPage() {
               return (
                 <Link key={brief.id} href={`/judges/brief/${brief.id}`}>
                   <Card className="h-full hover:shadow-md hover:border-gray-300 transition-all duration-200 cursor-pointer group">
-                    <CardContent className="pt-5 pb-5 space-y-3">
+                    <CardContent className="p-6 space-y-3">
                       <div className="flex items-start justify-between gap-2">
                         <h3 className="text-sm font-medium text-gray-900 line-clamp-2 group-hover:text-[#A21CAF] transition-colors">
                           {brief.caseTitle}

@@ -18,7 +18,7 @@ export function AIStreamingMessage({ text, isStreaming, onSkip }: AIStreamingMes
         <div className="prose prose-sm max-w-none text-gray-700">
           <div className="whitespace-pre-wrap">{text}</div>
           {isStreaming && (
-            <span className="inline-block w-2 h-4 bg-[#A21CAF] animate-pulse ml-0.5 align-middle" />
+            <span className="inline-block w-0.5 h-4 bg-gray-400 animate-blink ml-0.5 align-middle" />
           )}
         </div>
         {isStreaming && onSkip && (

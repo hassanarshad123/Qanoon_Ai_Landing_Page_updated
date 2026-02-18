@@ -42,7 +42,7 @@ export function ConversationInput({
               key={i}
               variant="outline"
               size="sm"
-              className="text-xs h-7 hover:border-[#A21CAF] hover:text-[#A21CAF]"
+              className="text-xs h-8 hover:border-[#A21CAF] hover:text-[#A21CAF]"
               onClick={() => onSend(suggestion)}
               disabled={disabled}
             >

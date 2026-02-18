@@ -11,17 +11,17 @@ export function PageHeader({ label, title, description, actions }: PageHeaderPro
   return (
     <div className="flex items-start justify-between">
       <div>
-        <span className="text-sm font-semibold uppercase tracking-wider text-[#84752F]">
+        <span className="text-xs font-medium uppercase tracking-wider text-[#84752F]">
           {label}
         </span>
-        <h1 className="mt-2 text-3xl font-bold font-serif text-gray-900">
+        <h1 className="mt-2 text-2xl font-semibold text-gray-900">
           {title}
         </h1>
         {description && (
-          <p className="mt-2 text-gray-500 max-w-2xl">{description}</p>
+          <p className="mt-1.5 text-sm text-gray-500 max-w-2xl">{description}</p>
         )}
       </div>
-      {actions && <div className="flex items-center gap-2 mt-2">{actions}</div>}
+      {actions && <div className="flex items-center gap-3 mt-2">{actions}</div>}
     </div>
   );
 }

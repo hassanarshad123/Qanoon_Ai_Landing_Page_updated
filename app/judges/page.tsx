@@ -71,16 +71,16 @@ export default function JudgesDashboard() {
         <p className="text-sm font-medium text-[#A21CAF] tracking-wide uppercase mb-1">
           {getGreeting()}
         </p>
-        <h1 className="text-4xl font-bold font-serif text-gray-900">
+        <h1 className="text-3xl font-semibold text-gray-900">
           Justice <span className="text-[#A21CAF]">Ahmed</span>
         </h1>
-        <p className="mt-2 text-gray-500">{today}</p>
+        <p className="mt-1.5 text-sm text-gray-500">{today}</p>
       </div>
 
       {/* Stat Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         <Card>
-          <CardContent className="pt-6">
+          <CardContent className="p-6">
             <div className="flex items-center justify-between">
               <div className="h-10 w-10 rounded-xl bg-[#A21CAF]/10 flex items-center justify-center">
                 <Scale className="h-5 w-5 text-[#A21CAF]" />
@@ -97,7 +97,7 @@ export default function JudgesDashboard() {
         </Card>
 
         <Card>
-          <CardContent className="pt-6">
+          <CardContent className="p-6">
             <div className="flex items-center justify-between">
               <div className="h-10 w-10 rounded-xl bg-blue-50 flex items-center justify-center">
                 <Clock className="h-5 w-5 text-blue-600" />
@@ -111,7 +111,7 @@ export default function JudgesDashboard() {
         </Card>
 
         <Card>
-          <CardContent className="pt-6">
+          <CardContent className="p-6">
             <div className="flex items-center justify-between">
               <div className="h-10 w-10 rounded-xl bg-amber-50 flex items-center justify-center">
                 <Gavel className="h-5 w-5 text-amber-600" />
@@ -128,7 +128,7 @@ export default function JudgesDashboard() {
         </Card>
 
         <Card>
-          <CardContent className="pt-6">
+          <CardContent className="p-6">
             <div className="flex items-center justify-between">
               <div className="h-10 w-10 rounded-xl bg-emerald-50 flex items-center justify-center">
                 <FileText className="h-5 w-5 text-emerald-600" />
@@ -156,16 +156,16 @@ export default function JudgesDashboard() {
                   <Link
                     key={hearing.id}
                     href={`/judges/brief/brief-001`}
-                    className="flex items-center justify-between p-3 rounded-lg bg-gray-50 hover:bg-gray-100 transition-colors"
+                    className="flex items-center justify-between p-4 rounded-lg bg-gray-50 hover:bg-gray-100 transition-colors"
                   >
                     <div className="min-w-0">
                       <p className="text-sm font-medium text-gray-900 truncate">
                         {hearing.caseTitle}
                       </p>
-                      <p className="text-xs text-gray-500 mt-0.5">
+                      <p className="text-xs text-gray-500 mt-1">
                         {hearing.time} — {hearing.courtRoom}
                       </p>
-                      <p className="text-xs text-gray-400 font-mono mt-0.5">
+                      <p className="text-xs text-gray-400 font-mono mt-1">
                         {hearing.caseNumber}
                       </p>
                     </div>
@@ -196,7 +196,7 @@ export default function JudgesDashboard() {
             <CardTitle className="text-base">Quick Actions</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="space-y-2">
+            <div className="space-y-2.5">
               {quickActions.map((action) => (
                 <Button
                   key={action.label}

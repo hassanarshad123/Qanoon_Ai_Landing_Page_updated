@@ -43,23 +43,23 @@ export function Sidebar({ collapsed, onToggle }: SidebarProps) {
     <TooltipProvider delayDuration={0}>
       <nav className="flex flex-col h-full">
         {/* Logo area */}
-        <div className={cn("px-4 py-5 border-b border-gray-200", collapsed && "px-2 py-5")}>
+        <div className={cn("px-4 py-5 border-b border-gray-200", collapsed && "px-3 py-5")}>
           {collapsed ? (
             <div className="flex justify-center">
               <Scale className="h-6 w-6 text-[#A21CAF]" />
             </div>
           ) : (
             <div>
-              <h2 className="text-sm font-semibold text-[#A21CAF] tracking-wide uppercase">
+              <h2 className="text-xs font-semibold text-[#A21CAF] tracking-wide uppercase">
                 QanoonAI
               </h2>
-              <p className="text-xs text-gray-400 mt-0.5">Judicial Portal</p>
+              <p className="text-xs text-gray-400 mt-1">Judicial Portal</p>
             </div>
           )}
         </div>
 
         {/* Navigation links */}
-        <div className="flex-1 py-4 space-y-1">
+        <div className="flex-1 py-4 space-y-1.5">
           {pages.map((page) => {
             const isActive =
               pathname === page.href ||
@@ -78,7 +78,7 @@ export function Sidebar({ collapsed, onToggle }: SidebarProps) {
                     : "text-gray-600 hover:bg-gray-100 hover:text-gray-900"
                 )}
               >
-                <Icon className="h-4.5 w-4.5 shrink-0" />
+                <Icon className="h-5 w-5 shrink-0" />
                 {!collapsed && <span className="text-sm">{page.label}</span>}
               </Link>
             );
@@ -99,7 +99,7 @@ export function Sidebar({ collapsed, onToggle }: SidebarProps) {
         </div>
 
         {/* Collapse toggle */}
-        <div className="border-t border-gray-200 p-2">
+        <div className="border-t border-gray-200 p-3">
           <Button
             variant="ghost"
             size="sm"

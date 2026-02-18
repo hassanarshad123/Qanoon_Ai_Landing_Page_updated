@@ -180,33 +180,70 @@ export async function deleteNote(noteId: string): Promise<void> {
 }
 
 // ---------------------------------------------------------------------------
-// Get folder counts (for sidebar)
+// List all folders with note counts
 // ---------------------------------------------------------------------------
-export async function getFolderCounts(): Promise<Folder[]> {
-  const folders: NoteFolder[] = [
-    "General",
-    "Case Research",
-    "Brief Notes",
-    "Judgment Drafts",
-    "Hearing Prep",
-  ];
-
-  const rows = await sql(
-    `SELECT folder, COUNT(*) as count
-     FROM notes
-     GROUP BY folder`
+export async function listFolders(): Promise<Folder[]> {
+  // Get all folders from database
+  const folderRows = await sql(
+    `SELECT f.id, f.name, f.sort_order, COUNT(n.id) as count
+     FROM folders f
+     LEFT JOIN notes n ON n.folder = f.name
+     GROUP BY f.id, f.name, f.sort_order
+     ORDER BY f.sort_order, f.created_at`
   );
 
-  const countMap: Record<string, number> = {};
-  for (const row of rows) {
-    countMap[row.folder] = parseInt(row.count, 10);
+  return folderRows.map((row: any) => ({
+    id: row.id,
+    name: row.name as NoteFolder,
+    count: parseInt(row.count, 10) || 0,
+  }));
+}
+
+// Backwards compatibility alias
+export async function getFolderCounts(): Promise<Folder[]> {
+  return listFolders();
+}
+
+// ---------------------------------------------------------------------------
+// Create a new folder
+// ---------------------------------------------------------------------------
+export async function createFolder(name: string): Promise<string> {
+  const trimmedName = name.trim();
+
+  if (!trimmedName) {
+    throw new Error("Folder name cannot be empty");
   }
 
-  return folders.map((name, index) => ({
-    id: `folder-${index + 1}`,
-    name,
-    count: countMap[name] || 0,
-  }));
+  // Get max sort order
+  const maxOrderRows = await sql(
+    `SELECT COALESCE(MAX(sort_order), 0) + 1 as next_order FROM folders`
+  );
+  const nextOrder = maxOrderRows[0].next_order;
+
+  const rows = await sql(
+    `INSERT INTO folders (name, sort_order) VALUES ($1, $2) RETURNING id`,
+    [trimmedName, nextOrder]
+  );
+
+  return rows[0].id;
+}
+
+// ---------------------------------------------------------------------------
+// Delete a folder (moves notes to "General", cannot delete "General")
+// ---------------------------------------------------------------------------
+export async function deleteFolder(folderName: string): Promise<void> {
+  if (folderName === "General") {
+    throw new Error("Cannot delete the General folder");
+  }
+
+  // Move all notes in this folder to "General"
+  await sql(
+    `UPDATE notes SET folder = 'General', updated_at = now() WHERE folder = $1`,
+    [folderName]
+  );
+
+  // Delete the folder
+  await sql(`DELETE FROM folders WHERE name = $1`, [folderName]);
 }
 
 // ---------------------------------------------------------------------------

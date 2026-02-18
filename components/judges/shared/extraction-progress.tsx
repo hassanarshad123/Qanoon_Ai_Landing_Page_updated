@@ -1,6 +1,6 @@
 "use client";
 
-import { CheckCircle2, Loader2, FileSearch, Database, Sparkles, FileText } from "lucide-react";
+import { CheckCircle2, Loader2, FileSearch, Database, PenTool, FileText } from "lucide-react";
 import type { PipelinePhase } from "@/hooks/use-brief-pipeline";
 
 interface ExtractionProgressProps {
@@ -14,7 +14,7 @@ const PIPELINE_STEPS = [
   { phase: "extracting", label: "Extracting text from documents", icon: FileText },
   { phase: "analyzing", label: "Analyzing document structure", icon: FileSearch },
   { phase: "matching_precedents", label: "Searching precedent database", icon: Database },
-  { phase: "generating_sections", label: "Generating brief sections", icon: Sparkles },
+  { phase: "generating_sections", label: "Generating brief sections", icon: PenTool },
 ];
 
 const phaseOrder: Record<string, number> = {
@@ -87,7 +87,7 @@ export function ExtractionProgress({
                   {step.label}
                 </p>
                 {isActive && progress.label && (
-                  <p className="text-xs text-gray-500 mt-0.5">{progress.label}</p>
+                  <p className="text-xs text-gray-500 mt-1">{progress.label}</p>
                 )}
               </div>
               {isComplete && (

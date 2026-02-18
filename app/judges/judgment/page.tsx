@@ -99,7 +99,7 @@ export default function JudgmentListPage() {
             value={creationMode}
             onValueChange={(v) => setCreationMode(v as "case" | "brief")}
           >
-            <TabsList className="mb-4">
+            <TabsList className="mb-6">
               <TabsTrigger value="case">Select a Case</TabsTrigger>
               <TabsTrigger value="brief">Start from Existing Brief</TabsTrigger>
             </TabsList>
@@ -164,15 +164,16 @@ export default function JudgmentListPage() {
 
       {/* Previous Judgment Drafts */}
       <div>
-        <h2 className="text-lg font-semibold text-gray-900 mb-4">
+        <h2 className="text-lg font-semibold text-gray-900 mb-6">
           Previous Judgment Drafts
         </h2>
+
 
         {loading ? (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
             {[1, 2, 3].map((i) => (
               <Card key={i} className="animate-pulse">
-                <CardContent className="pt-6">
+                <CardContent className="p-6">
                   <div className="h-4 bg-gray-200 rounded w-3/4 mb-3" />
                   <div className="h-3 bg-gray-200 rounded w-1/2 mb-2" />
                   <div className="h-3 bg-gray-200 rounded w-1/3" />
@@ -198,7 +199,7 @@ export default function JudgmentListPage() {
                 className="group"
               >
                 <Card className="h-full hover:shadow-md transition-shadow group-hover:border-[#A21CAF]/30">
-                  <CardContent className="pt-6">
+                  <CardContent className="p-6">
                     <div className="flex items-start justify-between gap-2 mb-3">
                       <div className="h-8 w-8 rounded-lg bg-amber-50 flex items-center justify-center shrink-0">
                         <Gavel className="h-4 w-4 text-amber-600" />
@@ -210,7 +211,7 @@ export default function JudgmentListPage() {
                       {judgment.caseTitle}
                     </h3>
 
-                    <div className="space-y-1">
+                    <div className="space-y-1.5">
                       <p className="text-xs text-gray-500">
                         Created:{" "}
                         {new Date(judgment.createdAt).toLocaleDateString(

@@ -7,7 +7,6 @@ import {
   ArrowLeft,
   Gavel,
   Scale,
-  Sparkles,
   BookOpen,
   Users,
   ListOrdered,
@@ -611,10 +610,10 @@ export default function BriefDetailPage() {
               <BookOpen className="h-5 w-5 text-[#A21CAF]" />
             </div>
             <div>
-              <h1 className="text-2xl font-bold font-serif text-gray-900">
+              <h1 className="text-2xl font-semibold text-gray-900">
                 {brief.caseTitle}
               </h1>
-              <p className="text-sm text-gray-500 mt-0.5">
+              <p className="text-sm text-gray-500 mt-1">
                 Generated on{" "}
                 {new Date(brief.createdAt).toLocaleDateString("en-US", {
                   year: "numeric",
@@ -677,7 +676,7 @@ export default function BriefDetailPage() {
         {/* ======================================================= */}
         {getSectionByTitle("Case Header") && (
           <Card className="overflow-hidden">
-            <div className="bg-gradient-to-r from-gray-900 via-gray-800 to-gray-900 px-8 py-10 text-center">
+            <div className="bg-gray-900 px-8 py-8 text-center">
               <p className="text-[#84752F] uppercase tracking-[0.2em] text-xs font-semibold mb-4">
                 Case Header
               </p>
@@ -688,7 +687,7 @@ export default function BriefDetailPage() {
                     key={i}
                     className={`${
                       i === 0
-                        ? "text-xl font-serif font-bold text-white mb-2"
+                        ? "text-xl font-bold text-white mb-2"
                         : i === 1
                         ? "text-sm text-gray-300 font-mono mb-1"
                         : "text-sm text-gray-400"
@@ -905,7 +904,7 @@ export default function BriefDetailPage() {
                               return (
                                 <div
                                   key={i}
-                                  className="flex items-start gap-3 p-2.5 rounded-lg hover:bg-gray-50 transition-colors"
+                                  className="flex items-start gap-3 p-4 rounded-lg hover:bg-gray-50 transition-colors"
                                 >
                                   <ScrollText className="h-4 w-4 text-[#84752F] shrink-0 mt-0.5" />
                                   <div>
@@ -1088,16 +1087,16 @@ export default function BriefDetailPage() {
                   <table className="w-full border-collapse text-sm">
                     <thead>
                       <tr>
-                        <th className="text-left p-3 bg-gray-50 border border-gray-200 rounded-tl-lg w-10 text-gray-500 font-medium">
+                        <th className="text-left p-4 bg-gray-50 border border-gray-200 rounded-tl-lg w-10 text-gray-500 font-medium">
                           #
                         </th>
-                        <th className="text-left p-3 bg-gray-50 border border-gray-200 text-gray-700 font-medium w-[28%]">
+                        <th className="text-left p-4 bg-gray-50 border border-gray-200 text-gray-700 font-medium w-[28%]">
                           Legal Issue
                         </th>
-                        <th className="text-left p-3 bg-blue-50/60 border border-blue-100 text-blue-800 font-medium w-[33%]">
+                        <th className="text-left p-4 bg-blue-50/60 border border-blue-100 text-blue-800 font-medium w-[33%]">
                           Petitioner&apos;s Position
                         </th>
-                        <th className="text-left p-3 bg-rose-50/60 border border-rose-100 text-rose-800 font-medium rounded-tr-lg w-[33%]">
+                        <th className="text-left p-4 bg-rose-50/60 border border-rose-100 text-rose-800 font-medium rounded-tr-lg w-[33%]">
                           Respondent&apos;s Position
                         </th>
                       </tr>
@@ -1105,19 +1104,19 @@ export default function BriefDetailPage() {
                     <tbody>
                       {matrixRows.map((row, i) => (
                         <tr key={i}>
-                          <td className="p-3 border border-gray-200 align-top">
+                          <td className="p-4 border border-gray-200 align-top">
                             <div className="h-6 w-6 rounded-full bg-[#A21CAF]/10 flex items-center justify-center">
                               <span className="text-xs font-bold text-[#A21CAF]">
                                 {i + 1}
                               </span>
                             </div>
                           </td>
-                          <td className="p-3 border border-gray-200 align-top">
+                          <td className="p-4 border border-gray-200 align-top">
                             <p className="text-sm text-gray-800 font-medium leading-relaxed">
                               {row.issue}
                             </p>
                           </td>
-                          <td className="p-3 border border-blue-100 bg-blue-50/20 align-top">
+                          <td className="p-4 border border-blue-100 bg-blue-50/20 align-top">
                             <p className="text-sm text-gray-700 leading-relaxed">
                               {row.petitionerArg}
                             </p>
@@ -1138,7 +1137,7 @@ export default function BriefDetailPage() {
                               </div>
                             )}
                           </td>
-                          <td className="p-3 border border-rose-100 bg-rose-50/20 align-top">
+                          <td className="p-4 border border-rose-100 bg-rose-50/20 align-top">
                             <p className="text-sm text-gray-700 leading-relaxed">
                               {row.respondentArg}
                             </p>
@@ -1296,7 +1295,7 @@ export default function BriefDetailPage() {
             <CardContent className="pt-6 pb-6">
               <ConversationThread messages={conversationMessages} />
               {streamingChat && (
-                <div className="mt-4 p-3 rounded-lg bg-gray-50">
+                <div className="mt-4 p-4 rounded-lg bg-gray-50">
                   <p className="text-xs font-medium text-[#A21CAF] mb-1">QanoonAI</p>
                   <p className="text-sm text-gray-700 whitespace-pre-wrap">{streamingChat}</p>
                 </div>
@@ -1306,7 +1305,7 @@ export default function BriefDetailPage() {
         )}
 
         <Card>
-          <CardContent className="pt-5 pb-5">
+          <CardContent className="p-6">
             <ConversationInput
               onSend={handleSendMessage}
               promptSuggestions={PROMPT_SUGGESTIONS}
@@ -1333,7 +1332,7 @@ function SectionLabel({ title }: { title: string }) {
   return (
     <div className="flex items-center gap-2">
       <Icon className="h-4 w-4 text-[#84752F]" />
-      <span className="text-[#84752F] uppercase tracking-wider text-xs font-semibold">
+      <span className="text-[#84752F] uppercase tracking-wider text-xs font-medium">
         {title}
       </span>
     </div>

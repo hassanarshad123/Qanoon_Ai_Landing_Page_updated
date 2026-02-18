@@ -142,10 +142,10 @@ export default function JudgmentDetailPage() {
 
       {/* Judgment Title */}
       <div>
-        <h1 className="text-xl font-bold font-serif text-gray-900">
+        <h1 className="text-xl font-semibold text-gray-900">
           {judgment.caseTitle}
         </h1>
-        <p className="text-sm text-gray-500 mt-1">
+        <p className="text-sm text-gray-500 mt-1.5">
           Created{" "}
           {new Date(judgment.createdAt).toLocaleDateString("en-US", {
             year: "numeric",
@@ -182,7 +182,7 @@ export default function JudgmentDetailPage() {
                   >
                     <Card>
                       <CollapsibleTrigger asChild>
-                        <CardHeader className="cursor-pointer hover:bg-gray-50/80 transition-colors py-3 px-4">
+                        <CardHeader className="cursor-pointer hover:bg-gray-50/80 transition-colors py-3.5 px-4">
                           <div className="flex items-center justify-between">
                             <div className="flex items-center gap-3">
                               <span className="flex items-center justify-center h-6 w-6 rounded-full bg-[#84752F]/10 text-[#84752F] text-xs font-semibold">
@@ -203,7 +203,7 @@ export default function JudgmentDetailPage() {
                         </CardHeader>
                       </CollapsibleTrigger>
                       <CollapsibleContent>
-                        <CardContent className="pt-0 px-4 pb-4">
+                        <CardContent className="pt-0 px-4 pb-5">
                           <Separator className="mb-3" />
                           <div className="text-sm text-gray-700 leading-relaxed whitespace-pre-line">
                             {section.content}

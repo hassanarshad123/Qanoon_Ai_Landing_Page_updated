@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Check, Flag, Pencil, Sparkles } from "lucide-react";
+import { Check, Flag, Pencil, RefreshCw } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -56,7 +56,7 @@ export function SectionReviewControls({
         <Button
           variant="outline"
           size="sm"
-          className="h-7 text-xs gap-1 border-emerald-200 text-emerald-700 hover:bg-emerald-50"
+          className="h-8 text-xs gap-1 border-emerald-200 text-emerald-700 hover:bg-emerald-50"
           onClick={onApprove}
         >
           <Check className="h-3 w-3" />
@@ -69,7 +69,7 @@ export function SectionReviewControls({
           <Button
             variant="outline"
             size="sm"
-            className="h-7 text-xs gap-1 border-amber-200 text-amber-700 hover:bg-amber-50"
+            className="h-8 text-xs gap-1 border-amber-200 text-amber-700 hover:bg-amber-50"
           >
             <Flag className="h-3 w-3" />
             Flag
@@ -101,7 +101,7 @@ export function SectionReviewControls({
       <Button
         variant="outline"
         size="sm"
-        className="h-7 text-xs gap-1"
+        className="h-8 text-xs gap-1"
         onClick={onEdit}
       >
         <Pencil className="h-3 w-3" />
@@ -111,10 +111,10 @@ export function SectionReviewControls({
       <Button
         variant="outline"
         size="sm"
-        className="h-7 text-xs gap-1 border-purple-200 text-purple-700 hover:bg-purple-50"
+        className="h-8 text-xs gap-1 border-purple-200 text-purple-700 hover:bg-purple-50"
         onClick={onRegenerate}
       >
-        <Sparkles className="h-3 w-3" />
+        <RefreshCw className="h-3 w-3" />
         Regenerate
       </Button>
 

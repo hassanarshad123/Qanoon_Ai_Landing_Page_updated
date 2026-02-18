@@ -2,14 +2,19 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import Link from "next/link";
-import { Search, MessageSquare, Clock } from "lucide-react";
-import { Card, CardContent } from "@/components/ui/card";
+import { Search, MessageSquare, Pin } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
+import { Input } from "@/components/ui/input";
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Card, CardContent } from "@/components/ui/card";
 import { PageHeader } from "@/components/judges/shared/page-header";
-import { getResearchConversations } from "@/lib/mock/api";
-import type { ResearchConversation } from "@/lib/mock/types";
+import { EmptyState } from "@/components/judges/shared/empty-state";
+import { CaseSelector } from "@/components/judges/shared/case-selector";
+import { ResearchConversationCard } from "@/components/judges/shared/research-conversation-card";
+import { listConversations, deleteConversation, togglePin } from "@/lib/research/actions";
+import type { ResearchConversationDB, ResearchMode } from "@/lib/research/types";
+import { toast } from "sonner";
 
 const suggestions = [
   "What is the test for granting bail in non-bailable offences?",
@@ -21,13 +26,14 @@ const suggestions = [
 export default function ResearchListPage() {
   const router = useRouter();
   const [query, setQuery] = useState("");
-  const [conversations, setConversations] = useState<ResearchConversation[]>(
-    []
-  );
+  const [mode, setMode] = useState<ResearchMode>("general");
+  const [selectedCaseId, setSelectedCaseId] = useState<string>("");
+  const [conversations, setConversations] = useState<ResearchConversationDB[]>([]);
   const [loading, setLoading] = useState(true);
+  const [searchFilter, setSearchFilter] = useState("");
 
   useEffect(() => {
-    getResearchConversations().then((data) => {
+    listConversations().then((data) => {
       setConversations(data);
       setLoading(false);
     });
@@ -35,12 +41,19 @@ export default function ResearchListPage() {
 
   const handleSubmit = () => {
     if (!query.trim()) return;
-    router.push("/judges/research/conv-001");
+    const params = new URLSearchParams({ q: query });
+    if (mode === "case_linked" && selectedCaseId) {
+      params.set("caseId", selectedCaseId);
+    }
+    router.push(`/judges/research/new?${params.toString()}`);
   };
 
   const handleSuggestionClick = (suggestion: string) => {
-    setQuery(suggestion);
-    router.push("/judges/research/conv-001");
+    const params = new URLSearchParams({ q: suggestion });
+    if (mode === "case_linked" && selectedCaseId) {
+      params.set("caseId", selectedCaseId);
+    }
+    router.push(`/judges/research/new?${params.toString()}`);
   };
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
@@ -50,16 +63,36 @@ export default function ResearchListPage() {
     }
   };
 
-  const formatDate = (dateStr: string) => {
-    return new Date(dateStr).toLocaleDateString("en-US", {
-      month: "short",
-      day: "numeric",
-      year: "numeric",
-    });
+  const handleDelete = async (id: string) => {
+    await deleteConversation(id);
+    setConversations((prev) => prev.filter((c) => c.id !== id));
+    toast.success("Conversation deleted");
   };
 
+  const handleTogglePin = async (id: string) => {
+    const pinned = await togglePin(id);
+    setConversations((prev) =>
+      prev.map((c) => (c.id === id ? { ...c, pinned } : c))
+    );
+    toast.success(pinned ? "Pinned" : "Unpinned");
+  };
+
+  // Filter conversations client-side
+  const filtered = searchFilter.trim()
+    ? conversations.filter(
+        (c) =>
+          c.title.toLowerCase().includes(searchFilter.toLowerCase()) ||
+          (c.lastMessagePreview || "")
+            .toLowerCase()
+            .includes(searchFilter.toLowerCase())
+      )
+    : conversations;
+
+  const pinned = filtered.filter((c) => c.pinned);
+  const recent = filtered.filter((c) => !c.pinned);
+
   return (
-    <div className="space-y-10">
+    <div className="space-y-8">
       {/* Header */}
       <PageHeader
         label="Research"
@@ -67,8 +100,29 @@ export default function ResearchListPage() {
         description="AI-powered legal research across 300,000+ Pakistani judgments"
       />
 
-      {/* Search Area */}
-      <div className="max-w-2xl mx-auto space-y-4">
+      {/* Mode Toggle + Hero Search */}
+      <div className="max-w-2xl mx-auto space-y-5">
+        {/* Mode Tabs */}
+        <Tabs
+          value={mode}
+          onValueChange={(v) => setMode(v as ResearchMode)}
+          className="w-full"
+        >
+          <TabsList className="grid w-full grid-cols-2">
+            <TabsTrigger value="general">General Research</TabsTrigger>
+            <TabsTrigger value="case_linked">Case Research</TabsTrigger>
+          </TabsList>
+        </Tabs>
+
+        {/* Case Selector (only in case mode) */}
+        {mode === "case_linked" && (
+          <CaseSelector
+            value={selectedCaseId}
+            onSelect={setSelectedCaseId}
+            placeholder="Select a case to link your research..."
+          />
+        )}
+
         {/* Search Icon + Heading */}
         <div className="text-center space-y-2">
           <div className="h-12 w-12 rounded-full bg-[#A21CAF]/10 flex items-center justify-center mx-auto">
@@ -125,16 +179,42 @@ export default function ResearchListPage() {
         </div>
       </div>
 
-      {/* Previous Conversations */}
-      <div className="space-y-4">
-        <div className="flex items-center justify-between">
-          <h2 className="text-lg font-semibold text-gray-900">
-            Previous Conversations
-          </h2>
-          <span className="text-sm text-gray-400">
-            {conversations.length} conversations
-          </span>
+      {/* Search/Filter Bar */}
+      <div className="flex items-center gap-3">
+        <div className="relative flex-1 max-w-sm">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+          <Input
+            placeholder="Search conversations..."
+            value={searchFilter}
+            onChange={(e) => setSearchFilter(e.target.value)}
+            className="pl-9"
+          />
         </div>
+        <span className="text-sm text-gray-400">
+          {filtered.length} conversation{filtered.length !== 1 ? "s" : ""}
+        </span>
+      </div>
+
+      {/* Pinned Conversations */}
+      {pinned.length > 0 && (
+        <div className="space-y-3">
+          <div className="flex items-center gap-2">
+            <Pin className="h-4 w-4 text-[#A21CAF]" />
+            <h2 className="text-sm font-semibold text-gray-700">Pinned</h2>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {pinned.map((conv) => (
+              <ResearchConversationCard key={conv.id} conversation={conv} />
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Recent Conversations */}
+      <div className="space-y-3">
+        <h2 className="text-sm font-semibold text-gray-700">
+          {pinned.length > 0 ? "Recent" : "Previous Conversations"}
+        </h2>
 
         {loading ? (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -150,57 +230,20 @@ export default function ResearchListPage() {
               </Card>
             ))}
           </div>
-        ) : conversations.length === 0 ? (
-          <Card>
-            <CardContent className="py-12 text-center">
-              <div className="h-12 w-12 rounded-full bg-gray-100 flex items-center justify-center mx-auto mb-3">
-                <MessageSquare className="h-6 w-6 text-gray-400" />
-              </div>
-              <p className="text-sm text-gray-500">
-                No previous conversations yet. Start your first research query
-                above.
-              </p>
-            </CardContent>
-          </Card>
+        ) : recent.length === 0 && pinned.length === 0 ? (
+          <EmptyState
+            icon={MessageSquare}
+            title="No conversations yet"
+            description="Start your first research query above to get AI-powered legal insights."
+          />
+        ) : recent.length === 0 ? (
+          <p className="text-sm text-gray-400 py-4">
+            No recent conversations. All conversations are pinned.
+          </p>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {conversations.map((conv) => (
-              <Link key={conv.id} href={`/judges/research/${conv.id}`}>
-                <Card className="hover:shadow-md hover:border-[#A21CAF]/20 transition-all cursor-pointer h-full">
-                  <CardContent className="pt-6">
-                    <div className="space-y-3">
-                      {/* Title */}
-                      <h3 className="text-sm font-semibold text-gray-900 line-clamp-2 leading-snug">
-                        {conv.title}
-                      </h3>
-
-                      {/* First message preview */}
-                      {conv.messages.length > 0 && (
-                        <p className="text-xs text-gray-500 line-clamp-2 leading-relaxed">
-                          {conv.messages[0].content}
-                        </p>
-                      )}
-
-                      {/* Metadata */}
-                      <div className="flex items-center justify-between pt-1">
-                        <div className="flex items-center gap-1 text-xs text-gray-400">
-                          <Clock className="h-3 w-3" />
-                          <span>{formatDate(conv.createdAt)}</span>
-                        </div>
-                        <div className="flex items-center gap-1 text-xs text-gray-400">
-                          <MessageSquare className="h-3 w-3" />
-                          <span>
-                            {conv.messages.length}{" "}
-                            {conv.messages.length === 1
-                              ? "message"
-                              : "messages"}
-                          </span>
-                        </div>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-              </Link>
+            {recent.map((conv) => (
+              <ResearchConversationCard key={conv.id} conversation={conv} />
             ))}
           </div>
         )}

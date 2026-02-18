@@ -20,7 +20,7 @@ export function SourceReferenceBadge({ source, compact }: SourceReferenceBadgePr
       <HoverCardTrigger asChild>
         <Badge
           variant="outline"
-          className="cursor-pointer text-[10px] font-medium border-purple-200 bg-purple-50 text-purple-700 hover:bg-purple-100 gap-1 py-0.5"
+          className="cursor-pointer text-[11px] font-medium border-purple-200 bg-purple-50 text-purple-700 hover:bg-purple-100 gap-1 py-1 px-2"
         >
           <FileText className="h-2.5 w-2.5" />
           {compact ? `p.${source.pageNumber}` : `Page ${source.pageNumber}`}
@@ -32,7 +32,7 @@ export function SourceReferenceBadge({ source, compact }: SourceReferenceBadgePr
             <FileText className="h-4 w-4 text-[#A21CAF] shrink-0" />
             <div className="min-w-0">
               <p className="font-medium text-gray-900 truncate text-xs">{source.documentName}</p>
-              <p className="text-[10px] text-gray-500">{source.documentType} — Page {source.pageNumber}</p>
+              <p className="text-[11px] text-gray-500">{source.documentType} — Page {source.pageNumber}</p>
             </div>
           </div>
           {source.snippet && (

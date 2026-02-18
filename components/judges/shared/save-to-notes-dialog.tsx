@@ -24,10 +24,9 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
-import { createNote, getTags } from "@/lib/notes/actions";
-import { folders } from "@/lib/mock/folders";
+import { createNote, getTags, listFolders } from "@/lib/notes/actions";
 import { useEffect } from "react";
-import type { Tag } from "@/lib/mock/types";
+import type { Tag, Folder } from "@/lib/mock/types";
 
 interface SaveToNotesDialogProps {
   title?: string;
@@ -53,11 +52,17 @@ export function SaveToNotesDialog({
   const [noteTitle, setNoteTitle] = useState("");
   const [isSaving, setIsSaving] = useState(false);
   const [tags, setTags] = useState<Tag[]>([]);
+  const [folders, setFolders] = useState<Folder[]>([]);
 
-  // Load tags when dialog opens
+  // Load tags and folders when dialog opens
   useEffect(() => {
     if (open) {
-      getTags().then(setTags).catch(console.error);
+      Promise.all([getTags(), listFolders()])
+        .then(([tagsData, foldersData]) => {
+          setTags(tagsData);
+          setFolders(foldersData);
+        })
+        .catch(console.error);
     }
   }, [open]);
 

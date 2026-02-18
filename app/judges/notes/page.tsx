@@ -1,9 +1,9 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { StickyNote, FolderIcon, Plus, Search } from "lucide-react";
+import { StickyNote, FolderIcon, Plus, Search, Trash2 } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -24,7 +24,14 @@ import {
 } from "@/components/ui/resizable";
 import { PageHeader } from "@/components/judges/shared/page-header";
 import { toast } from "sonner";
-import { listNotes, getFolderCounts, getTags, createNote } from "@/lib/notes/actions";
+import {
+  listNotes,
+  listFolders,
+  getTags,
+  createNote,
+  createFolder,
+  deleteFolder,
+} from "@/lib/notes/actions";
 import type { Note, Folder, Tag as TagType } from "@/lib/mock/types";
 
 export default function NotesLibraryPage() {
@@ -39,26 +46,39 @@ export default function NotesLibraryPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [isCreating, setIsCreating] = useState(false);
 
+  // Folder management state
+  const [isCreatingFolder, setIsCreatingFolder] = useState(false);
+  const [newFolderName, setNewFolderName] = useState("");
+  const folderInputRef = useRef<HTMLInputElement>(null);
+
   useEffect(() => {
-    async function loadData() {
-      try {
-        const [notesData, foldersData, tagsData] = await Promise.all([
-          listNotes(),
-          getFolderCounts(),
-          getTags(),
-        ]);
-        setNotes(notesData);
-        setFolders(foldersData);
-        setTags(tagsData);
-      } catch (error) {
-        console.error("Failed to load notes:", error);
-        toast.error("Failed to load notes");
-      } finally {
-        setIsLoading(false);
-      }
-    }
     loadData();
   }, []);
+
+  async function loadData() {
+    try {
+      const [notesData, foldersData, tagsData] = await Promise.all([
+        listNotes(),
+        listFolders(),
+        getTags(),
+      ]);
+      setNotes(notesData);
+      setFolders(foldersData);
+      setTags(tagsData);
+    } catch (error) {
+      console.error("Failed to load notes:", error);
+      toast.error("Failed to load notes");
+    } finally {
+      setIsLoading(false);
+    }
+  }
+
+  // Focus input when creating folder
+  useEffect(() => {
+    if (isCreatingFolder && folderInputRef.current) {
+      folderInputRef.current.focus();
+    }
+  }, [isCreatingFolder]);
 
   const tagMap = tags.reduce<Record<string, TagType>>((acc, t) => {
     acc[t.id] = t;
@@ -84,6 +104,69 @@ export default function NotesLibraryPage() {
       console.error("Failed to create note:", error);
       toast.error("Failed to create note");
       setIsCreating(false);
+    }
+  };
+
+  const handleCreateFolder = async () => {
+    const name = newFolderName.trim();
+    if (!name) {
+      setIsCreatingFolder(false);
+      setNewFolderName("");
+      return;
+    }
+
+    try {
+      await createFolder(name);
+      toast.success(`Folder "${name}" created`);
+      setIsCreatingFolder(false);
+      setNewFolderName("");
+      // Refresh folders
+      const foldersData = await listFolders();
+      setFolders(foldersData);
+    } catch (error: any) {
+      if (error?.message?.includes("unique") || error?.message?.includes("duplicate")) {
+        toast.error("A folder with this name already exists");
+      } else {
+        toast.error("Failed to create folder");
+      }
+    }
+  };
+
+  const handleDeleteFolder = async (folderName: string) => {
+    const notesInFolder = notes.filter((n) => n.folder === folderName).length;
+
+    try {
+      await deleteFolder(folderName);
+
+      if (notesInFolder > 0) {
+        toast.success(`Folder deleted. ${notesInFolder} note${notesInFolder > 1 ? "s" : ""} moved to General.`);
+      } else {
+        toast.success("Folder deleted");
+      }
+
+      // If we were viewing the deleted folder, go back to All Notes
+      if (activeFolder === folderName) {
+        setActiveFolder(null);
+      }
+
+      // Refresh data
+      const [notesData, foldersData] = await Promise.all([
+        listNotes(),
+        listFolders(),
+      ]);
+      setNotes(notesData);
+      setFolders(foldersData);
+    } catch (error) {
+      toast.error("Failed to delete folder");
+    }
+  };
+
+  const handleFolderKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === "Enter") {
+      handleCreateFolder();
+    } else if (e.key === "Escape") {
+      setIsCreatingFolder(false);
+      setNewFolderName("");
     }
   };
 
@@ -152,14 +235,23 @@ export default function NotesLibraryPage() {
               <div className="p-4 space-y-6">
                 {/* Folders Section */}
                 <div>
-                  <h3 className="text-xs font-semibold uppercase tracking-wider text-[#84752F] mb-3">
-                    Folders
-                  </h3>
-                  <div className="space-y-1">
+                  <div className="flex items-center justify-between mb-4">
+                    <h3 className="text-xs font-semibold uppercase tracking-wider text-[#84752F]">
+                      Folders
+                    </h3>
+                    <button
+                      onClick={() => setIsCreatingFolder(true)}
+                      className="p-1 rounded hover:bg-gray-100 text-gray-400 hover:text-gray-600 transition-colors"
+                      title="New folder"
+                    >
+                      <Plus className="h-3.5 w-3.5" />
+                    </button>
+                  </div>
+                  <div className="space-y-1.5">
                     {/* All Notes option */}
                     <button
                       onClick={() => setActiveFolder(null)}
-                      className={`w-full flex items-center justify-between rounded-md px-3 py-2 text-sm transition-colors ${
+                      className={`w-full flex items-center justify-between rounded-md px-3 py-2.5 text-sm transition-colors ${
                         activeFolder === null
                           ? "bg-[#A21CAF]/10 text-[#A21CAF] font-medium"
                           : "text-gray-700 hover:bg-gray-100"
@@ -174,31 +266,66 @@ export default function NotesLibraryPage() {
                       </Badge>
                     </button>
 
+                    {/* Inline folder creation */}
+                    {isCreatingFolder && (
+                      <div className="px-3 py-1.5">
+                        <Input
+                          ref={folderInputRef}
+                          value={newFolderName}
+                          onChange={(e) => setNewFolderName(e.target.value)}
+                          onKeyDown={handleFolderKeyDown}
+                          onBlur={handleCreateFolder}
+                          placeholder="Folder name..."
+                          className="h-8 text-sm"
+                        />
+                      </div>
+                    )}
+
+                    {/* Folder list */}
                     {folders.map((folder) => (
-                      <button
+                      <div
                         key={folder.id}
-                        onClick={() =>
-                          setActiveFolder(
-                            activeFolder === folder.name ? null : folder.name
-                          )
-                        }
-                        className={`w-full flex items-center justify-between rounded-md px-3 py-2 text-sm transition-colors ${
-                          activeFolder === folder.name
-                            ? "bg-[#A21CAF]/10 text-[#A21CAF] font-medium"
-                            : "text-gray-700 hover:bg-gray-100"
-                        }`}
+                        className="group relative"
                       >
-                        <div className="flex items-center gap-2">
-                          <FolderIcon className="h-4 w-4" />
-                          <span>{folder.name}</span>
-                        </div>
-                        <Badge
-                          variant="secondary"
-                          className="text-xs px-1.5 py-0"
+                        <button
+                          onClick={() =>
+                            setActiveFolder(
+                              activeFolder === folder.name ? null : folder.name
+                            )
+                          }
+                          className={`w-full flex items-center justify-between rounded-md px-3 py-2.5 text-sm transition-colors ${
+                            activeFolder === folder.name
+                              ? "bg-[#A21CAF]/10 text-[#A21CAF] font-medium"
+                              : "text-gray-700 hover:bg-gray-100"
+                          }`}
                         >
-                          {folder.count}
-                        </Badge>
-                      </button>
+                          <div className="flex items-center gap-2">
+                            <FolderIcon className="h-4 w-4" />
+                            <span className="truncate">{folder.name}</span>
+                          </div>
+                          <div className="flex items-center gap-1">
+                            {/* Delete button - only for non-General folders */}
+                            {folder.name !== "General" && (
+                              <button
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleDeleteFolder(folder.name);
+                                }}
+                                className="p-1 rounded opacity-0 group-hover:opacity-100 hover:bg-red-100 text-gray-400 hover:text-red-600 transition-all"
+                                title="Delete folder"
+                              >
+                                <Trash2 className="h-3 w-3" />
+                              </button>
+                            )}
+                            <Badge
+                              variant="secondary"
+                              className="text-xs px-1.5 py-0"
+                            >
+                              {folder.count}
+                            </Badge>
+                          </div>
+                        </button>
+                      </div>
                     ))}
                   </div>
                 </div>
