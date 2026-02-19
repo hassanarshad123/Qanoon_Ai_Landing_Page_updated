@@ -133,7 +133,7 @@ export default function BriefListPage() {
             </Card>
           ) : (
             <>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="max-w-xl mx-auto space-y-6">
                 {/* Option 1: Multi-Document Upload */}
                 <div className="space-y-2">
                   <p className="text-xs font-semibold uppercase tracking-wider text-[#84752F]">
@@ -142,16 +142,11 @@ export default function BriefListPage() {
                   <MultiDocumentUpload onDocumentsReady={handleDocumentsReady} />
                 </div>
 
-                {/* Divider for mobile, visual separator */}
-                <div className="hidden md:flex items-center justify-center">
-                  <div className="h-full w-px bg-gray-200" />
-                </div>
-                <div className="md:hidden">
-                  <div className="flex items-center gap-3">
-                    <Separator className="flex-1" />
-                    <span className="text-xs text-gray-400 font-medium">OR</span>
-                    <Separator className="flex-1" />
-                  </div>
+                {/* OR Divider */}
+                <div className="flex items-center gap-3">
+                  <Separator className="flex-1" />
+                  <span className="text-xs text-gray-400 font-medium">OR</span>
+                  <Separator className="flex-1" />
                 </div>
 
                 {/* Option 2: Select Existing Case */}
@@ -165,17 +160,15 @@ export default function BriefListPage() {
                     placeholder="Choose a case to generate brief..."
                   />
                 </div>
-              </div>
 
-              <Separator />
+                <Separator />
 
-              <div className="flex items-center justify-between">
-                {documentsReady && documentsReady.length > 0 && (
-                  <p className="text-xs text-emerald-600 font-medium">
-                    {documentsReady.length} document{documentsReady.length !== 1 ? "s" : ""} ready
-                  </p>
-                )}
-                <div className="ml-auto">
+                <div className="flex flex-col items-center gap-2">
+                  {documentsReady && documentsReady.length > 0 && (
+                    <p className="text-xs text-emerald-600 font-medium">
+                      {documentsReady.length} document{documentsReady.length !== 1 ? "s" : ""} ready
+                    </p>
+                  )}
                   <Button
                     className="bg-[#A21CAF] hover:bg-[#86198F] gap-2"
                     onClick={handleGenerateBrief}
