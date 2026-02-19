@@ -68,6 +68,22 @@ export default auth((req) => {
     return NextResponse.next();
   }
 
+  // Protected: /students/*
+  if (pathname.startsWith("/students")) {
+    if (!session?.user) return redirectToLogin(req);
+    if (!session.user.onboardingCompleted) return redirectToOnboarding(req);
+    if (session.user.role !== "law_student") return redirectToPortal(req, session);
+    return NextResponse.next();
+  }
+
+  // Protected: /citizens/*
+  if (pathname.startsWith("/citizens")) {
+    if (!session?.user) return redirectToLogin(req);
+    if (!session.user.onboardingCompleted) return redirectToOnboarding(req);
+    if (session.user.role !== "common_person") return redirectToPortal(req, session);
+    return NextResponse.next();
+  }
+
   // Protected: /admin/*
   if (pathname.startsWith("/admin")) {
     if (!session?.user) return redirectToLogin(req);
@@ -113,6 +129,10 @@ function redirectToPortal(req: any, session: any) {
     url.pathname = "/judges";
   } else if (role === "lawyer") {
     url.pathname = "/lawyers";
+  } else if (role === "law_student") {
+    url.pathname = "/students";
+  } else if (role === "common_person") {
+    url.pathname = "/citizens";
   } else if (role === "admin") {
     url.pathname = "/admin";
   } else {

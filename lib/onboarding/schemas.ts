@@ -45,3 +45,24 @@ export const judgeLocationSchema = z.object({
 export const comingSoonEmailSchema = z.object({
   email: z.string().email("Please enter a valid email address"),
 });
+
+export const lawStudentEducationSchema = z.object({
+  university: z.string().min(2, "University name is required"),
+  yearOfStudy: z.string().min(1, "Please select your year"),
+  program: z.string().min(1, "Please select your program"),
+});
+
+export const lawStudentInterestsSchema = z.object({
+  areasOfInterest: z.array(z.string()).min(1, "Select at least one area"),
+  careerGoal: z.string().min(1, "Please select a career goal"),
+});
+
+export const citizenConcernSchema = z.object({
+  concernArea: z.string().min(1, "Please select your legal concern area"),
+  briefDescription: z.string().optional().default(""),
+});
+
+export const citizenLocationSchema = z.object({
+  province: z.string().min(1, "Please select a province"),
+  city: z.string().min(1, "Please select a city"),
+});

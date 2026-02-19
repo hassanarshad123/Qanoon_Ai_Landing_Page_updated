@@ -3,9 +3,24 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { CheckCircle2, Loader2 } from "lucide-react";
+import type { UserRole } from "@/lib/onboarding/types";
+
+const DESTINATION_MAP: Record<string, string> = {
+  lawyer: "/lawyers",
+  judge: "/judges",
+  law_student: "/students",
+  common_person: "/citizens",
+};
+
+const ROLE_LABELS: Record<string, string> = {
+  lawyer: "Lawyer",
+  judge: "Judge",
+  law_student: "Law Student",
+  common_person: "Citizen",
+};
 
 interface OnboardingCompleteProps {
-  role: "lawyer" | "judge";
+  role: UserRole;
   isSubmitting?: boolean;
 }
 
@@ -13,8 +28,8 @@ export function OnboardingComplete({ role, isSubmitting }: OnboardingCompletePro
   const router = useRouter();
   const [countdown, setCountdown] = useState(3);
 
-  const destination = role === "judge" ? "/judges" : "/lawyers";
-  const roleLabel = role === "judge" ? "Judge" : "Lawyer";
+  const destination = DESTINATION_MAP[role] || "/onboarding";
+  const roleLabel = ROLE_LABELS[role] || role;
 
   useEffect(() => {
     if (isSubmitting) return;

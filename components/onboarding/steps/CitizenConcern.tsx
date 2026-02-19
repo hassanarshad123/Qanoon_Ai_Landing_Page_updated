@@ -3,9 +3,9 @@
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { lawyerFirmSchema } from "@/lib/onboarding/schemas";
-import { Input } from "@/components/ui/input";
+import { citizenConcernSchema } from "@/lib/onboarding/schemas";
 import { Button } from "@/components/ui/button";
+import { Textarea } from "@/components/ui/textarea";
 import {
   Form,
   FormField,
@@ -15,39 +15,39 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { ArrowLeft, ArrowRight } from "lucide-react";
+import { LEGAL_CONCERN_AREAS } from "@/lib/onboarding/constants";
 import { cn } from "@/lib/utils";
-import { FIRM_TYPES } from "@/lib/onboarding/constants";
-import type { LawyerFirmInfo as LawyerFirmInfoType } from "@/lib/onboarding/types";
+import type { CitizenConcern as CitizenConcernType } from "@/lib/onboarding/types";
 
-type FormValues = z.infer<typeof lawyerFirmSchema>;
+type FormValues = z.infer<typeof citizenConcernSchema>;
 
-interface LawyerFirmInfoProps {
-  data: LawyerFirmInfoType;
+interface CitizenConcernProps {
+  data: CitizenConcernType;
   onSubmit: (data: FormValues) => void;
   onBack: () => void;
-  accentColor?: string;
-  hoverColor?: string;
+  accentColor: string;
+  hoverColor: string;
 }
 
-export function LawyerFirmInfo({ data, onSubmit, onBack, accentColor = "#2563EB", hoverColor = "#1D4ED8" }: LawyerFirmInfoProps) {
+export function CitizenConcern({ data, onSubmit, onBack, accentColor, hoverColor }: CitizenConcernProps) {
   const form = useForm<FormValues>({
-    resolver: zodResolver(lawyerFirmSchema),
+    resolver: zodResolver(citizenConcernSchema),
     defaultValues: {
-      firmType: data.firmType,
-      firmName: data.firmName,
+      concernArea: data.concernArea,
+      briefDescription: data.briefDescription,
     },
   });
 
-  const selectedType = form.watch("firmType");
+  const selectedArea = form.watch("concernArea");
 
   return (
     <div className="space-y-6">
       <div>
         <h2 className="font-serif text-2xl sm:text-3xl font-semibold text-gray-900">
-          Tell us about your firm
+          How can we help you?
         </h2>
         <p className="mt-2 text-gray-500">
-          What kind of practice setup do you have?
+          Select the area of law that concerns you
         </p>
       </div>
 
@@ -55,31 +55,29 @@ export function LawyerFirmInfo({ data, onSubmit, onBack, accentColor = "#2563EB"
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-5">
           <FormField
             control={form.control}
-            name="firmType"
+            name="concernArea"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Firm Type</FormLabel>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-2">
-                  {FIRM_TYPES.map((type) => (
+                <FormLabel>Legal Concern Area</FormLabel>
+                <div className="grid grid-cols-2 gap-3 mt-2">
+                  {LEGAL_CONCERN_AREAS.map((area) => (
                     <button
-                      key={type.value}
+                      key={area}
                       type="button"
-                      onClick={() => field.onChange(type.value)}
+                      onClick={() => field.onChange(area)}
                       className={cn(
-                        "p-4 rounded-lg border-2 text-left transition-all",
-                        field.value === type.value
-                          ? "text-white"
-                          : "border-gray-200 hover:border-gray-300"
+                        "p-3 rounded-lg border-2 text-left text-sm font-medium transition-all",
+                        field.value === area
+                          ? "border-current text-white"
+                          : "border-gray-200 text-gray-700 hover:border-gray-300"
                       )}
                       style={
-                        field.value === type.value
-                          ? { borderColor: accentColor, backgroundColor: `${accentColor}10`, color: accentColor }
+                        field.value === area
+                          ? { backgroundColor: accentColor, borderColor: accentColor, color: "white" }
                           : undefined
                       }
                     >
-                      <span className="text-sm font-medium">
-                        {type.label}
-                      </span>
+                      {area}
                     </button>
                   ))}
                 </div>
@@ -88,15 +86,20 @@ export function LawyerFirmInfo({ data, onSubmit, onBack, accentColor = "#2563EB"
             )}
           />
 
-          {selectedType && selectedType !== "solo" && (
+          {selectedArea && (
             <FormField
               control={form.control}
-              name="firmName"
+              name="briefDescription"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Firm Name</FormLabel>
+                  <FormLabel>Brief Description (optional)</FormLabel>
                   <FormControl>
-                    <Input placeholder="e.g. Ahmed & Associates" {...field} />
+                    <Textarea
+                      placeholder="Tell us a bit more about your situation..."
+                      className="resize-none"
+                      rows={3}
+                      {...field}
+                    />
                   </FormControl>
                   <FormMessage />
                 </FormItem>

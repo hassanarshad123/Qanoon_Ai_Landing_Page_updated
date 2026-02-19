@@ -1,3 +1,5 @@
+import type { UserRole } from "./types";
+
 export const PROVINCES = [
   "Punjab",
   "Sindh",
@@ -129,4 +131,88 @@ export const JUDGE_STEPS = [
   { id: "personal", label: "Personal Info" },
   { id: "judicial", label: "Judicial Info" },
   { id: "location", label: "Location" },
+] as const;
+
+export const LAW_STUDENT_STEPS = [
+  { id: "role", label: "Role" },
+  { id: "personal", label: "About You" },
+  { id: "education", label: "Education" },
+  { id: "interests", label: "Interests" },
+] as const;
+
+export const COMMON_PERSON_STEPS = [
+  { id: "role", label: "Role" },
+  { id: "personal", label: "About You" },
+  { id: "concern", label: "Legal Need" },
+  { id: "location", label: "Location" },
+] as const;
+
+export const ROLE_COLORS: Record<UserRole, { primary: string; light: string; gradient: string; hover: string }> = {
+  lawyer: { primary: "#2563EB", light: "rgba(37,99,235,0.1)", gradient: "from-blue-600 to-blue-800", hover: "#1D4ED8" },
+  judge: { primary: "#A21CAF", light: "rgba(162,28,175,0.1)", gradient: "from-purple-600 to-purple-800", hover: "#86198F" },
+  law_student: { primary: "#059669", light: "rgba(5,150,105,0.1)", gradient: "from-emerald-600 to-emerald-800", hover: "#047857" },
+  common_person: { primary: "#D97706", light: "rgba(217,119,6,0.1)", gradient: "from-amber-600 to-amber-800", hover: "#B45309" },
+};
+
+export const VALUE_SLIDES: Record<UserRole, { title: string; stat: string; description: string }[]> = {
+  lawyer: [
+    { title: "AI-Powered Research", stat: "5+ hours saved weekly", description: "Search Pakistan's entire case law database in seconds with intelligent AI that understands legal context." },
+    { title: "Smart Brief Drafting", stat: "70% faster drafts", description: "Generate professional legal briefs with AI assistance, complete with relevant citations and precedents." },
+    { title: "Practice Management", stat: "Used by 500+ lawyers", description: "Track cases, clients, and deadlines in one place. Stay organized and never miss a hearing." },
+  ],
+  judge: [
+    { title: "Case Analysis", stat: "3x faster review", description: "AI-powered case summaries and precedent analysis help you review matters more efficiently." },
+    { title: "Judgment Writing", stat: "Save 2+ hours/judgment", description: "Draft well-structured judgments with relevant citations and proper legal formatting." },
+    { title: "Bench Resources", stat: "Complete legal database", description: "Access statutes, amendments, and case law instantly from your bench." },
+  ],
+  law_student: [
+    { title: "Study Smarter", stat: "10,000+ case summaries", description: "Instant AI summaries of landmark Pakistani cases to accelerate your learning." },
+    { title: "Exam Preparation", stat: "Used by top students", description: "Practice with AI-generated questions and model answers tailored to your syllabus." },
+    { title: "Career Head Start", stat: "Real legal tools", description: "Learn the same AI tools that top law firms are already using in practice." },
+  ],
+  common_person: [
+    { title: "Know Your Rights", stat: "Plain language", description: "Understand complex laws explained in simple Urdu & English that anyone can follow." },
+    { title: "Find Legal Help", stat: "500+ verified lawyers", description: "Connect with the right lawyer for your specific issue, verified and reviewed." },
+    { title: "Track Your Case", stat: "Stay informed", description: "Get updates and understand every step of your legal journey with clear guidance." },
+  ],
+};
+
+export const YEAR_OF_STUDY = [
+  "1st Year",
+  "2nd Year",
+  "3rd Year",
+  "4th Year",
+  "5th Year (LL.M)",
+  "PhD/Research",
+] as const;
+
+export const LAW_PROGRAMS = [
+  "LL.B (5-Year)",
+  "LL.B (3-Year)",
+  "LL.M",
+  "Bar-at-Law",
+  "PhD in Law",
+] as const;
+
+export const CAREER_GOALS = [
+  "Litigation",
+  "Corporate Practice",
+  "Judiciary",
+  "Academia",
+  "Government/Public Service",
+  "NGO/Human Rights",
+  "Not sure yet",
+] as const;
+
+export const LEGAL_CONCERN_AREAS = [
+  "Family & Divorce",
+  "Property & Land",
+  "Criminal Defense",
+  "Employment & Labor",
+  "Business & Contracts",
+  "Consumer Rights",
+  "Immigration",
+  "Inheritance & Succession",
+  "Cybercrime",
+  "Other",
 ] as const;

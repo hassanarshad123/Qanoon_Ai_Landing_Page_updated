@@ -3,8 +3,7 @@
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { lawyerPracticeSchema } from "@/lib/onboarding/schemas";
-import { Input } from "@/components/ui/input";
+import { lawStudentInterestsSchema } from "@/lib/onboarding/schemas";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import {
@@ -22,33 +21,26 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { ArrowLeft, ArrowRight } from "lucide-react";
-import { PRACTICE_AREAS, EXPERIENCE_RANGES } from "@/lib/onboarding/constants";
-import type { LawyerPracticeDetails as LawyerPracticeDetailsType } from "@/lib/onboarding/types";
+import { ArrowLeft, Check } from "lucide-react";
+import { PRACTICE_AREAS, CAREER_GOALS } from "@/lib/onboarding/constants";
+import type { LawStudentInterests } from "@/lib/onboarding/types";
 
-type FormValues = z.infer<typeof lawyerPracticeSchema>;
+type FormValues = z.infer<typeof lawStudentInterestsSchema>;
 
-interface LawyerPracticeDetailsProps {
-  data: LawyerPracticeDetailsType;
+interface StudentInterestsProps {
+  data: LawStudentInterests;
   onSubmit: (data: FormValues) => void;
   onBack: () => void;
-  accentColor?: string;
-  hoverColor?: string;
+  accentColor: string;
+  hoverColor: string;
 }
 
-export function LawyerPracticeDetails({
-  data,
-  onSubmit,
-  onBack,
-  accentColor = "#2563EB",
-  hoverColor = "#1D4ED8",
-}: LawyerPracticeDetailsProps) {
+export function StudentInterests({ data, onSubmit, onBack, accentColor, hoverColor }: StudentInterestsProps) {
   const form = useForm<FormValues>({
-    resolver: zodResolver(lawyerPracticeSchema),
+    resolver: zodResolver(lawStudentInterestsSchema),
     defaultValues: {
-      barCouncilNumber: data.barCouncilNumber,
-      yearsOfExperience: data.yearsOfExperience,
-      practiceAreas: data.practiceAreas,
+      areasOfInterest: data.areasOfInterest,
+      careerGoal: data.careerGoal,
     },
   });
 
@@ -56,10 +48,10 @@ export function LawyerPracticeDetails({
     <div className="space-y-6">
       <div>
         <h2 className="font-serif text-2xl sm:text-3xl font-semibold text-gray-900">
-          Tell us about your practice
+          What areas of law excite you?
         </h2>
         <p className="mt-2 text-gray-500">
-          This helps us tailor your legal tools
+          This helps us personalize your study resources
         </p>
       </div>
 
@@ -67,55 +59,16 @@ export function LawyerPracticeDetails({
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-5">
           <FormField
             control={form.control}
-            name="barCouncilNumber"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Bar Council Registration Number</FormLabel>
-                <FormControl>
-                  <Input placeholder="e.g. LHC/2020/1234" {...field} />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-
-          <FormField
-            control={form.control}
-            name="yearsOfExperience"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Years of Experience</FormLabel>
-                <Select onValueChange={field.onChange} defaultValue={field.value}>
-                  <FormControl>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select experience" />
-                    </SelectTrigger>
-                  </FormControl>
-                  <SelectContent>
-                    {EXPERIENCE_RANGES.map((range) => (
-                      <SelectItem key={range} value={range}>
-                        {range}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-
-          <FormField
-            control={form.control}
-            name="practiceAreas"
+            name="areasOfInterest"
             render={() => (
               <FormItem>
-                <FormLabel>Practice Areas</FormLabel>
+                <FormLabel>Areas of Interest</FormLabel>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 mt-2">
                   {PRACTICE_AREAS.map((area) => (
                     <FormField
                       key={area}
                       control={form.control}
-                      name="practiceAreas"
+                      name="areasOfInterest"
                       render={({ field }) => (
                         <FormItem className="flex items-center space-x-2 space-y-0">
                           <FormControl>
@@ -144,6 +97,31 @@ export function LawyerPracticeDetails({
             )}
           />
 
+          <FormField
+            control={form.control}
+            name="careerGoal"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Career Goal</FormLabel>
+                <Select onValueChange={field.onChange} defaultValue={field.value}>
+                  <FormControl>
+                    <SelectTrigger>
+                      <SelectValue placeholder="What do you want to do after graduation?" />
+                    </SelectTrigger>
+                  </FormControl>
+                  <SelectContent>
+                    {CAREER_GOALS.map((goal) => (
+                      <SelectItem key={goal} value={goal}>
+                        {goal}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
           <div className="flex items-center justify-between pt-4">
             <Button type="button" variant="outline" onClick={onBack} className="gap-2">
               <ArrowLeft className="h-4 w-4" />
@@ -156,8 +134,8 @@ export function LawyerPracticeDetails({
               onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = hoverColor)}
               onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = accentColor)}
             >
-              Next
-              <ArrowRight className="h-4 w-4" />
+              Complete
+              <Check className="h-4 w-4" />
             </Button>
           </div>
         </form>

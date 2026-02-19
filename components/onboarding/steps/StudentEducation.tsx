@@ -3,7 +3,7 @@
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { lawyerLocationSchema } from "@/lib/onboarding/schemas";
+import { lawStudentEducationSchema } from "@/lib/onboarding/schemas";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import {
@@ -22,40 +22,37 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { ArrowLeft, ArrowRight } from "lucide-react";
-import { PROVINCES, CITIES_BY_PROVINCE } from "@/lib/onboarding/constants";
-import type { LawyerLocation as LawyerLocationType } from "@/lib/onboarding/types";
+import { YEAR_OF_STUDY, LAW_PROGRAMS } from "@/lib/onboarding/constants";
+import type { LawStudentEducation } from "@/lib/onboarding/types";
 
-type FormValues = z.infer<typeof lawyerLocationSchema>;
+type FormValues = z.infer<typeof lawStudentEducationSchema>;
 
-interface LawyerLocationProps {
-  data: LawyerLocationType;
+interface StudentEducationProps {
+  data: LawStudentEducation;
   onSubmit: (data: FormValues) => void;
   onBack: () => void;
-  accentColor?: string;
-  hoverColor?: string;
+  accentColor: string;
+  hoverColor: string;
 }
 
-export function LawyerLocation({ data, onSubmit, onBack, accentColor = "#2563EB", hoverColor = "#1D4ED8" }: LawyerLocationProps) {
+export function StudentEducation({ data, onSubmit, onBack, accentColor, hoverColor }: StudentEducationProps) {
   const form = useForm<FormValues>({
-    resolver: zodResolver(lawyerLocationSchema),
+    resolver: zodResolver(lawStudentEducationSchema),
     defaultValues: {
-      province: data.province,
-      city: data.city,
-      primaryCourt: data.primaryCourt,
+      university: data.university,
+      yearOfStudy: data.yearOfStudy,
+      program: data.program,
     },
   });
-
-  const selectedProvince = form.watch("province");
-  const cities = selectedProvince ? CITIES_BY_PROVINCE[selectedProvince] || [] : [];
 
   return (
     <div className="space-y-6">
       <div>
         <h2 className="font-serif text-2xl sm:text-3xl font-semibold text-gray-900">
-          Where do you practice?
+          Where are you studying law?
         </h2>
         <p className="mt-2 text-gray-500">
-          Help us connect you with local legal resources
+          Tell us about your law school journey
         </p>
       </div>
 
@@ -63,75 +60,63 @@ export function LawyerLocation({ data, onSubmit, onBack, accentColor = "#2563EB"
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
           <FormField
             control={form.control}
-            name="province"
+            name="university"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Province / Territory</FormLabel>
-                <Select
-                  onValueChange={(value) => {
-                    field.onChange(value);
-                    form.setValue("city", "");
-                  }}
-                  defaultValue={field.value}
-                >
-                  <FormControl>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select province" />
-                    </SelectTrigger>
-                  </FormControl>
-                  <SelectContent>
-                    {PROVINCES.map((p) => (
-                      <SelectItem key={p} value={p}>
-                        {p}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-
-          <FormField
-            control={form.control}
-            name="city"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>City</FormLabel>
-                <Select
-                  onValueChange={field.onChange}
-                  defaultValue={field.value}
-                  disabled={!selectedProvince}
-                >
-                  <FormControl>
-                    <SelectTrigger>
-                      <SelectValue
-                        placeholder={selectedProvince ? "Select city" : "Select province first"}
-                      />
-                    </SelectTrigger>
-                  </FormControl>
-                  <SelectContent>
-                    {cities.map((c) => (
-                      <SelectItem key={c} value={c}>
-                        {c}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-
-          <FormField
-            control={form.control}
-            name="primaryCourt"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Primary Court</FormLabel>
+                <FormLabel>University / Law School</FormLabel>
                 <FormControl>
-                  <Input placeholder="e.g. Lahore High Court" {...field} />
+                  <Input placeholder="e.g. Punjab University Law College" {...field} />
                 </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
+          <FormField
+            control={form.control}
+            name="yearOfStudy"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Year of Study</FormLabel>
+                <Select onValueChange={field.onChange} defaultValue={field.value}>
+                  <FormControl>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select your year" />
+                    </SelectTrigger>
+                  </FormControl>
+                  <SelectContent>
+                    {YEAR_OF_STUDY.map((year) => (
+                      <SelectItem key={year} value={year}>
+                        {year}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
+          <FormField
+            control={form.control}
+            name="program"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Program</FormLabel>
+                <Select onValueChange={field.onChange} defaultValue={field.value}>
+                  <FormControl>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select your program" />
+                    </SelectTrigger>
+                  </FormControl>
+                  <SelectContent>
+                    {LAW_PROGRAMS.map((prog) => (
+                      <SelectItem key={prog} value={prog}>
+                        {prog}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
                 <FormMessage />
               </FormItem>
             )}

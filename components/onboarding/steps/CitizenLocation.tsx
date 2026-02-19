@@ -3,8 +3,7 @@
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { judgeLocationSchema } from "@/lib/onboarding/schemas";
-import { Input } from "@/components/ui/input";
+import { citizenLocationSchema } from "@/lib/onboarding/schemas";
 import { Button } from "@/components/ui/button";
 import {
   Form,
@@ -23,25 +22,24 @@ import {
 } from "@/components/ui/select";
 import { ArrowLeft, Check } from "lucide-react";
 import { PROVINCES, CITIES_BY_PROVINCE } from "@/lib/onboarding/constants";
-import type { JudgeLocation as JudgeLocationType } from "@/lib/onboarding/types";
+import type { CitizenLocation as CitizenLocationType } from "@/lib/onboarding/types";
 
-type FormValues = z.infer<typeof judgeLocationSchema>;
+type FormValues = z.infer<typeof citizenLocationSchema>;
 
-interface JudgeLocationProps {
-  data: JudgeLocationType;
+interface CitizenLocationProps {
+  data: CitizenLocationType;
   onSubmit: (data: FormValues) => void;
   onBack: () => void;
-  accentColor?: string;
-  hoverColor?: string;
+  accentColor: string;
+  hoverColor: string;
 }
 
-export function JudgeLocation({ data, onSubmit, onBack, accentColor = "#A21CAF", hoverColor = "#86198F" }: JudgeLocationProps) {
+export function CitizenLocation({ data, onSubmit, onBack, accentColor, hoverColor }: CitizenLocationProps) {
   const form = useForm<FormValues>({
-    resolver: zodResolver(judgeLocationSchema),
+    resolver: zodResolver(citizenLocationSchema),
     defaultValues: {
       province: data.province,
       city: data.city,
-      courtName: data.courtName,
     },
   });
 
@@ -52,10 +50,10 @@ export function JudgeLocation({ data, onSubmit, onBack, accentColor = "#A21CAF",
     <div className="space-y-6">
       <div>
         <h2 className="font-serif text-2xl sm:text-3xl font-semibold text-gray-900">
-          Where is your court located?
+          Where are you located?
         </h2>
         <p className="mt-2 text-gray-500">
-          Help us provide location-relevant resources
+          This helps us connect you with local legal resources
         </p>
       </div>
 
@@ -118,20 +116,6 @@ export function JudgeLocation({ data, onSubmit, onBack, accentColor = "#A21CAF",
                     ))}
                   </SelectContent>
                 </Select>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-
-          <FormField
-            control={form.control}
-            name="courtName"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Court Name</FormLabel>
-                <FormControl>
-                  <Input placeholder="e.g. District Court Lahore" {...field} />
-                </FormControl>
                 <FormMessage />
               </FormItem>
             )}

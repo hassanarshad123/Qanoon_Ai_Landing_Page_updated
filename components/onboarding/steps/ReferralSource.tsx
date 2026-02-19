@@ -25,9 +25,11 @@ interface ReferralSourceProps {
   data: ReferralInfo;
   onSubmit: (data: FormValues) => void;
   onBack: () => void;
+  accentColor?: string;
+  hoverColor?: string;
 }
 
-export function ReferralSource({ data, onSubmit, onBack }: ReferralSourceProps) {
+export function ReferralSource({ data, onSubmit, onBack, accentColor = "#2563EB", hoverColor = "#1D4ED8" }: ReferralSourceProps) {
   const form = useForm<FormValues>({
     resolver: zodResolver(referralSchema),
     defaultValues: {
@@ -40,9 +42,9 @@ export function ReferralSource({ data, onSubmit, onBack }: ReferralSourceProps) 
 
   return (
     <div className="space-y-6">
-      <div className="text-center">
+      <div>
         <h2 className="font-serif text-2xl sm:text-3xl font-semibold text-gray-900">
-          One Last Thing
+          One last thing
         </h2>
         <p className="mt-2 text-gray-500">
           How did you hear about QanoonAI? (Optional)
@@ -50,10 +52,7 @@ export function ReferralSource({ data, onSubmit, onBack }: ReferralSourceProps) 
       </div>
 
       <Form {...form}>
-        <form
-          onSubmit={form.handleSubmit(onSubmit)}
-          className="space-y-5 max-w-md mx-auto"
-        >
+        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-5">
           <FormField
             control={form.control}
             name="source"
@@ -106,12 +105,7 @@ export function ReferralSource({ data, onSubmit, onBack }: ReferralSourceProps) 
           )}
 
           <div className="flex items-center justify-between pt-4">
-            <Button
-              type="button"
-              variant="outline"
-              onClick={onBack}
-              className="gap-2"
-            >
+            <Button type="button" variant="outline" onClick={onBack} className="gap-2">
               <ArrowLeft className="h-4 w-4" />
               Back
             </Button>
@@ -125,7 +119,10 @@ export function ReferralSource({ data, onSubmit, onBack }: ReferralSourceProps) 
               </Button>
               <Button
                 type="submit"
-                className="gap-2 bg-[#A21CAF] hover:bg-[#86198F] text-white"
+                className="gap-2 text-white"
+                style={{ backgroundColor: accentColor }}
+                onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = hoverColor)}
+                onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = accentColor)}
               >
                 Complete
                 <Check className="h-4 w-4" />

@@ -10,11 +10,33 @@ import {
   clearOnboardingState,
   getDefaultState,
 } from "@/lib/onboarding/storage";
-import { LAWYER_STEPS, JUDGE_STEPS } from "@/lib/onboarding/constants";
+import { LAWYER_STEPS, JUDGE_STEPS, LAW_STUDENT_STEPS, COMMON_PERSON_STEPS } from "@/lib/onboarding/constants";
 import { submitOnboarding } from "@/lib/onboarding/submit";
 
 interface UseOnboardingOptions {
   userId?: string;
+}
+
+const REDIRECT_MAP: Record<string, string> = {
+  lawyer: "/lawyers",
+  judge: "/judges",
+  law_student: "/students",
+  common_person: "/citizens",
+};
+
+function getStepsForRole(role: UserRole | null) {
+  switch (role) {
+    case "lawyer":
+      return LAWYER_STEPS;
+    case "judge":
+      return JUDGE_STEPS;
+    case "law_student":
+      return LAW_STUDENT_STEPS;
+    case "common_person":
+      return COMMON_PERSON_STEPS;
+    default:
+      return LAWYER_STEPS;
+  }
 }
 
 export function useOnboarding(options: UseOnboardingOptions = {}) {
@@ -45,7 +67,7 @@ export function useOnboarding(options: UseOnboardingOptions = {}) {
     [persist]
   );
 
-  const steps = state.role === "judge" ? JUDGE_STEPS : LAWYER_STEPS;
+  const steps = getStepsForRole(state.role);
   const totalSteps = steps.length;
   const isLastStep = state.currentStep >= totalSteps - 1;
 
@@ -53,15 +75,35 @@ export function useOnboarding(options: UseOnboardingOptions = {}) {
     if (isLastStep) {
       setIsSubmitting(true);
       setSubmitError(null);
-      const role = state.role as "lawyer" | "judge";
-      const formData = role === "lawyer" ? state.lawyerData : state.judgeData;
-      const email =
-        role === "lawyer"
-          ? state.lawyerData.personalInfo.email
-          : state.judgeData.personalInfo.email;
+      const role = state.role!;
+
+      let formData: Record<string, unknown>;
+      let email: string;
+
+      switch (role) {
+        case "lawyer":
+          formData = state.lawyerData as unknown as Record<string, unknown>;
+          email = state.lawyerData.personalInfo.email;
+          break;
+        case "judge":
+          formData = state.judgeData as unknown as Record<string, unknown>;
+          email = state.judgeData.personalInfo.email;
+          break;
+        case "law_student":
+          formData = state.lawStudentData as unknown as Record<string, unknown>;
+          email = state.lawStudentData.personalInfo.email;
+          break;
+        case "common_person":
+          formData = state.commonPersonData as unknown as Record<string, unknown>;
+          email = state.commonPersonData.personalInfo.email;
+          break;
+        default:
+          setIsSubmitting(false);
+          return;
+      }
 
       try {
-        const result = await submitOnboarding(role, email, formData as unknown as Record<string, unknown>, options.userId);
+        const result = await submitOnboarding(role, email, formData, options.userId);
 
         if (!result.success) {
           setSubmitError(result.error ?? "Submission failed. Please try again.");
@@ -81,13 +123,13 @@ export function useOnboarding(options: UseOnboardingOptions = {}) {
       }
 
       setIsSubmitting(false);
-      const redirectTo = role === "judge" ? "/judges" : "/lawyers";
+      const redirectTo = REDIRECT_MAP[role] || "/onboarding";
       clearOnboardingState();
       router.push(redirectTo);
       return;
     }
     persist({ currentStep: state.currentStep + 1 });
-  }, [isLastStep, state.role, state.lawyerData, state.judgeData, state.currentStep, persist, router, options.userId, updateSession]);
+  }, [isLastStep, state, persist, router, options.userId, updateSession]);
 
   const prevStep = useCallback(() => {
     if (state.currentStep <= 0) return;
@@ -128,6 +170,40 @@ export function useOnboarding(options: UseOnboardingOptions = {}) {
     []
   );
 
+  const updateLawStudentData = useCallback(
+    (section: keyof OnboardingState["lawStudentData"], data: Record<string, unknown>) => {
+      setState((prev) => {
+        const next = {
+          ...prev,
+          lawStudentData: {
+            ...prev.lawStudentData,
+            [section]: { ...prev.lawStudentData[section], ...data },
+          },
+        };
+        saveOnboardingState(next);
+        return next;
+      });
+    },
+    []
+  );
+
+  const updateCommonPersonData = useCallback(
+    (section: keyof OnboardingState["commonPersonData"], data: Record<string, unknown>) => {
+      setState((prev) => {
+        const next = {
+          ...prev,
+          commonPersonData: {
+            ...prev.commonPersonData,
+            [section]: { ...prev.commonPersonData[section], ...data },
+          },
+        };
+        saveOnboardingState(next);
+        return next;
+      });
+    },
+    []
+  );
+
   const reset = useCallback(() => {
     clearOnboardingState();
     setState(getDefaultState());
@@ -146,6 +222,8 @@ export function useOnboarding(options: UseOnboardingOptions = {}) {
     prevStep,
     updateLawyerData,
     updateJudgeData,
+    updateLawStudentData,
+    updateCommonPersonData,
     persist,
     reset,
   };

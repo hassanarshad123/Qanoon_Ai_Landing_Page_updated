@@ -17,7 +17,16 @@ const defaultState: OnboardingState = {
     judicialInfo: { courtLevel: "", designation: "" },
     location: { province: "", city: "", courtName: "" },
   },
-  comingSoonEmail: "",
+  lawStudentData: {
+    personalInfo: { fullName: "", email: "", phone: "" },
+    education: { university: "", yearOfStudy: "", program: "" },
+    interests: { areasOfInterest: [], careerGoal: "" },
+  },
+  commonPersonData: {
+    personalInfo: { fullName: "", email: "", phone: "" },
+    legalConcern: { concernArea: "", briefDescription: "" },
+    location: { province: "", city: "" },
+  },
 };
 
 export function getOnboardingState(): OnboardingState {

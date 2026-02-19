@@ -53,10 +53,44 @@ export interface JudgeData {
   location: JudgeLocation;
 }
 
+export interface LawStudentEducation {
+  university: string;
+  yearOfStudy: string;
+  program: string;
+}
+
+export interface LawStudentInterests {
+  areasOfInterest: string[];
+  careerGoal: string;
+}
+
+export interface LawStudentData {
+  personalInfo: PersonalInfo;
+  education: LawStudentEducation;
+  interests: LawStudentInterests;
+}
+
+export interface CitizenConcern {
+  concernArea: string;
+  briefDescription: string;
+}
+
+export interface CitizenLocation {
+  province: string;
+  city: string;
+}
+
+export interface CommonPersonData {
+  personalInfo: PersonalInfo;
+  legalConcern: CitizenConcern;
+  location: CitizenLocation;
+}
+
 export interface OnboardingState {
   role: UserRole | null;
   currentStep: number;
   lawyerData: LawyerData;
   judgeData: JudgeData;
-  comingSoonEmail: string;
+  lawStudentData: LawStudentData;
+  commonPersonData: CommonPersonData;
 }

@@ -24,9 +24,11 @@ interface PersonalInfoProps {
   onSubmit: (data: FormValues) => void;
   onBack: () => void;
   emailReadOnly?: boolean;
+  accentColor?: string;
+  hoverColor?: string;
 }
 
-export function PersonalInfo({ data, onSubmit, onBack, emailReadOnly }: PersonalInfoProps) {
+export function PersonalInfo({ data, onSubmit, onBack, emailReadOnly, accentColor = "#A21CAF", hoverColor = "#86198F" }: PersonalInfoProps) {
   const form = useForm<FormValues>({
     resolver: zodResolver(personalInfoSchema),
     defaultValues: {
@@ -38,20 +40,17 @@ export function PersonalInfo({ data, onSubmit, onBack, emailReadOnly }: Personal
 
   return (
     <div className="space-y-6">
-      <div className="text-center">
+      <div>
         <h2 className="font-serif text-2xl sm:text-3xl font-semibold text-gray-900">
-          Personal Information
+          Let&apos;s get to know you
         </h2>
         <p className="mt-2 text-gray-500">
-          Let&apos;s start with your basic details
+          Your basic details help us personalize your experience
         </p>
       </div>
 
       <Form {...form}>
-        <form
-          onSubmit={form.handleSubmit(onSubmit)}
-          className="space-y-4 max-w-md mx-auto"
-        >
+        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
           <FormField
             control={form.control}
             name="fullName"
@@ -112,7 +111,10 @@ export function PersonalInfo({ data, onSubmit, onBack, emailReadOnly }: Personal
             </Button>
             <Button
               type="submit"
-              className="gap-2 bg-[#A21CAF] hover:bg-[#86198F] text-white"
+              className="gap-2 text-white"
+              style={{ backgroundColor: accentColor }}
+              onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = hoverColor)}
+              onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = accentColor)}
             >
               Next
               <ArrowRight className="h-4 w-4" />

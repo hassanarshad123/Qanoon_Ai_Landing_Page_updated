@@ -31,12 +31,16 @@ interface JudgeJudicialInfoProps {
   data: JudgeJudicialInfoType;
   onSubmit: (data: FormValues) => void;
   onBack: () => void;
+  accentColor?: string;
+  hoverColor?: string;
 }
 
 export function JudgeJudicialInfo({
   data,
   onSubmit,
   onBack,
+  accentColor = "#A21CAF",
+  hoverColor = "#86198F",
 }: JudgeJudicialInfoProps) {
   const form = useForm<FormValues>({
     resolver: zodResolver(judgeJudicialSchema),
@@ -48,30 +52,24 @@ export function JudgeJudicialInfo({
 
   return (
     <div className="space-y-6">
-      <div className="text-center">
+      <div>
         <h2 className="font-serif text-2xl sm:text-3xl font-semibold text-gray-900">
-          Judicial Information
+          Tell us about your judicial role
         </h2>
         <p className="mt-2 text-gray-500">
-          Tell us about your judicial role
+          This helps us provide the right tools for your bench
         </p>
       </div>
 
       <Form {...form}>
-        <form
-          onSubmit={form.handleSubmit(onSubmit)}
-          className="space-y-4 max-w-md mx-auto"
-        >
+        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
           <FormField
             control={form.control}
             name="courtLevel"
             render={({ field }) => (
               <FormItem>
                 <FormLabel>Court Level</FormLabel>
-                <Select
-                  onValueChange={field.onChange}
-                  defaultValue={field.value}
-                >
+                <Select onValueChange={field.onChange} defaultValue={field.value}>
                   <FormControl>
                     <SelectTrigger>
                       <SelectValue placeholder="Select court level" />
@@ -97,10 +95,7 @@ export function JudgeJudicialInfo({
               <FormItem>
                 <FormLabel>Designation</FormLabel>
                 <FormControl>
-                  <Input
-                    placeholder="e.g. District & Sessions Judge"
-                    {...field}
-                  />
+                  <Input placeholder="e.g. District & Sessions Judge" {...field} />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -108,18 +103,16 @@ export function JudgeJudicialInfo({
           />
 
           <div className="flex items-center justify-between pt-4">
-            <Button
-              type="button"
-              variant="outline"
-              onClick={onBack}
-              className="gap-2"
-            >
+            <Button type="button" variant="outline" onClick={onBack} className="gap-2">
               <ArrowLeft className="h-4 w-4" />
               Back
             </Button>
             <Button
               type="submit"
-              className="gap-2 bg-[#A21CAF] hover:bg-[#86198F] text-white"
+              className="gap-2 text-white"
+              style={{ backgroundColor: accentColor }}
+              onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = hoverColor)}
+              onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = accentColor)}
             >
               Next
               <ArrowRight className="h-4 w-4" />
