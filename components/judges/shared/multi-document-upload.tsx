@@ -133,6 +133,14 @@ export function MultiDocumentUpload({ onDocumentsReady }: MultiDocumentUploadPro
     documents.every((d) => d.status === "extracted" || d.status === "skipped" || d.status === "error") &&
     documents.some((d) => d.status === "extracted");
   const hasErrors = documents.some((d) => d.status === "error");
+
+  // Auto-trigger onDocumentsReady when all documents reach terminal state
+  useEffect(() => {
+    if (allReady) {
+      onDocumentsReady(documents);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [allReady]);
   const isProcessing = documents.some((d) => d.status === "extracting" || d.status === "pending");
 
   const statusIcon = (status: UploadedDocument["status"]) => {
@@ -253,7 +261,11 @@ export function MultiDocumentUpload({ onDocumentsReady }: MultiDocumentUploadPro
                   {doc.totalPages > 0 && <span>{doc.totalPages} pages</span>}
                   {doc.status === "extracting" && <span>Extracting text...</span>}
                   {doc.status === "skipped" && (
-                    <span className="text-amber-600">Image — no text extracted</span>
+                    <span className="text-amber-600">
+                      {doc.fileFormat === "doc"
+                        ? "Legacy .doc — convert to .docx"
+                        : "Image — no text extracted"}
+                    </span>
                   )}
                   {doc.status === "error" && (
                     <span className="text-red-500">{doc.error}</span>
