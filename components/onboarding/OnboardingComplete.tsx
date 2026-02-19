@@ -33,28 +33,35 @@ export function OnboardingComplete({
   const [phase, setPhase] = useState<Phase>("dissolve");
   const calledRef = useRef(false);
 
-  // Respect prefers-reduced-motion
   useEffect(() => {
     const mq = window.matchMedia("(prefers-reduced-motion: reduce)");
-    if (mq.matches) {
-      onComplete();
-      return;
-    }
-
     const timers: ReturnType<typeof setTimeout>[] = [];
 
-    timers.push(setTimeout(() => setPhase("icon"), 600));
-    timers.push(setTimeout(() => setPhase("sequence"), 1800));
-    timers.push(setTimeout(() => setPhase("welcome"), 3200));
-    timers.push(setTimeout(() => setPhase("exit"), 4800));
-    timers.push(
-      setTimeout(() => {
-        if (!calledRef.current) {
-          calledRef.current = true;
-          onComplete();
-        }
-      }, 5300)
-    );
+    if (mq.matches) {
+      // Reduced-motion: skip to welcome phase, brief 1.5s display, then complete
+      setPhase("welcome");
+      timers.push(
+        setTimeout(() => {
+          if (!calledRef.current) {
+            calledRef.current = true;
+            onComplete();
+          }
+        }, 1500)
+      );
+    } else {
+      timers.push(setTimeout(() => setPhase("icon"), 600));
+      timers.push(setTimeout(() => setPhase("sequence"), 1800));
+      timers.push(setTimeout(() => setPhase("welcome"), 3200));
+      timers.push(setTimeout(() => setPhase("exit"), 4800));
+      timers.push(
+        setTimeout(() => {
+          if (!calledRef.current) {
+            calledRef.current = true;
+            onComplete();
+          }
+        }, 5300)
+      );
+    }
 
     return () => timers.forEach(clearTimeout);
   }, []); // eslint-disable-line react-hooks/exhaustive-deps

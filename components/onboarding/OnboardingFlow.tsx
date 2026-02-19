@@ -23,9 +23,10 @@ interface OnboardingFlowProps {
   userId: string;
   userEmail: string;
   userName: string;
+  onAnimationStart?: () => void;
 }
 
-export function OnboardingFlow({ userId, userEmail, userName }: OnboardingFlowProps) {
+export function OnboardingFlow({ userId, userEmail, userName, onAnimationStart }: OnboardingFlowProps) {
   const router = useRouter();
   const {
     state,
@@ -64,6 +65,13 @@ export function OnboardingFlow({ userId, userEmail, userName }: OnboardingFlowPr
       });
     }
   }, [submitError, nextStep]);
+
+  // Signal the parent page to suppress session-based redirects during animation
+  useEffect(() => {
+    if (isComplete) {
+      onAnimationStart?.();
+    }
+  }, [isComplete, onAnimationStart]);
 
   // Prevent hydration mismatch
   if (!hydrated) {

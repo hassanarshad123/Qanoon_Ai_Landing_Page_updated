@@ -2,7 +2,7 @@
 
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
-import { useEffect } from "react";
+import { useEffect, useRef, useCallback } from "react";
 import { OnboardingFlow } from "@/components/onboarding/OnboardingFlow";
 
 const REDIRECT_MAP: Record<string, string> = {
@@ -16,8 +16,15 @@ const REDIRECT_MAP: Record<string, string> = {
 export default function OnboardingPage() {
   const { data: session, status } = useSession();
   const router = useRouter();
+  const animatingRef = useRef(false);
+
+  const onAnimationStart = useCallback(() => {
+    animatingRef.current = true;
+  }, []);
 
   useEffect(() => {
+    // Don't redirect while the completion animation is playing
+    if (animatingRef.current) return;
     if (status === "loading") return;
     if (!session?.user) {
       router.replace("/login");
@@ -38,13 +45,14 @@ export default function OnboardingPage() {
     );
   }
 
-  if (session.user.onboardingCompleted) return null;
+  if (session.user.onboardingCompleted && !animatingRef.current) return null;
 
   return (
     <OnboardingFlow
       userId={session.user.id}
       userEmail={session.user.email}
       userName={session.user.name}
+      onAnimationStart={onAnimationStart}
     />
   );
 }
