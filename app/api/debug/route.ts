@@ -1,15 +1,13 @@
 import { NextResponse } from "next/server";
+import { requireAdmin } from "@/lib/auth/api";
 
 export async function GET() {
-  const key = process.env.ANTHROPIC_API_KEY;
-  const dbUrl = process.env.DATABASE_URL;
+  const { error } = await requireAdmin();
+  if (error) return error;
 
   return NextResponse.json({
-    anthropic_key_exists: !!key,
-    anthropic_key_length: key?.length ?? 0,
-    anthropic_key_prefix: key?.substring(0, 10) ?? "NOT SET",
-    database_url_exists: !!dbUrl,
+    anthropic_key_exists: !!process.env.ANTHROPIC_API_KEY,
+    database_url_exists: !!process.env.DATABASE_URL,
     node_env: process.env.NODE_ENV,
-    vercel_env: process.env.VERCEL_ENV ?? "not on vercel",
   });
 }

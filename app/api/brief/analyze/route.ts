@@ -2,8 +2,12 @@ import { NextResponse } from "next/server";
 import { anthropic } from "@/lib/ai/client";
 import { AI_MODELS } from "@/lib/ai/models";
 import { buildAnalysisPrompt } from "@/lib/ai/prompts";
+import { requireAuth } from "@/lib/auth/api";
 
 export async function POST(request: Request) {
+  const { error } = await requireAuth();
+  if (error) return error;
+
   try {
     const { documents } = await request.json();
 

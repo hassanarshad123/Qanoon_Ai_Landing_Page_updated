@@ -2,6 +2,7 @@
 
 import { useState, useCallback, useEffect } from "react";
 import { useRouter } from "next/navigation";
+import { useSession } from "next-auth/react";
 import type { OnboardingState, UserRole } from "@/lib/onboarding/types";
 import {
   getOnboardingState,
@@ -12,8 +13,13 @@ import {
 import { LAWYER_STEPS, JUDGE_STEPS } from "@/lib/onboarding/constants";
 import { submitOnboarding } from "@/lib/onboarding/submit";
 
-export function useOnboarding() {
+interface UseOnboardingOptions {
+  userId?: string;
+}
+
+export function useOnboarding(options: UseOnboardingOptions = {}) {
   const router = useRouter();
+  const { update: updateSession } = useSession();
   const [state, setState] = useState<OnboardingState>(getDefaultState());
   const [hydrated, setHydrated] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -55,7 +61,7 @@ export function useOnboarding() {
           : state.judgeData.personalInfo.email;
 
       try {
-        const result = await submitOnboarding(role, email, formData as unknown as Record<string, unknown>);
+        const result = await submitOnboarding(role, email, formData as unknown as Record<string, unknown>, options.userId);
 
         if (!result.success) {
           setSubmitError(result.error ?? "Submission failed. Please try again.");
@@ -69,6 +75,11 @@ export function useOnboarding() {
         return;
       }
 
+      // Update the NextAuth session with the new role
+      if (options.userId) {
+        await updateSession({ role, onboardingCompleted: true });
+      }
+
       setIsSubmitting(false);
       const redirectTo = role === "judge" ? "/judges" : "/lawyers";
       clearOnboardingState();
@@ -76,7 +87,7 @@ export function useOnboarding() {
       return;
     }
     persist({ currentStep: state.currentStep + 1 });
-  }, [isLastStep, state.role, state.lawyerData, state.judgeData, state.currentStep, persist, router]);
+  }, [isLastStep, state.role, state.lawyerData, state.judgeData, state.currentStep, persist, router, options.userId, updateSession]);
 
   const prevStep = useCallback(() => {
     if (state.currentStep <= 0) return;

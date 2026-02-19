@@ -39,6 +39,7 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from "@/components/ui/accordion";
+import { UserMenu } from "@/components/shared/UserMenu";
 
 const topItems = [
   { href: "/lawyers", label: "Home", icon: LayoutDashboard },
@@ -218,6 +219,11 @@ export function LawyerSidebar({ collapsed, onToggle }: SidebarProps) {
               ))}
             </Accordion>
           )}
+        </div>
+
+        {/* User menu */}
+        <div className="border-t border-gray-200 px-2 py-2">
+          <UserMenu collapsed={collapsed} />
         </div>
 
         {/* Collapse toggle */}

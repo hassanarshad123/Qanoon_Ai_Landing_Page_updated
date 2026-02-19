@@ -21,6 +21,7 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+import { UserMenu } from "@/components/shared/UserMenu";
 
 const pages = [
   { href: "/judges", label: "Dashboard", icon: LayoutDashboard },
@@ -96,6 +97,11 @@ export function Sidebar({ collapsed, onToggle }: SidebarProps) {
 
             return linkContent;
           })}
+        </div>
+
+        {/* User menu */}
+        <div className="border-t border-gray-200 px-2 py-2">
+          <UserMenu collapsed={collapsed} />
         </div>
 
         {/* Collapse toggle */}

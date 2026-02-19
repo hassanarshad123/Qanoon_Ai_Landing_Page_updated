@@ -15,7 +15,13 @@ import { JudgeLocation } from "./steps/JudgeLocation";
 import { ComingSoonView } from "./ComingSoonView";
 import { OnboardingComplete } from "./OnboardingComplete";
 
-export function OnboardingFlow() {
+interface OnboardingFlowProps {
+  userId: string;
+  userEmail: string;
+  userName: string;
+}
+
+export function OnboardingFlow({ userId, userEmail, userName }: OnboardingFlowProps) {
   const {
     state,
     hydrated,
@@ -28,7 +34,7 @@ export function OnboardingFlow() {
     updateLawyerData,
     updateJudgeData,
     reset,
-  } = useOnboarding();
+  } = useOnboarding({ userId });
 
   useEffect(() => {
     if (submitError) {
@@ -88,12 +94,13 @@ export function OnboardingFlow() {
       case 1:
         return (
           <PersonalInfo
-            data={state.lawyerData.personalInfo}
+            data={{ ...state.lawyerData.personalInfo, email: userEmail, fullName: userName || state.lawyerData.personalInfo.fullName }}
             onSubmit={(data) => {
               updateLawyerData("personalInfo", data);
               nextStep();
             }}
             onBack={prevStep}
+            emailReadOnly
           />
         );
       case 2:
@@ -150,12 +157,13 @@ export function OnboardingFlow() {
       case 1:
         return (
           <PersonalInfo
-            data={state.judgeData.personalInfo}
+            data={{ ...state.judgeData.personalInfo, email: userEmail, fullName: userName || state.judgeData.personalInfo.fullName }}
             onSubmit={(data) => {
               updateJudgeData("personalInfo", data);
               nextStep();
             }}
             onBack={prevStep}
+            emailReadOnly
           />
         );
       case 2:

@@ -1,8 +1,12 @@
 import { NextResponse } from "next/server";
 import { sql } from "@/lib/db";
 import { generateEmbeddings } from "@/lib/ai/embeddings";
+import { requireAuth } from "@/lib/auth/api";
 
 export async function POST() {
+  const { error } = await requireAuth();
+  if (error) return error;
+
   try {
     const rows = await sql(
       `SELECT id, case_name, citation, summary, ratio, headnotes, keywords FROM precedents WHERE embedding IS NULL`

@@ -23,9 +23,10 @@ interface PersonalInfoProps {
   data: PersonalInfoType;
   onSubmit: (data: FormValues) => void;
   onBack: () => void;
+  emailReadOnly?: boolean;
 }
 
-export function PersonalInfo({ data, onSubmit, onBack }: PersonalInfoProps) {
+export function PersonalInfo({ data, onSubmit, onBack, emailReadOnly }: PersonalInfoProps) {
   const form = useForm<FormValues>({
     resolver: zodResolver(personalInfoSchema),
     defaultValues: {
@@ -75,6 +76,8 @@ export function PersonalInfo({ data, onSubmit, onBack }: PersonalInfoProps) {
                   <Input
                     type="email"
                     placeholder="you@example.com"
+                    readOnly={emailReadOnly}
+                    className={emailReadOnly ? "bg-gray-50 text-gray-500" : ""}
                     {...field}
                   />
                 </FormControl>

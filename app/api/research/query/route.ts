@@ -6,6 +6,7 @@ import {
   buildTitleGenerationPrompt,
 } from "@/lib/ai/prompts";
 import { hybridSearch } from "@/lib/research/rag";
+import { requireAuth } from "@/lib/auth/api";
 import {
   createConversation,
   saveMessage,
@@ -13,6 +14,9 @@ import {
 } from "@/lib/research/actions";
 
 export async function POST(request: Request) {
+  const { error } = await requireAuth();
+  if (error) return error;
+
   try {
     const { question, conversationId, caseId, caseContext } =
       await request.json();

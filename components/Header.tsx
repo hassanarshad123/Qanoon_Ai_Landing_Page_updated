@@ -3,9 +3,12 @@
 import { Scale, Menu, X } from "lucide-react";
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
+import { useSession } from "next-auth/react";
+import Link from "next/link";
 
 export default function Header() {
   const router = useRouter();
+  const { data: session } = useSession();
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
@@ -16,6 +19,16 @@ export default function Header() {
     window.addEventListener("scroll", handleScroll);
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
+
+  function getPortalHref() {
+    if (!session?.user) return "/login";
+    const role = session.user.role;
+    if (!session.user.onboardingCompleted) return "/onboarding";
+    if (role === "judge") return "/judges";
+    if (role === "lawyer") return "/lawyers";
+    if (role === "admin") return "/admin";
+    return "/onboarding";
+  }
 
   return (
     <header
@@ -39,17 +52,13 @@ export default function Header() {
             Platform
           </a>
           <a
-            href="https://www.zensbots.site/judges"
-            target="_blank"
-            rel="noopener noreferrer"
+            href="#"
             className="text-gray-600 hover:text-gray-900 text-sm font-medium transition-colors"
           >
             For Judges
           </a>
           <a
-            href="https://www.zensbots.site/lawyers"
-            target="_blank"
-            rel="noopener noreferrer"
+            href="#"
             className="text-gray-600 hover:text-gray-900 text-sm font-medium transition-colors"
           >
             For Lawyers
@@ -63,15 +72,32 @@ export default function Header() {
         </nav>
 
         <div className="hidden md:flex items-center gap-4">
-          <a
-            href="#"
-            className="text-gray-600 hover:text-gray-900 text-sm font-medium transition-colors"
-          >
-            Log in
-          </a>
-          <button onClick={() => router.push('/onboarding')} className="bg-[#1f1f1f] text-white px-5 py-2.5 rounded-lg text-sm font-medium hover:bg-black transition-all duration-200 hover:shadow-md">
-            Get Started
-          </button>
+          {session?.user ? (
+            <>
+              <span className="text-sm text-gray-600">{session.user.name}</span>
+              <Link
+                href={getPortalHref()}
+                className="bg-[#1f1f1f] text-white px-5 py-2.5 rounded-lg text-sm font-medium hover:bg-black transition-all duration-200 hover:shadow-md"
+              >
+                Go to Portal
+              </Link>
+            </>
+          ) : (
+            <>
+              <Link
+                href="/login"
+                className="text-gray-600 hover:text-gray-900 text-sm font-medium transition-colors"
+              >
+                Log in
+              </Link>
+              <button
+                onClick={() => router.push("/signup")}
+                className="bg-[#1f1f1f] text-white px-5 py-2.5 rounded-lg text-sm font-medium hover:bg-black transition-all duration-200 hover:shadow-md"
+              >
+                Get Started
+              </button>
+            </>
+          )}
         </div>
 
         <button
@@ -92,22 +118,40 @@ export default function Header() {
             <a href="#" className="text-gray-600 hover:text-gray-900 text-sm font-medium py-2">
               Platform
             </a>
-            <a href="https://www.zensbots.site/judges" target="_blank" rel="noopener noreferrer" className="text-gray-600 hover:text-gray-900 text-sm font-medium py-2">
+            <a href="#" className="text-gray-600 hover:text-gray-900 text-sm font-medium py-2">
               For Judges
             </a>
-            <a href="https://www.zensbots.site/lawyers" target="_blank" rel="noopener noreferrer" className="text-gray-600 hover:text-gray-900 text-sm font-medium py-2">
+            <a href="#" className="text-gray-600 hover:text-gray-900 text-sm font-medium py-2">
               For Lawyers
             </a>
             <a href="#" className="text-gray-600 hover:text-gray-900 text-sm font-medium py-2">
               Pricing
             </a>
             <div className="border-t border-gray-100 pt-4 mt-2 flex flex-col gap-3">
-              <a href="#" className="text-gray-600 hover:text-gray-900 text-sm font-medium py-2">
-                Log in
-              </a>
-              <button onClick={() => { router.push('/onboarding'); setIsMobileMenuOpen(false); }} className="bg-[#1f1f1f] text-white px-5 py-3 rounded-lg text-sm font-medium hover:bg-black transition-colors w-full">
-                Get Started
-              </button>
+              {session?.user ? (
+                <Link
+                  href={getPortalHref()}
+                  onClick={() => setIsMobileMenuOpen(false)}
+                  className="bg-[#1f1f1f] text-white px-5 py-3 rounded-lg text-sm font-medium hover:bg-black transition-colors w-full text-center"
+                >
+                  Go to Portal
+                </Link>
+              ) : (
+                <>
+                  <Link href="/login" className="text-gray-600 hover:text-gray-900 text-sm font-medium py-2">
+                    Log in
+                  </Link>
+                  <button
+                    onClick={() => {
+                      router.push("/signup");
+                      setIsMobileMenuOpen(false);
+                    }}
+                    className="bg-[#1f1f1f] text-white px-5 py-3 rounded-lg text-sm font-medium hover:bg-black transition-colors w-full"
+                  >
+                    Get Started
+                  </button>
+                </>
+              )}
             </div>
           </nav>
         </div>

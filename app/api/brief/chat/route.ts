@@ -1,8 +1,12 @@
 import { anthropic } from "@/lib/ai/client";
 import { AI_MODELS } from "@/lib/ai/models";
 import { buildChatPrompt } from "@/lib/ai/prompts";
+import { requireAuth } from "@/lib/auth/api";
 
 export async function POST(request: Request) {
+  const { error } = await requireAuth();
+  if (error) return error;
+
   try {
     const { briefContext, messages, userMessage } = await request.json();
 

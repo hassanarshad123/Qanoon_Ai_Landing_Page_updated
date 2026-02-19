@@ -5,6 +5,7 @@ import {
   buildResearchUserMessage,
 } from "@/lib/ai/prompts";
 import { hybridSearch } from "@/lib/research/rag";
+import { requireAuth } from "@/lib/auth/api";
 import {
   getConversation,
   getMessages,
@@ -12,6 +13,9 @@ import {
 } from "@/lib/research/actions";
 
 export async function POST(request: Request) {
+  const { error } = await requireAuth();
+  if (error) return error;
+
   try {
     const { conversationId, question, caseContext } = await request.json();
 

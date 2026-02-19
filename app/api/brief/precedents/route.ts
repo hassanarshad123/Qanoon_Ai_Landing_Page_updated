@@ -3,8 +3,12 @@ import { sql } from "@/lib/db";
 import { anthropic } from "@/lib/ai/client";
 import { AI_MODELS } from "@/lib/ai/models";
 import { buildPrecedentRankingPrompt } from "@/lib/ai/prompts";
+import { requireAuth } from "@/lib/auth/api";
 
 export async function POST(request: Request) {
+  const { error } = await requireAuth();
+  if (error) return error;
+
   try {
     const { extractedData } = await request.json();
 
