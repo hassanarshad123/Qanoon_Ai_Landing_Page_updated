@@ -25,11 +25,9 @@ interface LawyerFirmInfoProps {
   data: LawyerFirmInfoType;
   onSubmit: (data: FormValues) => void;
   onBack: () => void;
-  accentColor?: string;
-  hoverColor?: string;
 }
 
-export function LawyerFirmInfo({ data, onSubmit, onBack, accentColor = "#2563EB", hoverColor = "#1D4ED8" }: LawyerFirmInfoProps) {
+export function LawyerFirmInfo({ data, onSubmit, onBack }: LawyerFirmInfoProps) {
   const form = useForm<FormValues>({
     resolver: zodResolver(lawyerFirmSchema),
     defaultValues: {
@@ -68,14 +66,9 @@ export function LawyerFirmInfo({ data, onSubmit, onBack, accentColor = "#2563EB"
                       className={cn(
                         "p-4 rounded-lg border-2 text-left transition-all",
                         field.value === type.value
-                          ? "text-white"
+                          ? "border-accent-dynamic bg-accent-light text-accent-dynamic"
                           : "border-gray-200 hover:border-gray-300"
                       )}
-                      style={
-                        field.value === type.value
-                          ? { borderColor: accentColor, backgroundColor: `${accentColor}10`, color: accentColor }
-                          : undefined
-                      }
                     >
                       <span className="text-sm font-medium">
                         {type.label}
@@ -111,10 +104,7 @@ export function LawyerFirmInfo({ data, onSubmit, onBack, accentColor = "#2563EB"
             </Button>
             <Button
               type="submit"
-              className="gap-2 text-white"
-              style={{ backgroundColor: accentColor }}
-              onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = hoverColor)}
-              onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = accentColor)}
+              className="gap-2 text-white bg-accent-dynamic hover:bg-accent-hover transition-colors"
             >
               Next
               <ArrowRight className="h-4 w-4" />

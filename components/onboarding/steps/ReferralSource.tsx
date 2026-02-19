@@ -25,11 +25,9 @@ interface ReferralSourceProps {
   data: ReferralInfo;
   onSubmit: (data: FormValues) => void;
   onBack: () => void;
-  accentColor?: string;
-  hoverColor?: string;
 }
 
-export function ReferralSource({ data, onSubmit, onBack, accentColor = "#2563EB", hoverColor = "#1D4ED8" }: ReferralSourceProps) {
+export function ReferralSource({ data, onSubmit, onBack }: ReferralSourceProps) {
   const form = useForm<FormValues>({
     resolver: zodResolver(referralSchema),
     defaultValues: {
@@ -119,10 +117,7 @@ export function ReferralSource({ data, onSubmit, onBack, accentColor = "#2563EB"
               </Button>
               <Button
                 type="submit"
-                className="gap-2 text-white"
-                style={{ backgroundColor: accentColor }}
-                onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = hoverColor)}
-                onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = accentColor)}
+                className="gap-2 text-white bg-accent-dynamic hover:bg-accent-hover transition-colors"
               >
                 Complete
                 <Check className="h-4 w-4" />

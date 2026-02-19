@@ -1,9 +1,18 @@
 import bcrypt from "bcryptjs";
 import { getSQL } from "@/lib/db";
 
-export async function createUser(email: string, password: string, name: string) {
+export async function createUser(email: string, password: string, name: string, role?: string) {
   const sql = getSQL();
   const hash = await bcrypt.hash(password, 12);
+
+  if (role) {
+    const rows = await sql`
+      INSERT INTO users (email, password_hash, name, role)
+      VALUES (${email}, ${hash}, ${name}, ${role})
+      RETURNING id, email, name, role, onboarding_completed, is_active, created_at
+    `;
+    return rows[0];
+  }
 
   const rows = await sql`
     INSERT INTO users (email, password_hash, name)

@@ -118,7 +118,6 @@ export const REFERRAL_SOURCES = [
 ] as const;
 
 export const LAWYER_STEPS = [
-  { id: "role", label: "Role" },
   { id: "personal", label: "Personal Info" },
   { id: "practice", label: "Practice" },
   { id: "location", label: "Location" },
@@ -127,21 +126,18 @@ export const LAWYER_STEPS = [
 ] as const;
 
 export const JUDGE_STEPS = [
-  { id: "role", label: "Role" },
   { id: "personal", label: "Personal Info" },
   { id: "judicial", label: "Judicial Info" },
   { id: "location", label: "Location" },
 ] as const;
 
 export const LAW_STUDENT_STEPS = [
-  { id: "role", label: "Role" },
   { id: "personal", label: "About You" },
   { id: "education", label: "Education" },
   { id: "interests", label: "Interests" },
 ] as const;
 
 export const COMMON_PERSON_STEPS = [
-  { id: "role", label: "Role" },
   { id: "personal", label: "About You" },
   { id: "concern", label: "Legal Need" },
   { id: "location", label: "Location" },

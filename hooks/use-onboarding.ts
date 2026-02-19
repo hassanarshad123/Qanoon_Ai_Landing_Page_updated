@@ -62,7 +62,7 @@ export function useOnboarding(options: UseOnboardingOptions = {}) {
 
   const setRole = useCallback(
     (role: UserRole) => {
-      persist({ role, currentStep: 1 });
+      persist({ role, currentStep: 0 });
     },
     [persist]
   );
@@ -132,9 +132,13 @@ export function useOnboarding(options: UseOnboardingOptions = {}) {
   }, [isLastStep, state, persist, router, options.userId, updateSession]);
 
   const prevStep = useCallback(() => {
+    if (state.currentStep <= 0 && state.role) {
+      router.push("/signup");
+      return;
+    }
     if (state.currentStep <= 0) return;
     persist({ currentStep: state.currentStep - 1 });
-  }, [state.currentStep, persist]);
+  }, [state.currentStep, state.role, persist, router]);
 
   const updateLawyerData = useCallback(
     (section: keyof OnboardingState["lawyerData"], data: Record<string, unknown>) => {

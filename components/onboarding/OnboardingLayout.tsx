@@ -14,7 +14,7 @@ interface OnboardingLayoutProps {
 
 export function OnboardingLayout({ role, currentStep, totalSteps, children }: OnboardingLayoutProps) {
   const colors = role ? ROLE_COLORS[role] : ROLE_COLORS.lawyer;
-  const showProgress = currentStep > 0 && role;
+  const showProgress = !!role;
 
   return (
     <div className="flex min-h-screen">

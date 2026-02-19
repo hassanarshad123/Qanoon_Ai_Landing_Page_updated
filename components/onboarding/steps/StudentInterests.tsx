@@ -31,11 +31,9 @@ interface StudentInterestsProps {
   data: LawStudentInterests;
   onSubmit: (data: FormValues) => void;
   onBack: () => void;
-  accentColor: string;
-  hoverColor: string;
 }
 
-export function StudentInterests({ data, onSubmit, onBack, accentColor, hoverColor }: StudentInterestsProps) {
+export function StudentInterests({ data, onSubmit, onBack }: StudentInterestsProps) {
   const form = useForm<FormValues>({
     resolver: zodResolver(lawStudentInterestsSchema),
     defaultValues: {
@@ -129,10 +127,7 @@ export function StudentInterests({ data, onSubmit, onBack, accentColor, hoverCol
             </Button>
             <Button
               type="submit"
-              className="gap-2 text-white"
-              style={{ backgroundColor: accentColor }}
-              onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = hoverColor)}
-              onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = accentColor)}
+              className="gap-2 text-white bg-accent-dynamic hover:bg-accent-hover transition-colors"
             >
               Complete
               <Check className="h-4 w-4" />

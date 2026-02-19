@@ -1,11 +1,11 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 import { useOnboarding } from "@/hooks/use-onboarding";
 import { toast } from "sonner";
 import { ROLE_COLORS } from "@/lib/onboarding/constants";
 import { OnboardingLayout } from "./OnboardingLayout";
-import { RoleSelection } from "./steps/RoleSelection";
 import { PersonalInfo } from "./steps/PersonalInfo";
 import { LawyerPracticeDetails } from "./steps/LawyerPracticeDetails";
 import { LawyerLocation } from "./steps/LawyerLocation";
@@ -26,6 +26,7 @@ interface OnboardingFlowProps {
 }
 
 export function OnboardingFlow({ userId, userEmail, userName }: OnboardingFlowProps) {
+  const router = useRouter();
   const {
     state,
     hydrated,
@@ -33,7 +34,6 @@ export function OnboardingFlow({ userId, userEmail, userName }: OnboardingFlowPr
     submitError,
     steps,
     totalSteps,
-    setRole,
     nextStep,
     prevStep,
     updateLawyerData,
@@ -41,6 +41,15 @@ export function OnboardingFlow({ userId, userEmail, userName }: OnboardingFlowPr
     updateLawStudentData,
     updateCommonPersonData,
   } = useOnboarding({ userId });
+
+  // Step transition animation
+  const [stepVisible, setStepVisible] = useState(false);
+
+  useEffect(() => {
+    setStepVisible(false);
+    const t = setTimeout(() => setStepVisible(true), 50);
+    return () => clearTimeout(t);
+  }, [state.currentStep]);
 
   useEffect(() => {
     if (submitError) {
@@ -63,28 +72,40 @@ export function OnboardingFlow({ userId, userEmail, userName }: OnboardingFlowPr
     );
   }
 
-  const colors = state.role ? ROLE_COLORS[state.role] : null;
-  const accentColor = colors?.primary ?? "#A21CAF";
-  const hoverColor = colors?.hover ?? "#86198F";
+  // No role = redirect to signup
+  if (!state.role) {
+    router.push("/signup");
+    return null;
+  }
+
+  const colors = ROLE_COLORS[state.role];
 
   return (
-    <OnboardingLayout
-      role={state.role}
-      currentStep={state.currentStep}
-      totalSteps={totalSteps}
+    <div
+      style={{
+        ["--accent" as string]: colors.primary,
+        ["--accent-hover" as string]: colors.hover,
+        ["--accent-light" as string]: colors.light,
+      }}
     >
-      <div className="transition-opacity duration-300">
-        {renderCurrentStep()}
-      </div>
-    </OnboardingLayout>
+      <OnboardingLayout
+        role={state.role}
+        currentStep={state.currentStep}
+        totalSteps={totalSteps}
+      >
+        <div
+          key={state.currentStep}
+          className={`transition-all duration-500 ease-out ${
+            stepVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-6"
+          }`}
+        >
+          {renderCurrentStep()}
+        </div>
+      </OnboardingLayout>
+    </div>
   );
 
   function renderCurrentStep() {
-    // Step 0: Role selection
-    if (state.currentStep === 0 || !state.role) {
-      return <RoleSelection onSelect={setRole} userName={userName} />;
-    }
-
     switch (state.role) {
       case "lawyer":
         return renderLawyerStep();
@@ -101,7 +122,7 @@ export function OnboardingFlow({ userId, userEmail, userName }: OnboardingFlowPr
 
   function renderLawyerStep() {
     switch (state.currentStep) {
-      case 1:
+      case 0:
         return (
           <PersonalInfo
             data={{ ...state.lawyerData.personalInfo, email: userEmail, fullName: userName || state.lawyerData.personalInfo.fullName }}
@@ -111,11 +132,9 @@ export function OnboardingFlow({ userId, userEmail, userName }: OnboardingFlowPr
             }}
             onBack={prevStep}
             emailReadOnly
-            accentColor={accentColor}
-            hoverColor={hoverColor}
           />
         );
-      case 2:
+      case 1:
         return (
           <LawyerPracticeDetails
             data={state.lawyerData.practiceDetails}
@@ -124,11 +143,9 @@ export function OnboardingFlow({ userId, userEmail, userName }: OnboardingFlowPr
               nextStep();
             }}
             onBack={prevStep}
-            accentColor={accentColor}
-            hoverColor={hoverColor}
           />
         );
-      case 3:
+      case 2:
         return (
           <LawyerLocation
             data={state.lawyerData.location}
@@ -137,11 +154,9 @@ export function OnboardingFlow({ userId, userEmail, userName }: OnboardingFlowPr
               nextStep();
             }}
             onBack={prevStep}
-            accentColor={accentColor}
-            hoverColor={hoverColor}
           />
         );
-      case 4:
+      case 3:
         return (
           <LawyerFirmInfo
             data={state.lawyerData.firmInfo}
@@ -150,11 +165,9 @@ export function OnboardingFlow({ userId, userEmail, userName }: OnboardingFlowPr
               nextStep();
             }}
             onBack={prevStep}
-            accentColor={accentColor}
-            hoverColor={hoverColor}
           />
         );
-      case 5:
+      case 4:
         return (
           <ReferralSource
             data={state.lawyerData.referral}
@@ -163,8 +176,6 @@ export function OnboardingFlow({ userId, userEmail, userName }: OnboardingFlowPr
               nextStep();
             }}
             onBack={prevStep}
-            accentColor={accentColor}
-            hoverColor={hoverColor}
           />
         );
       default:
@@ -174,7 +185,7 @@ export function OnboardingFlow({ userId, userEmail, userName }: OnboardingFlowPr
 
   function renderJudgeStep() {
     switch (state.currentStep) {
-      case 1:
+      case 0:
         return (
           <PersonalInfo
             data={{ ...state.judgeData.personalInfo, email: userEmail, fullName: userName || state.judgeData.personalInfo.fullName }}
@@ -184,11 +195,9 @@ export function OnboardingFlow({ userId, userEmail, userName }: OnboardingFlowPr
             }}
             onBack={prevStep}
             emailReadOnly
-            accentColor={accentColor}
-            hoverColor={hoverColor}
           />
         );
-      case 2:
+      case 1:
         return (
           <JudgeJudicialInfo
             data={state.judgeData.judicialInfo}
@@ -197,11 +206,9 @@ export function OnboardingFlow({ userId, userEmail, userName }: OnboardingFlowPr
               nextStep();
             }}
             onBack={prevStep}
-            accentColor={accentColor}
-            hoverColor={hoverColor}
           />
         );
-      case 3:
+      case 2:
         return (
           <JudgeLocation
             data={state.judgeData.location}
@@ -210,8 +217,6 @@ export function OnboardingFlow({ userId, userEmail, userName }: OnboardingFlowPr
               nextStep();
             }}
             onBack={prevStep}
-            accentColor={accentColor}
-            hoverColor={hoverColor}
           />
         );
       default:
@@ -221,7 +226,7 @@ export function OnboardingFlow({ userId, userEmail, userName }: OnboardingFlowPr
 
   function renderLawStudentStep() {
     switch (state.currentStep) {
-      case 1:
+      case 0:
         return (
           <PersonalInfo
             data={{ ...state.lawStudentData.personalInfo, email: userEmail, fullName: userName || state.lawStudentData.personalInfo.fullName }}
@@ -231,11 +236,9 @@ export function OnboardingFlow({ userId, userEmail, userName }: OnboardingFlowPr
             }}
             onBack={prevStep}
             emailReadOnly
-            accentColor={accentColor}
-            hoverColor={hoverColor}
           />
         );
-      case 2:
+      case 1:
         return (
           <StudentEducation
             data={state.lawStudentData.education}
@@ -244,11 +247,9 @@ export function OnboardingFlow({ userId, userEmail, userName }: OnboardingFlowPr
               nextStep();
             }}
             onBack={prevStep}
-            accentColor={accentColor}
-            hoverColor={hoverColor}
           />
         );
-      case 3:
+      case 2:
         return (
           <StudentInterests
             data={state.lawStudentData.interests}
@@ -257,8 +258,6 @@ export function OnboardingFlow({ userId, userEmail, userName }: OnboardingFlowPr
               nextStep();
             }}
             onBack={prevStep}
-            accentColor={accentColor}
-            hoverColor={hoverColor}
           />
         );
       default:
@@ -268,7 +267,7 @@ export function OnboardingFlow({ userId, userEmail, userName }: OnboardingFlowPr
 
   function renderCommonPersonStep() {
     switch (state.currentStep) {
-      case 1:
+      case 0:
         return (
           <PersonalInfo
             data={{ ...state.commonPersonData.personalInfo, email: userEmail, fullName: userName || state.commonPersonData.personalInfo.fullName }}
@@ -278,11 +277,9 @@ export function OnboardingFlow({ userId, userEmail, userName }: OnboardingFlowPr
             }}
             onBack={prevStep}
             emailReadOnly
-            accentColor={accentColor}
-            hoverColor={hoverColor}
           />
         );
-      case 2:
+      case 1:
         return (
           <CitizenConcern
             data={state.commonPersonData.legalConcern}
@@ -291,11 +288,9 @@ export function OnboardingFlow({ userId, userEmail, userName }: OnboardingFlowPr
               nextStep();
             }}
             onBack={prevStep}
-            accentColor={accentColor}
-            hoverColor={hoverColor}
           />
         );
-      case 3:
+      case 2:
         return (
           <CitizenLocation
             data={state.commonPersonData.location}
@@ -304,8 +299,6 @@ export function OnboardingFlow({ userId, userEmail, userName }: OnboardingFlowPr
               nextStep();
             }}
             onBack={prevStep}
-            accentColor={accentColor}
-            hoverColor={hoverColor}
           />
         );
       default:

@@ -19,8 +19,7 @@ export function ValueSlidePanel({ role, currentStep }: ValueSlidePanelProps) {
 
   // Change slide based on step progression
   useEffect(() => {
-    if (currentStep <= 0) return;
-    const newIndex = (currentStep - 1) % slides.length;
+    const newIndex = currentStep % slides.length;
     setIsTransitioning(true);
     const timer = setTimeout(() => {
       setSlideIndex(newIndex);

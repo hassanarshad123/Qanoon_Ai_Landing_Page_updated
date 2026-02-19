@@ -64,6 +64,31 @@
   background-size: 40px 40px;
 }
 
+/* ========== Accent color utilities (driven by --accent CSS vars) ========== */
+@layer utilities {
+  .bg-accent-dynamic {
+    background-color: var(--accent);
+  }
+  .hover\:bg-accent-hover:hover {
+    background-color: var(--accent-hover);
+  }
+  .border-accent-dynamic {
+    border-color: var(--accent);
+  }
+  .hover\:border-accent-dynamic:hover {
+    border-color: var(--accent);
+  }
+  .hover\:bg-accent-light:hover {
+    background-color: var(--accent-light);
+  }
+  .text-accent-dynamic {
+    color: var(--accent);
+  }
+  .bg-accent-light {
+    background-color: var(--accent-light);
+  }
+}
+
 /* ========== Print Styles for Judicial Portal ========== */
 @media print {
   /* Hide non-printable UI elements */

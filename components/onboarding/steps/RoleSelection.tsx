@@ -61,24 +61,16 @@ export function RoleSelection({ onSelect, userName }: RoleSelectionProps) {
               onClick={() => onSelect(role.id)}
               className={cn(
                 "group relative flex flex-col items-center gap-3 p-6 rounded-xl border-2 border-gray-200",
-                "transition-all duration-200 hover:scale-[1.02] hover:shadow-lg cursor-pointer"
+                "transition-all duration-200 hover:scale-[1.02] hover:shadow-lg cursor-pointer",
+                "hover:border-accent-dynamic hover:bg-accent-light"
               )}
               style={{
-                ["--role-color" as string]: colors.primary,
-                ["--role-light" as string]: colors.light,
-              }}
-              onMouseEnter={(e) => {
-                e.currentTarget.style.borderColor = colors.primary;
-                e.currentTarget.style.backgroundColor = colors.light;
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.borderColor = "";
-                e.currentTarget.style.backgroundColor = "";
+                ["--accent" as string]: colors.primary,
+                ["--accent-light" as string]: colors.light,
               }}
             >
               <div
-                className="w-12 h-12 rounded-xl flex items-center justify-center transition-colors"
-                style={{ backgroundColor: colors.light, color: colors.primary }}
+                className="w-12 h-12 rounded-xl flex items-center justify-center transition-colors bg-accent-light text-accent-dynamic"
               >
                 <Icon className="w-6 h-6" />
               </div>

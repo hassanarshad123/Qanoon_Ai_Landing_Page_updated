@@ -13,6 +13,7 @@ export async function signupAction(data: {
   email: string;
   password: string;
   confirmPassword: string;
+  role?: string;
 }): Promise<ActionResult> {
   const parsed = signupSchema.safeParse(data);
   if (!parsed.success) {
@@ -27,7 +28,7 @@ export async function signupAction(data: {
   }
 
   try {
-    await createUser(email, password, name);
+    await createUser(email, password, name, data.role);
     return { success: true };
   } catch (err: any) {
     console.error("Signup error:", err);

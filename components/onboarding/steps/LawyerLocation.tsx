@@ -31,11 +31,9 @@ interface LawyerLocationProps {
   data: LawyerLocationType;
   onSubmit: (data: FormValues) => void;
   onBack: () => void;
-  accentColor?: string;
-  hoverColor?: string;
 }
 
-export function LawyerLocation({ data, onSubmit, onBack, accentColor = "#2563EB", hoverColor = "#1D4ED8" }: LawyerLocationProps) {
+export function LawyerLocation({ data, onSubmit, onBack }: LawyerLocationProps) {
   const form = useForm<FormValues>({
     resolver: zodResolver(lawyerLocationSchema),
     defaultValues: {
@@ -144,10 +142,7 @@ export function LawyerLocation({ data, onSubmit, onBack, accentColor = "#2563EB"
             </Button>
             <Button
               type="submit"
-              className="gap-2 text-white"
-              style={{ backgroundColor: accentColor }}
-              onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = hoverColor)}
-              onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = accentColor)}
+              className="gap-2 text-white bg-accent-dynamic hover:bg-accent-hover transition-colors"
             >
               Next
               <ArrowRight className="h-4 w-4" />

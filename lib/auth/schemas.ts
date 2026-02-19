@@ -23,6 +23,14 @@ export const signupSchema = z
     path: ["confirmPassword"],
   });
 
+export const signupWithRoleSchema = signupSchema.and(
+  z.object({
+    role: z.enum(["lawyer", "judge", "law_student", "common_person"]),
+  })
+);
+
+export type SignupWithRoleInput = z.infer<typeof signupWithRoleSchema>;
+
 export const forgotPasswordSchema = z.object({
   email: z.string().email("Please enter a valid email"),
 });

@@ -31,11 +31,9 @@ interface JudgeLocationProps {
   data: JudgeLocationType;
   onSubmit: (data: FormValues) => void;
   onBack: () => void;
-  accentColor?: string;
-  hoverColor?: string;
 }
 
-export function JudgeLocation({ data, onSubmit, onBack, accentColor = "#A21CAF", hoverColor = "#86198F" }: JudgeLocationProps) {
+export function JudgeLocation({ data, onSubmit, onBack }: JudgeLocationProps) {
   const form = useForm<FormValues>({
     resolver: zodResolver(judgeLocationSchema),
     defaultValues: {
@@ -144,10 +142,7 @@ export function JudgeLocation({ data, onSubmit, onBack, accentColor = "#A21CAF",
             </Button>
             <Button
               type="submit"
-              className="gap-2 text-white"
-              style={{ backgroundColor: accentColor }}
-              onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = hoverColor)}
-              onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = accentColor)}
+              className="gap-2 text-white bg-accent-dynamic hover:bg-accent-hover transition-colors"
             >
               Complete
               <Check className="h-4 w-4" />

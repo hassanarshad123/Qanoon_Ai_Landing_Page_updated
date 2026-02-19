@@ -32,16 +32,12 @@ interface LawyerPracticeDetailsProps {
   data: LawyerPracticeDetailsType;
   onSubmit: (data: FormValues) => void;
   onBack: () => void;
-  accentColor?: string;
-  hoverColor?: string;
 }
 
 export function LawyerPracticeDetails({
   data,
   onSubmit,
   onBack,
-  accentColor = "#2563EB",
-  hoverColor = "#1D4ED8",
 }: LawyerPracticeDetailsProps) {
   const form = useForm<FormValues>({
     resolver: zodResolver(lawyerPracticeSchema),
@@ -151,10 +147,7 @@ export function LawyerPracticeDetails({
             </Button>
             <Button
               type="submit"
-              className="gap-2 text-white"
-              style={{ backgroundColor: accentColor }}
-              onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = hoverColor)}
-              onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = accentColor)}
+              className="gap-2 text-white bg-accent-dynamic hover:bg-accent-hover transition-colors"
             >
               Next
               <ArrowRight className="h-4 w-4" />

@@ -30,11 +30,9 @@ interface CitizenLocationProps {
   data: CitizenLocationType;
   onSubmit: (data: FormValues) => void;
   onBack: () => void;
-  accentColor: string;
-  hoverColor: string;
 }
 
-export function CitizenLocation({ data, onSubmit, onBack, accentColor, hoverColor }: CitizenLocationProps) {
+export function CitizenLocation({ data, onSubmit, onBack }: CitizenLocationProps) {
   const form = useForm<FormValues>({
     resolver: zodResolver(citizenLocationSchema),
     defaultValues: {
@@ -128,10 +126,7 @@ export function CitizenLocation({ data, onSubmit, onBack, accentColor, hoverColo
             </Button>
             <Button
               type="submit"
-              className="gap-2 text-white"
-              style={{ backgroundColor: accentColor }}
-              onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = hoverColor)}
-              onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = accentColor)}
+              className="gap-2 text-white bg-accent-dynamic hover:bg-accent-hover transition-colors"
             >
               Complete
               <Check className="h-4 w-4" />

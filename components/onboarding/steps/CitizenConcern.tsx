@@ -25,11 +25,9 @@ interface CitizenConcernProps {
   data: CitizenConcernType;
   onSubmit: (data: FormValues) => void;
   onBack: () => void;
-  accentColor: string;
-  hoverColor: string;
 }
 
-export function CitizenConcern({ data, onSubmit, onBack, accentColor, hoverColor }: CitizenConcernProps) {
+export function CitizenConcern({ data, onSubmit, onBack }: CitizenConcernProps) {
   const form = useForm<FormValues>({
     resolver: zodResolver(citizenConcernSchema),
     defaultValues: {
@@ -68,14 +66,9 @@ export function CitizenConcern({ data, onSubmit, onBack, accentColor, hoverColor
                       className={cn(
                         "p-3 rounded-lg border-2 text-left text-sm font-medium transition-all",
                         field.value === area
-                          ? "border-current text-white"
+                          ? "border-accent-dynamic bg-accent-light text-accent-dynamic"
                           : "border-gray-200 text-gray-700 hover:border-gray-300"
                       )}
-                      style={
-                        field.value === area
-                          ? { backgroundColor: accentColor, borderColor: accentColor, color: "white" }
-                          : undefined
-                      }
                     >
                       {area}
                     </button>
@@ -114,10 +107,7 @@ export function CitizenConcern({ data, onSubmit, onBack, accentColor, hoverColor
             </Button>
             <Button
               type="submit"
-              className="gap-2 text-white"
-              style={{ backgroundColor: accentColor }}
-              onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = hoverColor)}
-              onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = accentColor)}
+              className="gap-2 text-white bg-accent-dynamic hover:bg-accent-hover transition-colors"
             >
               Next
               <ArrowRight className="h-4 w-4" />
