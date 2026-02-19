@@ -45,6 +45,7 @@ export function useOnboarding(options: UseOnboardingOptions = {}) {
   const [state, setState] = useState<OnboardingState>(getDefaultState());
   const [hydrated, setHydrated] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isComplete, setIsComplete] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
 
   useEffect(() => {
@@ -71,7 +72,19 @@ export function useOnboarding(options: UseOnboardingOptions = {}) {
   const totalSteps = steps.length;
   const isLastStep = state.currentStep >= totalSteps - 1;
 
+  const completeOnboarding = useCallback(async () => {
+    const role = state.role!;
+    if (options.userId) {
+      await updateSession({ role, onboardingCompleted: true });
+    }
+    clearOnboardingState();
+    const redirectTo = REDIRECT_MAP[role] || "/onboarding";
+    router.push(redirectTo);
+  }, [state.role, options.userId, updateSession, router]);
+
   const nextStep = useCallback(async () => {
+    if (isSubmitting || isComplete) return;
+
     if (isLastStep) {
       setIsSubmitting(true);
       setSubmitError(null);
@@ -117,19 +130,12 @@ export function useOnboarding(options: UseOnboardingOptions = {}) {
         return;
       }
 
-      // Update the NextAuth session with the new role
-      if (options.userId) {
-        await updateSession({ role, onboardingCompleted: true });
-      }
-
       setIsSubmitting(false);
-      const redirectTo = REDIRECT_MAP[role] || "/onboarding";
-      clearOnboardingState();
-      router.push(redirectTo);
+      setIsComplete(true);
       return;
     }
     persist({ currentStep: state.currentStep + 1 });
-  }, [isLastStep, state, persist, router, options.userId, updateSession]);
+  }, [isSubmitting, isComplete, isLastStep, state, persist, options.userId]);
 
   const prevStep = useCallback(() => {
     if (state.currentStep <= 0 && state.role) {
@@ -217,6 +223,7 @@ export function useOnboarding(options: UseOnboardingOptions = {}) {
     state,
     hydrated,
     isSubmitting,
+    isComplete,
     submitError,
     steps,
     totalSteps,
@@ -224,6 +231,7 @@ export function useOnboarding(options: UseOnboardingOptions = {}) {
     setRole,
     nextStep,
     prevStep,
+    completeOnboarding,
     updateLawyerData,
     updateJudgeData,
     updateLawStudentData,

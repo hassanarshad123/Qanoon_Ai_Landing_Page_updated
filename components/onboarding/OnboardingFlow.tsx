@@ -31,11 +31,13 @@ export function OnboardingFlow({ userId, userEmail, userName }: OnboardingFlowPr
     state,
     hydrated,
     isSubmitting,
+    isComplete,
     submitError,
     steps,
     totalSteps,
     nextStep,
     prevStep,
+    completeOnboarding,
     updateLawyerData,
     updateJudgeData,
     updateLawStudentData,
@@ -80,6 +82,14 @@ export function OnboardingFlow({ userId, userEmail, userName }: OnboardingFlowPr
 
   const colors = ROLE_COLORS[state.role];
 
+  // Extract display name for the animation
+  const displayName =
+    state.judgeData.personalInfo.fullName ||
+    state.lawyerData.personalInfo.fullName ||
+    state.lawStudentData.personalInfo.fullName ||
+    state.commonPersonData.personalInfo.fullName ||
+    userName;
+
   return (
     <div
       style={{
@@ -102,6 +112,14 @@ export function OnboardingFlow({ userId, userEmail, userName }: OnboardingFlowPr
           {renderCurrentStep()}
         </div>
       </OnboardingLayout>
+
+      {isComplete && (
+        <OnboardingComplete
+          role={state.role}
+          displayName={displayName}
+          onComplete={completeOnboarding}
+        />
+      )}
     </div>
   );
 
@@ -179,7 +197,7 @@ export function OnboardingFlow({ userId, userEmail, userName }: OnboardingFlowPr
           />
         );
       default:
-        return <OnboardingComplete role="lawyer" isSubmitting={isSubmitting} />;
+        return null;
     }
   }
 
@@ -220,7 +238,7 @@ export function OnboardingFlow({ userId, userEmail, userName }: OnboardingFlowPr
           />
         );
       default:
-        return <OnboardingComplete role="judge" isSubmitting={isSubmitting} />;
+        return null;
     }
   }
 
@@ -261,7 +279,7 @@ export function OnboardingFlow({ userId, userEmail, userName }: OnboardingFlowPr
           />
         );
       default:
-        return <OnboardingComplete role="law_student" isSubmitting={isSubmitting} />;
+        return null;
     }
   }
 
@@ -302,7 +320,7 @@ export function OnboardingFlow({ userId, userEmail, userName }: OnboardingFlowPr
           />
         );
       default:
-        return <OnboardingComplete role="common_person" isSubmitting={isSubmitting} />;
+        return null;
     }
   }
 }
