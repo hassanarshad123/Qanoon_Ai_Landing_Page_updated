@@ -1,5 +1,18 @@
-import { readFileSync } from "fs";
-import { join } from "path";
+import { readFileSync, existsSync } from "fs";
+import { join, resolve } from "path";
+
+// Load .env and .env.local files for standalone script execution
+const root = resolve(__dirname, "../../..");
+for (const envFile of [".env", ".env.local"]) {
+  const path = join(root, envFile);
+  if (existsSync(path)) {
+    for (const line of readFileSync(path, "utf-8").split("\n")) {
+      const match = line.match(/^([^#=]+)=(.*)$/);
+      if (match) process.env[match[1].trim()] = match[2].trim();
+    }
+  }
+}
+
 import { getSQL } from "../index";
 
 async function runMigrations() {
@@ -40,12 +53,14 @@ async function runMigrations() {
   }
 
   for (const stmt of statements) {
-    if (!stmt || stmt.startsWith("--")) continue;
+    // Strip leading comment lines and blank lines to get actual SQL
+    const sqlBody = stmt.replace(/^(--.*\n|\s*\n)*/g, "").trim();
+    if (!sqlBody) continue;
     try {
       await sql(stmt);
-      console.log("  OK:", stmt.slice(0, 60).replace(/\n/g, " ") + "...");
+      console.log("  OK:", sqlBody.slice(0, 60).replace(/\n/g, " ") + "...");
     } catch (err: any) {
-      console.error("  FAIL:", stmt.slice(0, 60).replace(/\n/g, " "));
+      console.error("  FAIL:", sqlBody.slice(0, 60).replace(/\n/g, " "));
       console.error("  Error:", err.message);
     }
   }

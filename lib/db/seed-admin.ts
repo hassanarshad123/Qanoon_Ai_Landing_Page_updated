@@ -1,3 +1,18 @@
+import { readFileSync, existsSync } from "fs";
+import { join, resolve } from "path";
+
+// Load .env and .env.local files for standalone script execution
+const root = resolve(__dirname, "../..");
+for (const envFile of [".env", ".env.local"]) {
+  const path = join(root, envFile);
+  if (existsSync(path)) {
+    for (const line of readFileSync(path, "utf-8").split("\n")) {
+      const match = line.match(/^([^#=]+)=(.*)$/);
+      if (match) process.env[match[1].trim()] = match[2].trim();
+    }
+  }
+}
+
 import bcrypt from "bcryptjs";
 import { getSQL } from "./index";
 
