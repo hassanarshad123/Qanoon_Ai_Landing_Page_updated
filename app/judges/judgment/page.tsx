@@ -1,11 +1,13 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
+import { Suspense, useState, useEffect } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
-import { Gavel, FileText } from "lucide-react";
+import { Gavel, FileText, Loader2, Plus } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import {
   Select,
   SelectContent,
@@ -15,29 +17,48 @@ import {
 } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { PageHeader } from "@/components/judges/shared/page-header";
-import { CaseSelector } from "@/components/judges/shared/case-selector";
 import { LegalStatusBadge } from "@/components/judges/shared/legal-status-badge";
-import { getJudgments, getBriefs } from "@/lib/mock/api";
-import type { Judgment, Brief, EnhancedBrief } from "@/lib/mock/types";
+import { EmptyState } from "@/components/judges/shared/empty-state";
+import { listJudgments, type JudgmentListItem } from "@/lib/judgment/actions";
+import { listBriefs } from "@/lib/brief/actions";
+import type { EnhancedBrief } from "@/lib/mock/types";
+import { toast } from "sonner";
 
 export default function JudgmentListPage() {
+  return (
+    <Suspense fallback={<div className="flex justify-center py-16"><Loader2 className="h-8 w-8 text-[#A21CAF] animate-spin" /></div>}>
+      <JudgmentListContent />
+    </Suspense>
+  );
+}
+
+function JudgmentListContent() {
   const router = useRouter();
-  const [judgments, setJudgments] = useState<Judgment[]>([]);
-  const [briefs, setBriefs] = useState<(Brief | EnhancedBrief)[]>([]);
+  const searchParams = useSearchParams();
+  const preselectedBriefId = searchParams.get("briefId") || "";
+  const [judgments, setJudgments] = useState<JudgmentListItem[]>([]);
+  const [briefs, setBriefs] = useState<EnhancedBrief[]>([]);
   const [loading, setLoading] = useState(true);
-  const [selectedCaseId, setSelectedCaseId] = useState<string>("");
-  const [selectedBriefId, setSelectedBriefId] = useState<string>("");
-  const [creationMode, setCreationMode] = useState<"case" | "brief">("case");
+  const [generating, setGenerating] = useState(false);
+  const [selectedBriefId, setSelectedBriefId] = useState<string>(preselectedBriefId);
+  const [creationMode, setCreationMode] = useState<"brief" | "manual">(preselectedBriefId ? "brief" : "brief");
+
+  // Manual form state
+  const [manualTitle, setManualTitle] = useState("");
+  const [manualCaseNumber, setManualCaseNumber] = useState("");
+  const [manualCourt, setManualCourt] = useState("");
 
   useEffect(() => {
     async function loadData() {
       try {
         const [judgmentsData, briefsData] = await Promise.all([
-          getJudgments(),
-          getBriefs(),
+          listJudgments(),
+          listBriefs(),
         ]);
         setJudgments(judgmentsData);
         setBriefs(briefsData);
+      } catch (err) {
+        console.error("Failed to load data:", err);
       } finally {
         setLoading(false);
       }
@@ -45,39 +66,80 @@ export default function JudgmentListPage() {
     loadData();
   }, []);
 
-  const handleGenerateSkeleton = () => {
-    if (creationMode === "case" && selectedCaseId) {
-      // Navigate to the first judgment for demo purposes
-      const existingJudgment = judgments.find(
-        (j) => j.caseId === selectedCaseId
-      );
-      if (existingJudgment) {
-        router.push(`/judges/judgment/${existingJudgment.id}`);
-      } else {
-        router.push(`/judges/judgment/${judgments[0]?.id ?? "jdg-001"}`);
-      }
-    } else if (creationMode === "brief" && selectedBriefId) {
+  const handleGenerate = async () => {
+    if (generating) return;
+
+    let body: any;
+    if (creationMode === "brief" && selectedBriefId) {
       const brief = briefs.find((b) => b.id === selectedBriefId);
-      if (brief) {
-        const existingJudgment = judgments.find(
-          (j) => j.caseId === brief.caseId
-        );
-        if (existingJudgment) {
-          router.push(`/judges/judgment/${existingJudgment.id}`);
-        } else {
-          router.push(`/judges/judgment/${judgments[0]?.id ?? "jdg-001"}`);
+      body = {
+        briefId: selectedBriefId,
+        caseTitle: brief?.caseTitle || "Untitled Judgment",
+        caseNumber: brief ? undefined : undefined,
+        court: brief ? undefined : undefined,
+      };
+    } else if (creationMode === "manual" && manualTitle.trim()) {
+      body = {
+        caseTitle: manualTitle.trim(),
+        caseNumber: manualCaseNumber.trim() || undefined,
+        court: manualCourt.trim() || undefined,
+      };
+    } else {
+      return;
+    }
+
+    setGenerating(true);
+    try {
+      const response = await fetch("/api/judgment/generate", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(body),
+      });
+
+      if (!response.ok) throw new Error("Generation failed");
+
+      const reader = response.body?.getReader();
+      if (!reader) throw new Error("No stream");
+
+      const decoder = new TextDecoder();
+
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+
+        const chunk = decoder.decode(value, { stream: true });
+        const lines = chunk.split("\n");
+
+        for (const line of lines) {
+          if (line.startsWith("data: ")) {
+            const payload = line.slice(6);
+            if (payload === "[DONE]") continue;
+            try {
+              const parsed = JSON.parse(payload);
+              if (parsed.complete?.judgmentId) {
+                router.push(`/judges/judgment/${parsed.complete.judgmentId}`);
+                return;
+              }
+            } catch {
+              // Ignore
+            }
+          }
         }
       }
+    } catch (err) {
+      console.error("Generation error:", err);
+      toast.error("Failed to generate judgment. Please try again.");
+      setGenerating(false);
     }
   };
 
   const canGenerate =
-    (creationMode === "case" && selectedCaseId) ||
-    (creationMode === "brief" && selectedBriefId);
+    !generating &&
+    ((creationMode === "brief" && selectedBriefId) ||
+      (creationMode === "manual" && manualTitle.trim()));
 
   return (
     <div className="space-y-8">
-      {/* Page Header */}
       <PageHeader
         label="Judgment"
         title="Judgment Assistant"
@@ -95,70 +157,113 @@ export default function JudgmentListPage() {
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <Tabs
-            value={creationMode}
-            onValueChange={(v) => setCreationMode(v as "case" | "brief")}
-          >
-            <TabsList className="mb-6">
-              <TabsTrigger value="case">Select a Case</TabsTrigger>
-              <TabsTrigger value="brief">Start from Existing Brief</TabsTrigger>
-            </TabsList>
-
-            <TabsContent value="case">
-              <div className="space-y-4">
-                <p className="text-sm text-gray-500">
-                  Choose a case to generate a judgment skeleton with AI-powered
-                  analysis and precedent suggestions.
-                </p>
-                <CaseSelector
-                  value={selectedCaseId}
-                  onSelect={setSelectedCaseId}
-                  placeholder="Select a case to draft judgment..."
-                />
-              </div>
-            </TabsContent>
-
-            <TabsContent value="brief">
-              <div className="space-y-4">
-                <p className="text-sm text-gray-500">
-                  Generate a judgment skeleton from an existing case brief to
-                  save time and maintain consistency.
-                </p>
-                <Select
-                  value={selectedBriefId}
-                  onValueChange={setSelectedBriefId}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select an existing brief..." />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {briefs.map((brief) => (
-                      <SelectItem key={brief.id} value={brief.id}>
-                        <div className="flex items-center gap-2">
-                          <FileText className="h-3.5 w-3.5 text-gray-400" />
-                          <span>{brief.caseTitle}</span>
-                          <span className="text-xs text-gray-400 ml-1">
-                            ({brief.status})
-                          </span>
-                        </div>
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-            </TabsContent>
-          </Tabs>
-
-          <div className="mt-6">
-            <Button
-              onClick={handleGenerateSkeleton}
-              disabled={!canGenerate}
-              className="bg-[#A21CAF] hover:bg-[#86198F] text-white"
+          {generating ? (
+            <div className="flex flex-col items-center py-8">
+              <Loader2 className="h-8 w-8 text-[#A21CAF] animate-spin mb-4" />
+              <p className="text-sm font-medium text-gray-900">Generating Judgment...</p>
+              <p className="text-xs text-gray-500 mt-1">
+                AI is analyzing the case and drafting 7 sections. This may take a minute.
+              </p>
+            </div>
+          ) : (
+            <Tabs
+              value={creationMode}
+              onValueChange={(v) => setCreationMode(v as "brief" | "manual")}
             >
-              <Gavel className="h-4 w-4 mr-2" />
-              Generate Judgment Skeleton
-            </Button>
-          </div>
+              <TabsList className="mb-6">
+                <TabsTrigger value="brief">Start from Existing Brief</TabsTrigger>
+                <TabsTrigger value="manual">Enter Case Details</TabsTrigger>
+              </TabsList>
+
+              <TabsContent value="brief">
+                <div className="space-y-4">
+                  <p className="text-sm text-gray-500">
+                    Generate a judgment from an existing case brief to
+                    save time and maintain consistency.
+                  </p>
+                  <Select
+                    value={selectedBriefId}
+                    onValueChange={setSelectedBriefId}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select an existing brief..." />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {briefs.map((brief) => (
+                        <SelectItem key={brief.id} value={brief.id}>
+                          <div className="flex items-center gap-2">
+                            <FileText className="h-3.5 w-3.5 text-gray-400" />
+                            <span>{brief.caseTitle}</span>
+                            <span className="text-xs text-gray-400 ml-1">
+                              ({brief.status})
+                            </span>
+                          </div>
+                        </SelectItem>
+                      ))}
+                      {briefs.length === 0 && (
+                        <SelectItem value="_none" disabled>
+                          No briefs available — generate one first
+                        </SelectItem>
+                      )}
+                    </SelectContent>
+                  </Select>
+                </div>
+              </TabsContent>
+
+              <TabsContent value="manual">
+                <div className="space-y-4 max-w-lg">
+                  <p className="text-sm text-gray-500">
+                    Enter case details manually to generate a judgment draft.
+                  </p>
+                  <div className="space-y-3">
+                    <div>
+                      <Label htmlFor="case-title" className="text-sm">Case Title *</Label>
+                      <Input
+                        id="case-title"
+                        placeholder="e.g., Muhammad Ali v. State"
+                        value={manualTitle}
+                        onChange={(e) => setManualTitle(e.target.value)}
+                        className="mt-1"
+                      />
+                    </div>
+                    <div>
+                      <Label htmlFor="case-number" className="text-sm">Case Number</Label>
+                      <Input
+                        id="case-number"
+                        placeholder="e.g., Crl. Appeal No. 123/2024"
+                        value={manualCaseNumber}
+                        onChange={(e) => setManualCaseNumber(e.target.value)}
+                        className="mt-1"
+                      />
+                    </div>
+                    <div>
+                      <Label htmlFor="court" className="text-sm">Court</Label>
+                      <Input
+                        id="court"
+                        placeholder="e.g., Lahore High Court"
+                        value={manualCourt}
+                        onChange={(e) => setManualCourt(e.target.value)}
+                        className="mt-1"
+                      />
+                    </div>
+                  </div>
+                </div>
+              </TabsContent>
+            </Tabs>
+          )}
+
+          {!generating && (
+            <div className="mt-6">
+              <Button
+                onClick={handleGenerate}
+                disabled={!canGenerate}
+                className="bg-[#A21CAF] hover:bg-[#86198F] text-white"
+              >
+                <Gavel className="h-4 w-4 mr-2" />
+                Generate Judgment Draft
+              </Button>
+            </div>
+          )}
         </CardContent>
       </Card>
 
@@ -167,7 +272,6 @@ export default function JudgmentListPage() {
         <h2 className="text-lg font-semibold text-gray-900 mb-6">
           Previous Judgment Drafts
         </h2>
-
 
         {loading ? (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -182,14 +286,11 @@ export default function JudgmentListPage() {
             ))}
           </div>
         ) : judgments.length === 0 ? (
-          <Card>
-            <CardContent className="pt-6 text-center">
-              <Gavel className="h-12 w-12 text-gray-300 mx-auto mb-3" />
-              <p className="text-gray-500">
-                No judgment drafts yet. Create your first one above.
-              </p>
-            </CardContent>
-          </Card>
+          <EmptyState
+            icon={Gavel}
+            title="No Judgment Drafts Yet"
+            description="Create your first judgment — start from a brief or enter case details above."
+          />
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
             {judgments.map((judgment) => (
@@ -212,20 +313,20 @@ export default function JudgmentListPage() {
                     </h3>
 
                     <div className="space-y-1.5">
+                      {judgment.caseNumber && (
+                        <p className="text-xs text-gray-400 font-mono">
+                          {judgment.caseNumber}
+                        </p>
+                      )}
                       <p className="text-xs text-gray-500">
                         Created:{" "}
                         {new Date(judgment.createdAt).toLocaleDateString(
                           "en-US",
-                          {
-                            year: "numeric",
-                            month: "short",
-                            day: "numeric",
-                          }
+                          { year: "numeric", month: "short", day: "numeric" }
                         )}
                       </p>
                       <p className="text-xs text-gray-400">
-                        {judgment.sections.length} sections &middot;{" "}
-                        {judgment.suggestedPrecedents.length} precedents
+                        {judgment.sectionCount} sections
                       </p>
                     </div>
                   </CardContent>

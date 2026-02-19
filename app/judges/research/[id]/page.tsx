@@ -22,7 +22,6 @@ import type { ResearchMessageDB } from "@/lib/research/types";
 import type { StructuredResearchResponse } from "@/lib/research/types";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
-import { cases } from "@/lib/mock/cases";
 
 const followUpPrompts = [
   "Explain further",
@@ -177,21 +176,7 @@ export default function ResearchConversationPage() {
         initialQuerySent.current = true;
         setLoading(false);
 
-        // Build case context if case-linked
-        let caseContext: any = undefined;
-        if (caseId) {
-          const c = cases.find((cs) => cs.id === caseId);
-          if (c) {
-            caseContext = {
-              caseTitle: c.title,
-              caseNumber: c.number,
-              court: c.court,
-              description: c.description,
-            };
-          }
-        }
-
-        sendQuery(q, { caseId: caseId || undefined, caseContext });
+        sendQuery(q, { caseId: caseId || undefined });
       } else {
         setLoading(false);
       }
@@ -221,21 +206,7 @@ export default function ResearchConversationPage() {
 
   const handleSendMessage = (content: string) => {
     if (conversationId) {
-      // Build case context for follow-ups too
-      const caseId = searchParams.get("caseId");
-      let caseContext: any = undefined;
-      if (caseId) {
-        const c = cases.find((cs) => cs.id === caseId);
-        if (c) {
-          caseContext = {
-            caseTitle: c.title,
-            caseNumber: c.number,
-            court: c.court,
-            description: c.description,
-          };
-        }
-      }
-      sendFollowUp(content, caseContext);
+      sendFollowUp(content);
     } else {
       sendQuery(content);
     }

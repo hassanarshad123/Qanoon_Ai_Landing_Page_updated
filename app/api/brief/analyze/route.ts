@@ -5,7 +5,7 @@ import { buildAnalysisPrompt } from "@/lib/ai/prompts";
 import { requireAuth } from "@/lib/auth/api";
 
 export async function POST(request: Request) {
-  const { error } = await requireAuth();
+  const { session, error } = await requireAuth();
   if (error) return error;
 
   try {

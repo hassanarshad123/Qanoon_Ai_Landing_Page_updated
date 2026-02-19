@@ -48,6 +48,38 @@ export async function submitOnboarding(
         SET role = ${role}, onboarding_completed = true, updated_at = now()
         WHERE id = ${userId}
       `;
+
+      // Auto-create judge_profiles row for judges
+      if (role === "judge") {
+        const courtInfo = data.courtInfo as
+          | { courtLevel?: string; designation?: string; province?: string; city?: string; courtName?: string }
+          | undefined;
+
+        await sql`
+          INSERT INTO judge_profiles (user_id, full_name, email, phone, court_level, designation, province, city, court_name)
+          VALUES (
+            ${userId},
+            ${fullName},
+            ${email},
+            ${phone},
+            ${courtInfo?.courtLevel ?? null},
+            ${courtInfo?.designation ?? null},
+            ${courtInfo?.province ?? null},
+            ${courtInfo?.city ?? null},
+            ${courtInfo?.courtName ?? null}
+          )
+          ON CONFLICT (user_id) DO UPDATE SET
+            full_name = COALESCE(EXCLUDED.full_name, judge_profiles.full_name),
+            email = COALESCE(EXCLUDED.email, judge_profiles.email),
+            phone = COALESCE(EXCLUDED.phone, judge_profiles.phone),
+            court_level = COALESCE(EXCLUDED.court_level, judge_profiles.court_level),
+            designation = COALESCE(EXCLUDED.designation, judge_profiles.designation),
+            province = COALESCE(EXCLUDED.province, judge_profiles.province),
+            city = COALESCE(EXCLUDED.city, judge_profiles.city),
+            court_name = COALESCE(EXCLUDED.court_name, judge_profiles.court_name),
+            updated_at = now()
+        `;
+      }
     }
 
     return { success: true, error: null };

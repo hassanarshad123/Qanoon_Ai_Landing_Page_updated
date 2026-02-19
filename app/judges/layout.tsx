@@ -14,6 +14,7 @@ import {
 } from "@/components/ui/sheet";
 import { Sidebar } from "@/components/judges/Sidebar";
 import { JudgesBreadcrumbs } from "@/components/judges/Breadcrumbs";
+import { ProductTour } from "@/components/judges/shared/product-tour";
 import { cn } from "@/lib/utils";
 
 const SIDEBAR_COLLAPSED_KEY = "judges-sidebar-collapsed";
@@ -88,6 +89,7 @@ export default function JudgesLayout({
           <div className="px-6 py-6 lg:px-10 lg:py-8 max-w-[1400px] mx-auto">{children}</div>
         </main>
       </div>
+      <ProductTour />
       <Toaster />
     </ThemeProvider>
   );

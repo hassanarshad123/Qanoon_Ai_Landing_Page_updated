@@ -592,7 +592,7 @@ export default function BriefDetailPage() {
             asChild
             className="bg-[#A21CAF] hover:bg-[#86198F] gap-2"
           >
-            <Link href="/judges/judgment">
+            <Link href={`/judges/judgment?briefId=${id}`}>
               <Gavel className="h-4 w-4" />
               Draft Judgment
             </Link>

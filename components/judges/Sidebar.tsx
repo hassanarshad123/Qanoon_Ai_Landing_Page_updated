@@ -24,12 +24,12 @@ import {
 import { UserMenu } from "@/components/shared/UserMenu";
 
 const pages = [
-  { href: "/judges", label: "Dashboard", icon: LayoutDashboard },
-  // { href: "/judges/documents", label: "Documents", icon: FileStack },
-  { href: "/judges/brief", label: "Case Brief", icon: FileText },
-  { href: "/judges/judgment", label: "Judgment", icon: Gavel },
-  { href: "/judges/research", label: "Research", icon: Search },
-  { href: "/judges/notes", label: "Notes", icon: StickyNote },
+  { href: "/judges", label: "Dashboard", icon: LayoutDashboard, tourId: "nav-dashboard" },
+  { href: "/judges/documents", label: "Documents", icon: FileStack, tourId: "nav-documents" },
+  { href: "/judges/brief", label: "Case Brief", icon: FileText, tourId: "nav-brief" },
+  { href: "/judges/judgment", label: "Judgment", icon: Gavel, tourId: "nav-judgment" },
+  { href: "/judges/research", label: "Research", icon: Search, tourId: "nav-research" },
+  { href: "/judges/notes", label: "Notes", icon: StickyNote, tourId: "nav-notes" },
 ];
 
 interface SidebarProps {
@@ -71,6 +71,7 @@ export function Sidebar({ collapsed, onToggle }: SidebarProps) {
               <Link
                 key={page.href}
                 href={page.href}
+                data-tour={page.tourId}
                 className={cn(
                   "mx-2 flex items-center rounded-lg transition-colors",
                   collapsed ? "justify-center px-2 py-2.5" : "gap-3 px-3 py-2.5",

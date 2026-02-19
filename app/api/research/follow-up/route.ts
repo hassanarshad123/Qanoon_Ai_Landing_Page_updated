@@ -13,8 +13,9 @@ import {
 } from "@/lib/research/actions";
 
 export async function POST(request: Request) {
-  const { error } = await requireAuth();
+  const { session, error } = await requireAuth();
   if (error) return error;
+  const userId = session!.user.id;
 
   try {
     const { conversationId, question, caseContext } = await request.json();
@@ -26,7 +27,7 @@ export async function POST(request: Request) {
     }
 
     // 1. Fetch conversation + history
-    const conversation = await getConversation(conversationId);
+    const conversation = await getConversation(conversationId, userId);
     if (!conversation) {
       return new Response("Conversation not found", { status: 404 });
     }

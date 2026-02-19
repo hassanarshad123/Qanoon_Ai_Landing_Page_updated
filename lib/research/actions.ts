@@ -1,6 +1,8 @@
 "use server";
 
 import { sql } from "@/lib/db";
+import { getUserId } from "@/lib/auth/session";
+import { logActivity } from "@/lib/activity/actions";
 import type { ResearchConversationDB, ResearchMessageDB, ResearchMode } from "./types";
 
 function parseJson(val: unknown): any {
@@ -17,29 +19,37 @@ export async function createConversation(data: {
   title?: string;
   caseId?: string;
   mode?: ResearchMode;
-}): Promise<string> {
+}, userId?: string): Promise<string> {
+  const uid = userId ?? await getUserId();
+
   const rows = await sql(
-    `INSERT INTO research_conversations (title, case_id, mode)
-     VALUES ($1, $2, $3)
+    `INSERT INTO research_conversations (title, case_id, mode, user_id)
+     VALUES ($1, $2, $3, $4)
      RETURNING id`,
-    [data.title || "New Research", data.caseId || null, data.mode || "general"]
+    [data.title || "New Research", data.caseId || null, data.mode || "general", uid]
   );
-  return rows[0].id;
+
+  const convId = rows[0].id;
+  await logActivity(uid, "created", "research", convId, data.title || "New Research");
+  return convId;
 }
 
 // ---------------------------------------------------------------------------
 // Get a single conversation
 // ---------------------------------------------------------------------------
 export async function getConversation(
-  id: string
+  id: string,
+  userId?: string
 ): Promise<ResearchConversationDB | null> {
+  const uid = userId ?? await getUserId();
+
   const rows = await sql(
     `SELECT rc.*,
        (SELECT count(*) FROM research_messages WHERE conversation_id = rc.id) AS message_count,
        (SELECT content FROM research_messages WHERE conversation_id = rc.id ORDER BY created_at LIMIT 1) AS first_message
      FROM research_conversations rc
-     WHERE rc.id = $1`,
-    [id]
+     WHERE rc.id = $1 AND rc.user_id = $2`,
+    [id, uid]
   );
 
   if (rows.length === 0) return null;
@@ -61,12 +71,13 @@ export async function getConversation(
 }
 
 // ---------------------------------------------------------------------------
-// List conversations
+// List conversations (user-scoped)
 // ---------------------------------------------------------------------------
 export async function listConversations(options?: {
   search?: string;
   limit?: number;
-}): Promise<ResearchConversationDB[]> {
+}, userId?: string): Promise<ResearchConversationDB[]> {
+  const uid = userId ?? await getUserId();
   const limit = options?.limit ?? 50;
 
   let query: string;
@@ -77,20 +88,21 @@ export async function listConversations(options?: {
        (SELECT count(*) FROM research_messages WHERE conversation_id = rc.id) AS message_count,
        (SELECT content FROM research_messages WHERE conversation_id = rc.id AND role = 'user' ORDER BY created_at LIMIT 1) AS first_message
      FROM research_conversations rc
-     WHERE rc.title ILIKE $1 OR EXISTS (
-       SELECT 1 FROM research_messages rm WHERE rm.conversation_id = rc.id AND rm.content ILIKE $1
-     )
+     WHERE rc.user_id = $1 AND (rc.title ILIKE $2 OR EXISTS (
+       SELECT 1 FROM research_messages rm WHERE rm.conversation_id = rc.id AND rm.content ILIKE $2
+     ))
      ORDER BY rc.pinned DESC, rc.updated_at DESC
-     LIMIT $2`;
-    params = [`%${options.search.trim()}%`, limit];
+     LIMIT $3`;
+    params = [uid, `%${options.search.trim()}%`, limit];
   } else {
     query = `SELECT rc.*,
        (SELECT count(*) FROM research_messages WHERE conversation_id = rc.id) AS message_count,
        (SELECT content FROM research_messages WHERE conversation_id = rc.id AND role = 'user' ORDER BY created_at LIMIT 1) AS first_message
      FROM research_conversations rc
+     WHERE rc.user_id = $1
      ORDER BY rc.pinned DESC, rc.updated_at DESC
-     LIMIT $1`;
-    params = [limit];
+     LIMIT $2`;
+    params = [uid, limit];
   }
 
   const rows = await sql(query, params);
@@ -114,16 +126,19 @@ export async function listConversations(options?: {
 // Delete a conversation
 // ---------------------------------------------------------------------------
 export async function deleteConversation(id: string): Promise<void> {
-  await sql(`DELETE FROM research_conversations WHERE id = $1`, [id]);
+  const uid = await getUserId();
+  await sql(`DELETE FROM research_conversations WHERE id = $1 AND user_id = $2`, [id, uid]);
+  await logActivity(uid, "deleted", "research", id);
 }
 
 // ---------------------------------------------------------------------------
 // Toggle pin
 // ---------------------------------------------------------------------------
 export async function togglePin(id: string): Promise<boolean> {
+  const uid = await getUserId();
   const rows = await sql(
-    `UPDATE research_conversations SET pinned = NOT pinned, updated_at = now() WHERE id = $1 RETURNING pinned`,
-    [id]
+    `UPDATE research_conversations SET pinned = NOT pinned, updated_at = now() WHERE id = $1 AND user_id = $2 RETURNING pinned`,
+    [id, uid]
   );
   return rows[0]?.pinned ?? false;
 }
@@ -132,6 +147,7 @@ export async function togglePin(id: string): Promise<boolean> {
 // Update title
 // ---------------------------------------------------------------------------
 export async function updateTitle(id: string, title: string): Promise<void> {
+  // Called from API routes which already verified auth — skip userId check for title updates
   await sql(
     `UPDATE research_conversations SET title = $1, updated_at = now() WHERE id = $2`,
     [title, id]
@@ -201,16 +217,18 @@ export async function updateConversationMeta(
   id: string,
   meta: { legalAreas?: string[]; caseId?: string }
 ): Promise<void> {
+  const uid = await getUserId();
+
   if (meta.legalAreas !== undefined) {
     await sql(
-      `UPDATE research_conversations SET legal_areas = $1, updated_at = now() WHERE id = $2`,
-      [JSON.stringify(meta.legalAreas), id]
+      `UPDATE research_conversations SET legal_areas = $1, updated_at = now() WHERE id = $2 AND user_id = $3`,
+      [JSON.stringify(meta.legalAreas), id, uid]
     );
   }
   if (meta.caseId !== undefined) {
     await sql(
-      `UPDATE research_conversations SET case_id = $1, updated_at = now() WHERE id = $2`,
-      [meta.caseId, id]
+      `UPDATE research_conversations SET case_id = $1, updated_at = now() WHERE id = $2 AND user_id = $3`,
+      [meta.caseId, id, uid]
     );
   }
 }

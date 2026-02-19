@@ -29,9 +29,9 @@ export default function ContractReviewPage() {
     });
   }, []);
 
-  const handleUploadComplete = (filename: string) => {
+  const handleUploadComplete = (doc: { id: string; fileName: string; blobUrl: string }) => {
     toast.success("Contract uploaded successfully", {
-      description: `${filename} is being analyzed by AI`,
+      description: `${doc.fileName} is being analyzed by AI`,
     });
   };
 

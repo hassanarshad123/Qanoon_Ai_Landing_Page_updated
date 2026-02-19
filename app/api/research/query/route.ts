@@ -14,8 +14,9 @@ import {
 } from "@/lib/research/actions";
 
 export async function POST(request: Request) {
-  const { error } = await requireAuth();
+  const { session, error } = await requireAuth();
   if (error) return error;
+  const userId = session!.user.id;
 
   try {
     const { question, conversationId, caseId, caseContext } =
@@ -33,7 +34,7 @@ export async function POST(request: Request) {
         title: "New Research",
         caseId: caseId || undefined,
         mode: caseId ? "case_linked" : "general",
-      });
+      }, userId);
     }
 
     // 2. Save user message

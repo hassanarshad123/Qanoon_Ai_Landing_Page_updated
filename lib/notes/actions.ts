@@ -1,6 +1,8 @@
 "use server";
 
 import { sql } from "@/lib/db";
+import { getUserId } from "@/lib/auth/session";
+import { logActivity } from "@/lib/activity/actions";
 import type { Note, NoteFolder, Tag, Folder } from "@/lib/mock/types";
 
 // ---------------------------------------------------------------------------
@@ -15,9 +17,11 @@ export async function createNote(data: {
   sourceType?: "brief" | "judgment" | "research";
   sourceLabel?: string;
 }): Promise<string> {
+  const uid = await getUserId();
+
   const rows = await sql(
-    `INSERT INTO notes (title, content, folder, source_id, source_type, source_label)
-     VALUES ($1, $2, $3, $4, $5, $6)
+    `INSERT INTO notes (title, content, folder, source_id, source_type, source_label, user_id)
+     VALUES ($1, $2, $3, $4, $5, $6, $7)
      RETURNING id`,
     [
       data.title || "Untitled Note",
@@ -26,6 +30,7 @@ export async function createNote(data: {
       data.sourceId || null,
       data.sourceType || null,
       data.sourceLabel || null,
+      uid,
     ]
   );
 
@@ -41,6 +46,8 @@ export async function createNote(data: {
     }
   }
 
+  await logActivity(uid, "created", "note", noteId, data.title || "Untitled Note");
+
   return noteId;
 }
 
@@ -48,13 +55,15 @@ export async function createNote(data: {
 // Get a single note by ID
 // ---------------------------------------------------------------------------
 export async function getNote(id: string): Promise<Note | null> {
+  const uid = await getUserId();
+
   const rows = await sql(
     `SELECT n.*, array_agg(nt.tag_id) FILTER (WHERE nt.tag_id IS NOT NULL) as tag_ids
      FROM notes n
      LEFT JOIN note_tags nt ON n.id = nt.note_id
-     WHERE n.id = $1
+     WHERE n.id = $1 AND n.user_id = $2
      GROUP BY n.id`,
-    [id]
+    [id, uid]
   );
 
   if (rows.length === 0) return null;
@@ -75,15 +84,19 @@ export async function getNote(id: string): Promise<Note | null> {
 }
 
 // ---------------------------------------------------------------------------
-// List all notes
+// List all notes (user-scoped)
 // ---------------------------------------------------------------------------
 export async function listNotes(): Promise<Note[]> {
+  const uid = await getUserId();
+
   const rows = await sql(
     `SELECT n.*, array_agg(nt.tag_id) FILTER (WHERE nt.tag_id IS NOT NULL) as tag_ids
      FROM notes n
      LEFT JOIN note_tags nt ON n.id = nt.note_id
+     WHERE n.user_id = $1
      GROUP BY n.id
-     ORDER BY n.updated_at DESC`
+     ORDER BY n.updated_at DESC`,
+    [uid]
   );
 
   return rows.map((row: any) => ({
@@ -107,11 +120,13 @@ export async function updateNoteContent(
   noteId: string,
   content: string
 ): Promise<{ updatedAt: string }> {
+  const uid = await getUserId();
+
   const rows = await sql(
     `UPDATE notes SET content = $1, updated_at = now()
-     WHERE id = $2
+     WHERE id = $2 AND user_id = $3
      RETURNING updated_at`,
-    [content, noteId]
+    [content, noteId, uid]
   );
 
   if (rows.length === 0) {
@@ -128,11 +143,13 @@ export async function updateNoteTitle(
   noteId: string,
   title: string
 ): Promise<{ updatedAt: string }> {
+  const uid = await getUserId();
+
   const rows = await sql(
     `UPDATE notes SET title = $1, updated_at = now()
-     WHERE id = $2
+     WHERE id = $2 AND user_id = $3
      RETURNING updated_at`,
-    [title, noteId]
+    [title, noteId, uid]
   );
 
   if (rows.length === 0) {
@@ -149,16 +166,22 @@ export async function updateNoteMetadata(
   noteId: string,
   data: { folder?: string; tags?: string[] }
 ): Promise<void> {
+  const uid = await getUserId();
+
   // Update folder if provided
   if (data.folder) {
     await sql(
-      `UPDATE notes SET folder = $1, updated_at = now() WHERE id = $2`,
-      [data.folder, noteId]
+      `UPDATE notes SET folder = $1, updated_at = now() WHERE id = $2 AND user_id = $3`,
+      [data.folder, noteId, uid]
     );
   }
 
   // Update tags if provided
   if (data.tags !== undefined) {
+    // Verify ownership first
+    const ownerCheck = await sql(`SELECT id FROM notes WHERE id = $1 AND user_id = $2`, [noteId, uid]);
+    if (ownerCheck.length === 0) throw new Error("Note not found");
+
     // Remove existing tags
     await sql(`DELETE FROM note_tags WHERE note_id = $1`, [noteId]);
 
@@ -176,20 +199,26 @@ export async function updateNoteMetadata(
 // Delete a note
 // ---------------------------------------------------------------------------
 export async function deleteNote(noteId: string): Promise<void> {
-  await sql(`DELETE FROM notes WHERE id = $1`, [noteId]);
+  const uid = await getUserId();
+  await sql(`DELETE FROM notes WHERE id = $1 AND user_id = $2`, [noteId, uid]);
+  await logActivity(uid, "deleted", "note", noteId);
 }
 
 // ---------------------------------------------------------------------------
-// List all folders with note counts
+// List all folders with note counts (user-scoped)
 // ---------------------------------------------------------------------------
 export async function listFolders(): Promise<Folder[]> {
-  // Get all folders from database
+  const uid = await getUserId();
+
+  // Get all folders for this user (or shared default folders)
   const folderRows = await sql(
     `SELECT f.id, f.name, f.sort_order, COUNT(n.id) as count
      FROM folders f
-     LEFT JOIN notes n ON n.folder = f.name
+     LEFT JOIN notes n ON n.folder = f.name AND n.user_id = $1
+     WHERE f.user_id = $1 OR f.user_id IS NULL
      GROUP BY f.id, f.name, f.sort_order
-     ORDER BY f.sort_order, f.created_at`
+     ORDER BY f.sort_order, f.created_at`,
+    [uid]
   );
 
   return folderRows.map((row: any) => ({
@@ -208,21 +237,23 @@ export async function getFolderCounts(): Promise<Folder[]> {
 // Create a new folder
 // ---------------------------------------------------------------------------
 export async function createFolder(name: string): Promise<string> {
+  const uid = await getUserId();
   const trimmedName = name.trim();
 
   if (!trimmedName) {
     throw new Error("Folder name cannot be empty");
   }
 
-  // Get max sort order
+  // Get max sort order for this user
   const maxOrderRows = await sql(
-    `SELECT COALESCE(MAX(sort_order), 0) + 1 as next_order FROM folders`
+    `SELECT COALESCE(MAX(sort_order), 0) + 1 as next_order FROM folders WHERE user_id = $1 OR user_id IS NULL`,
+    [uid]
   );
   const nextOrder = maxOrderRows[0].next_order;
 
   const rows = await sql(
-    `INSERT INTO folders (name, sort_order) VALUES ($1, $2) RETURNING id`,
-    [trimmedName, nextOrder]
+    `INSERT INTO folders (name, sort_order, user_id) VALUES ($1, $2, $3) RETURNING id`,
+    [trimmedName, nextOrder, uid]
   );
 
   return rows[0].id;
@@ -232,18 +263,20 @@ export async function createFolder(name: string): Promise<string> {
 // Delete a folder (moves notes to "General", cannot delete "General")
 // ---------------------------------------------------------------------------
 export async function deleteFolder(folderName: string): Promise<void> {
+  const uid = await getUserId();
+
   if (folderName === "General") {
     throw new Error("Cannot delete the General folder");
   }
 
   // Move all notes in this folder to "General"
   await sql(
-    `UPDATE notes SET folder = 'General', updated_at = now() WHERE folder = $1`,
-    [folderName]
+    `UPDATE notes SET folder = 'General', updated_at = now() WHERE folder = $1 AND user_id = $2`,
+    [folderName, uid]
   );
 
   // Delete the folder
-  await sql(`DELETE FROM folders WHERE name = $1`, [folderName]);
+  await sql(`DELETE FROM folders WHERE name = $1 AND (user_id = $2 OR user_id IS NULL)`, [folderName, uid]);
 }
 
 // ---------------------------------------------------------------------------

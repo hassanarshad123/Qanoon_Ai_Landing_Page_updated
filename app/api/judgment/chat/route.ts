@@ -1,6 +1,6 @@
 import { anthropic } from "@/lib/ai/client";
 import { AI_MODELS } from "@/lib/ai/models";
-import { buildRegenerationPrompt } from "@/lib/ai/prompts";
+import { buildJudgmentChatPrompt } from "@/lib/ai/prompts";
 import { requireAuth } from "@/lib/auth/api";
 
 export async function POST(request: Request) {
@@ -8,24 +8,23 @@ export async function POST(request: Request) {
   if (error) return error;
 
   try {
-    const { sectionTitle, currentContent, judgeNote, briefContext } =
-      await request.json();
+    const { judgmentContext, messages, userMessage } = await request.json();
 
-    if (!sectionTitle || !currentContent || !judgeNote) {
-      return new Response("Missing required fields", { status: 400 });
+    if (!userMessage) {
+      return new Response("Missing userMessage", { status: 400 });
     }
 
-    const prompt = buildRegenerationPrompt(
-      sectionTitle,
-      currentContent,
-      judgeNote,
-      briefContext || ""
+    const { system, messages: chatMessages } = buildJudgmentChatPrompt(
+      judgmentContext || "",
+      messages || [],
+      userMessage
     );
 
     const stream = anthropic.messages.stream({
-      model: AI_MODELS.regenerate,
+      model: AI_MODELS.chat,
       max_tokens: 4096,
-      messages: [{ role: "user", content: prompt }],
+      system,
+      messages: chatMessages,
     });
 
     const encoder = new TextEncoder();
@@ -65,7 +64,7 @@ export async function POST(request: Request) {
       },
     });
   } catch (error: any) {
-    console.error("Regeneration error:", error);
+    console.error("Judgment chat error:", error);
     return new Response(JSON.stringify({ error: error.message }), {
       status: 500,
       headers: { "Content-Type": "application/json" },

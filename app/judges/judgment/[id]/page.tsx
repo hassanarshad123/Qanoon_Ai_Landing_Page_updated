@@ -1,9 +1,9 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { useParams } from "next/navigation";
 import Link from "next/link";
-import { ArrowLeft, ChevronDown } from "lucide-react";
+import { ArrowLeft, ChevronDown, Loader2 } from "lucide-react";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -22,18 +22,20 @@ import { ExportMenu } from "@/components/judges/shared/export-menu";
 import { SaveToNotesDialog } from "@/components/judges/shared/save-to-notes-dialog";
 import { PrecedentCard } from "@/components/judges/shared/precedent-card";
 import { ConversationInput } from "@/components/judges/shared/conversation-input";
-import { getJudgmentById } from "@/lib/mock/api";
-import type { Judgment } from "@/lib/mock/types";
-
-const SECTION_ORDER = [
-  "Facts",
-  "Issues",
-  "Analysis",
-  "Applicable Law",
-  "Precedents",
-  "Holding",
-  "Relief",
-];
+import { SectionReviewControls } from "@/components/judges/shared/section-review-controls";
+import { SectionEditor } from "@/components/judges/shared/section-editor";
+import { RegenerateDialog } from "@/components/judges/shared/regenerate-dialog";
+import { LegalStatusBadge } from "@/components/judges/shared/legal-status-badge";
+import {
+  getJudgment,
+  updateJudgmentSection,
+  updateJudgmentReview,
+  updateJudgmentStatus,
+  saveJudgmentChat,
+  type Judgment,
+  type JudgmentSection,
+} from "@/lib/judgment/actions";
+import { toast } from "sonner";
 
 const AI_SUGGESTIONS = [
   "Expand the analysis section",
@@ -42,6 +44,43 @@ const AI_SUGGESTIONS = [
   "Strengthen legal reasoning",
 ];
 
+async function readSSEStream(
+  response: Response,
+  onChunk: (text: string) => void
+): Promise<string> {
+  const reader = response.body?.getReader();
+  if (!reader) throw new Error("No response stream");
+
+  const decoder = new TextDecoder();
+  let fullText = "";
+
+  while (true) {
+    const { done, value } = await reader.read();
+    if (done) break;
+
+    const chunk = decoder.decode(value, { stream: true });
+    const lines = chunk.split("\n");
+
+    for (const line of lines) {
+      if (line.startsWith("data: ")) {
+        const payload = line.slice(6);
+        if (payload === "[DONE]") continue;
+        try {
+          const parsed = JSON.parse(payload);
+          if (parsed.text) {
+            fullText += parsed.text;
+            onChunk(fullText);
+          }
+        } catch {
+          // Ignore
+        }
+      }
+    }
+  }
+
+  return fullText;
+}
+
 export default function JudgmentDetailPage() {
   const params = useParams();
   const id = params.id as string;
@@ -49,40 +88,209 @@ export default function JudgmentDetailPage() {
   const [judgment, setJudgment] = useState<Judgment | null>(null);
   const [loading, setLoading] = useState(true);
   const [openSections, setOpenSections] = useState<Record<string, boolean>>({});
+  const [editingSection, setEditingSection] = useState<string | null>(null);
+  const [regenerateSection, setRegenerateSection] = useState<string | null>(null);
+  const [regenerating, setRegenerating] = useState(false);
+  const [chatLoading, setChatLoading] = useState(false);
+  const [streamingChat, setStreamingChat] = useState("");
 
   useEffect(() => {
-    async function loadJudgment() {
-      try {
-        const data = await getJudgmentById(id);
+    if (!id) return;
+    getJudgment(id)
+      .then((data) => {
         if (data) {
           setJudgment(data);
-          // Open all sections by default
           const initialOpen: Record<string, boolean> = {};
-          data.sections.forEach((section) => {
-            initialOpen[section.id] = true;
+          data.sections.forEach((s) => {
+            initialOpen[s.id] = true;
           });
           setOpenSections(initialOpen);
         }
-      } finally {
-        setLoading(false);
-      }
-    }
-    if (id) {
-      loadJudgment();
-    }
+      })
+      .catch(console.error)
+      .finally(() => setLoading(false));
   }, [id]);
 
   const toggleSection = (sectionId: string) => {
-    setOpenSections((prev) => ({
-      ...prev,
-      [sectionId]: !prev[sectionId],
-    }));
+    setOpenSections((prev) => ({ ...prev, [sectionId]: !prev[sectionId] }));
   };
 
-  const handleAIFollowUp = (message: string) => {
-    // Placeholder for AI follow-up interaction
-    console.log("AI follow-up:", message);
-  };
+  const handleApprove = useCallback((sectionId: string) => {
+    setJudgment((prev) => {
+      if (!prev) return prev;
+      return {
+        ...prev,
+        sections: prev.sections.map((s) =>
+          s.id === sectionId ? { ...s, reviewStatus: "approved", flagNote: undefined } : s
+        ),
+      };
+    });
+    updateJudgmentReview(sectionId, "approved").catch(console.error);
+  }, []);
+
+  const handleFlag = useCallback((sectionId: string, note: string) => {
+    setJudgment((prev) => {
+      if (!prev) return prev;
+      return {
+        ...prev,
+        sections: prev.sections.map((s) =>
+          s.id === sectionId ? { ...s, reviewStatus: "flagged", flagNote: note } : s
+        ),
+      };
+    });
+    updateJudgmentReview(sectionId, "flagged", note).catch(console.error);
+  }, []);
+
+  const handleEditSave = useCallback((sectionId: string, newContent: string) => {
+    setJudgment((prev) => {
+      if (!prev) return prev;
+      return {
+        ...prev,
+        sections: prev.sections.map((s) =>
+          s.id === sectionId ? { ...s, content: newContent } : s
+        ),
+      };
+    });
+    setEditingSection(null);
+    updateJudgmentSection(sectionId, newContent).catch(console.error);
+  }, []);
+
+  const handleRegenerate = useCallback(
+    async (sectionId: string, instructions?: string) => {
+      if (!judgment || !instructions || regenerating) return;
+
+      setRegenerating(true);
+      setRegenerateSection(null);
+
+      const section = judgment.sections.find((s) => s.id === sectionId);
+      if (!section) {
+        setRegenerating(false);
+        return;
+      }
+
+      const judgmentContext = judgment.sections
+        .map((s) => `## ${s.title}\n${s.content}`)
+        .join("\n\n");
+
+      try {
+        const response = await fetch("/api/judgment/regenerate", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            sectionTitle: section.title,
+            currentContent: section.content,
+            judgeNote: instructions,
+            judgmentContext,
+          }),
+        });
+
+        if (!response.ok) throw new Error("Regeneration failed");
+
+        const fullText = await readSSEStream(response, () => {});
+
+        setJudgment((prev) => {
+          if (!prev) return prev;
+          return {
+            ...prev,
+            sections: prev.sections.map((s) =>
+              s.id === sectionId
+                ? {
+                    ...s,
+                    content: fullText,
+                    regenerationCount: s.regenerationCount + 1,
+                    reviewStatus: "pending_review",
+                  }
+                : s
+            ),
+          };
+        });
+
+        updateJudgmentSection(sectionId, fullText, true).catch(console.error);
+        toast.success("Section regenerated");
+      } catch (err) {
+        console.error("Regeneration error:", err);
+        toast.error("Failed to regenerate section");
+      } finally {
+        setRegenerating(false);
+      }
+    },
+    [judgment, regenerating]
+  );
+
+  const handleChat = useCallback(
+    async (message: string) => {
+      if (!judgment || chatLoading) return;
+
+      setChatLoading(true);
+      setStreamingChat("");
+
+      // Add user message to local state
+      const userMsg = {
+        id: `temp-${Date.now()}`,
+        role: "user" as const,
+        content: message,
+        citations: [],
+        createdAt: new Date().toISOString(),
+      };
+      setJudgment((prev) =>
+        prev ? { ...prev, conversation: [...prev.conversation, userMsg] } : prev
+      );
+
+      saveJudgmentChat(id, "user", message).catch(console.error);
+
+      const judgmentContext = judgment.sections
+        .map((s) => `## ${s.title}\n${s.content}`)
+        .join("\n\n");
+
+      try {
+        const response = await fetch("/api/judgment/chat", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            judgmentContext,
+            messages: judgment.conversation.map((m) => ({
+              role: m.role,
+              content: m.content,
+            })),
+            userMessage: message,
+          }),
+        });
+
+        if (!response.ok) throw new Error("Chat failed");
+
+        const fullText = await readSSEStream(response, (text) => {
+          setStreamingChat(text);
+        });
+
+        const aiMsg = {
+          id: `temp-${Date.now()}-ai`,
+          role: "assistant" as const,
+          content: fullText,
+          citations: [],
+          createdAt: new Date().toISOString(),
+        };
+        setJudgment((prev) =>
+          prev ? { ...prev, conversation: [...prev.conversation, aiMsg] } : prev
+        );
+        setStreamingChat("");
+
+        saveJudgmentChat(id, "assistant", fullText).catch(console.error);
+      } catch (err) {
+        console.error("Chat error:", err);
+        toast.error("Failed to get AI response");
+      } finally {
+        setChatLoading(false);
+      }
+    },
+    [judgment, chatLoading, id]
+  );
+
+  const handleFinalize = useCallback(() => {
+    if (!judgment) return;
+    setJudgment((prev) => (prev ? { ...prev, status: "finalized" } : prev));
+    updateJudgmentStatus(id, "finalized").catch(console.error);
+    toast.success("Judgment finalized");
+  }, [judgment, id]);
 
   if (loading) {
     return (
@@ -111,15 +319,19 @@ export default function JudgmentDetailPage() {
     );
   }
 
-  // Sort sections by the defined order
-  const sortedSections = [...judgment.sections].sort((a, b) => {
-    const aIndex = SECTION_ORDER.indexOf(a.title);
-    const bIndex = SECTION_ORDER.indexOf(b.title);
-    if (aIndex === -1 && bIndex === -1) return a.order - b.order;
-    if (aIndex === -1) return 1;
-    if (bIndex === -1) return -1;
-    return aIndex - bIndex;
-  });
+  // Extract precedents from RAG results for the right panel
+  const precedents = (judgment.ragResults || []).map((r: any) => ({
+    id: r.precedent?.id || `prec-${Math.random()}`,
+    caseName: r.precedent?.caseName || "",
+    citation: r.precedent?.citation || "",
+    court: r.precedent?.court || "",
+    year: r.precedent?.year || "",
+    relevance: r.precedent?.summary || "",
+    summary: r.precedent?.summary || "",
+    relevanceScore: r.relevanceScore || 0,
+  }));
+
+  const allApproved = judgment.sections.every((s) => s.reviewStatus === "approved");
 
   return (
     <div className="space-y-4">
@@ -132,20 +344,34 @@ export default function JudgmentDetailPage() {
           </Button>
         </Link>
         <div className="flex items-center gap-2">
+          <LegalStatusBadge status={judgment.status} />
           <ExportMenu title={judgment.caseTitle} />
           <SaveToNotesDialog
             title="Save Judgment to Notes"
             sourceLabel={judgment.caseTitle}
           />
+          {judgment.status !== "finalized" && allApproved && (
+            <Button
+              onClick={handleFinalize}
+              className="bg-emerald-600 hover:bg-emerald-700 text-white"
+            >
+              Finalize Judgment
+            </Button>
+          )}
         </div>
       </div>
 
-      {/* Judgment Title */}
+      {/* Title */}
       <div>
         <h1 className="text-xl font-semibold text-gray-900">
           {judgment.caseTitle}
         </h1>
-        <p className="text-sm text-gray-500 mt-1.5">
+        {judgment.caseNumber && (
+          <p className="text-sm text-gray-500 font-mono mt-1">
+            {judgment.caseNumber}
+          </p>
+        )}
+        <p className="text-sm text-gray-400 mt-1">
           Created{" "}
           {new Date(judgment.createdAt).toLocaleDateString("en-US", {
             year: "numeric",
@@ -155,64 +381,97 @@ export default function JudgmentDetailPage() {
         </p>
       </div>
 
+      {regenerating && (
+        <Card className="border-[#A21CAF]/20 bg-gradient-to-br from-[#A21CAF]/[0.02] to-purple-50/30">
+          <CardContent className="pt-4 pb-4">
+            <div className="flex items-center gap-2">
+              <Loader2 className="h-4 w-4 text-[#A21CAF] animate-spin" />
+              <span className="text-sm text-gray-700">AI is regenerating section...</span>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
       {/* Resizable Panel Layout */}
       <ResizablePanelGroup
         direction="horizontal"
         className="min-h-[700px] rounded-lg border"
       >
-        {/* Left Panel - Judgment Skeleton */}
+        {/* Left Panel - Judgment Sections */}
         <ResizablePanel defaultSize={65} minSize={40}>
           <div className="h-full flex flex-col">
             <div className="p-4 border-b bg-gray-50/50">
               <h2 className="text-sm font-semibold uppercase tracking-wider text-[#84752F]">
-                Judgment Skeleton
+                Judgment Draft
               </h2>
               <p className="text-xs text-gray-500 mt-1">
-                Pakistani judgment format &mdash; 7 sections
+                {judgment.sections.length} sections &mdash; Pakistani judgment format
               </p>
             </div>
 
             <ScrollArea className="flex-1 p-4">
               <div className="space-y-3">
-                {sortedSections.map((section, index) => (
-                  <Collapsible
-                    key={section.id}
-                    open={openSections[section.id]}
-                    onOpenChange={() => toggleSection(section.id)}
-                  >
-                    <Card>
-                      <CollapsibleTrigger asChild>
-                        <CardHeader className="cursor-pointer hover:bg-gray-50/80 transition-colors py-3.5 px-4">
-                          <div className="flex items-center justify-between">
-                            <div className="flex items-center gap-3">
-                              <span className="flex items-center justify-center h-6 w-6 rounded-full bg-[#84752F]/10 text-[#84752F] text-xs font-semibold">
-                                {index + 1}
-                              </span>
-                              <span className="text-sm font-semibold uppercase tracking-wider text-[#84752F]">
-                                {section.title}
-                              </span>
+                {judgment.sections.map((section, index) => {
+                  const isEditing = editingSection === section.id;
+
+                  return (
+                    <Collapsible
+                      key={section.id}
+                      open={openSections[section.id]}
+                      onOpenChange={() => toggleSection(section.id)}
+                    >
+                      <Card>
+                        <CollapsibleTrigger asChild>
+                          <CardHeader className="cursor-pointer hover:bg-gray-50/80 transition-colors py-3.5 px-4">
+                            <div className="flex items-center justify-between">
+                              <div className="flex items-center gap-3">
+                                <span className="flex items-center justify-center h-6 w-6 rounded-full bg-[#84752F]/10 text-[#84752F] text-xs font-semibold">
+                                  {index + 1}
+                                </span>
+                                <span className="text-sm font-semibold uppercase tracking-wider text-[#84752F]">
+                                  {section.title}
+                                </span>
+                              </div>
+                              <ChevronDown
+                                className={`h-4 w-4 text-gray-400 transition-transform duration-200 ${
+                                  openSections[section.id] ? "rotate-180" : "rotate-0"
+                                }`}
+                              />
                             </div>
-                            <ChevronDown
-                              className={`h-4 w-4 text-gray-400 transition-transform duration-200 ${
-                                openSections[section.id]
-                                  ? "rotate-180"
-                                  : "rotate-0"
-                              }`}
-                            />
-                          </div>
-                        </CardHeader>
-                      </CollapsibleTrigger>
-                      <CollapsibleContent>
-                        <CardContent className="pt-0 px-4 pb-5">
-                          <Separator className="mb-3" />
-                          <div className="text-sm text-gray-700 leading-relaxed whitespace-pre-line">
-                            {section.content}
-                          </div>
-                        </CardContent>
-                      </CollapsibleContent>
-                    </Card>
-                  </Collapsible>
-                ))}
+                          </CardHeader>
+                        </CollapsibleTrigger>
+                        <CollapsibleContent>
+                          <CardContent className="pt-0 px-4 pb-5">
+                            <Separator className="mb-3" />
+                            {isEditing ? (
+                              <SectionEditor
+                                content={section.content}
+                                onSave={(newContent) => handleEditSave(section.id, newContent)}
+                                onCancel={() => setEditingSection(null)}
+                              />
+                            ) : (
+                              <div className="text-sm text-gray-700 leading-relaxed whitespace-pre-line">
+                                {section.content}
+                              </div>
+                            )}
+                            {judgment.status !== "finalized" && !isEditing && (
+                              <div className="mt-3 pt-3 border-t border-gray-100">
+                                <SectionReviewControls
+                                  reviewStatus={section.reviewStatus as any}
+                                  flagNote={section.flagNote}
+                                  onApprove={() => handleApprove(section.id)}
+                                  onFlag={(note) => handleFlag(section.id, note)}
+                                  onEdit={() => setEditingSection(section.id)}
+                                  onRegenerate={() => setRegenerateSection(section.id)}
+                                />
+                              </div>
+                            )}
+                          </CardContent>
+                        </CollapsibleContent>
+                      </Card>
+                    </Collapsible>
+                  );
+                })}
               </div>
 
               {/* AI Follow-up Area */}
@@ -224,11 +483,45 @@ export default function JudgmentDetailPage() {
                   Ask the AI to refine, expand, or modify specific sections of
                   the judgment draft.
                 </p>
+
+                {/* Conversation history */}
+                {judgment.conversation.length > 0 && (
+                  <div className="space-y-3 mb-4">
+                    {judgment.conversation.map((msg) => (
+                      <div
+                        key={msg.id}
+                        className={`p-3 rounded-lg ${
+                          msg.role === "user" ? "bg-blue-50" : "bg-gray-50"
+                        }`}
+                      >
+                        <p className="text-xs font-medium mb-1 text-gray-500">
+                          {msg.role === "user" ? "You" : "QanoonAI"}
+                        </p>
+                        <p className="text-sm text-gray-700 whitespace-pre-wrap">
+                          {msg.content}
+                        </p>
+                      </div>
+                    ))}
+                    {streamingChat && (
+                      <div className="p-3 rounded-lg bg-gray-50">
+                        <p className="text-xs font-medium text-[#A21CAF] mb-1">QanoonAI</p>
+                        <p className="text-sm text-gray-700 whitespace-pre-wrap">{streamingChat}</p>
+                      </div>
+                    )}
+                  </div>
+                )}
+
                 <ConversationInput
-                  onSend={handleAIFollowUp}
+                  onSend={handleChat}
                   promptSuggestions={AI_SUGGESTIONS}
                   placeholder="Ask to refine any section of the judgment..."
                 />
+                {chatLoading && !streamingChat && (
+                  <div className="flex items-center gap-2 mt-2">
+                    <Loader2 className="h-3 w-3 animate-spin text-[#A21CAF]" />
+                    <span className="text-xs text-gray-500">QanoonAI is thinking...</span>
+                  </div>
+                )}
               </div>
             </ScrollArea>
           </div>
@@ -236,34 +529,32 @@ export default function JudgmentDetailPage() {
 
         <ResizableHandle withHandle />
 
-        {/* Right Panel - Suggested Precedents */}
+        {/* Right Panel - Precedents */}
         <ResizablePanel defaultSize={35} minSize={25}>
           <div className="h-full flex flex-col">
             <div className="p-4 border-b bg-gray-50/50">
               <h2 className="text-sm font-semibold uppercase tracking-wider text-[#84752F]">
-                Suggested Precedents
+                Relevant Precedents
               </h2>
               <p className="text-xs text-gray-500 mt-1">
-                {judgment.suggestedPrecedents.length} relevant cases found
+                {precedents.length} relevant cases found
               </p>
             </div>
 
             <ScrollArea className="flex-1 p-4">
               <div className="space-y-3">
-                {judgment.suggestedPrecedents.map((precedent) => (
+                {precedents.map((precedent: any) => (
                   <PrecedentCard
                     key={precedent.id}
                     precedent={precedent}
-                    onSaveToNotes={() => {
-                      // Handled by SaveToNotesDialog wrapping in parent
-                    }}
+                    onSaveToNotes={() => {}}
                   />
                 ))}
 
-                {judgment.suggestedPrecedents.length === 0 && (
+                {precedents.length === 0 && (
                   <div className="text-center py-8">
                     <p className="text-sm text-gray-400">
-                      No precedents suggested yet.
+                      No precedents found from the RAG search.
                     </p>
                   </div>
                 )}
@@ -272,6 +563,22 @@ export default function JudgmentDetailPage() {
           </div>
         </ResizablePanel>
       </ResizablePanelGroup>
+
+      {/* Regenerate Dialog */}
+      {regenerateSection && (
+        <RegenerateDialog
+          sectionTitle={
+            judgment.sections.find((s) => s.id === regenerateSection)?.title || ""
+          }
+          open={!!regenerateSection}
+          onOpenChange={(open) => {
+            if (!open) setRegenerateSection(null);
+          }}
+          onRegenerate={(instructions) =>
+            handleRegenerate(regenerateSection, instructions)
+          }
+        />
+      )}
     </div>
   );
 }

@@ -4,7 +4,7 @@ import { generateEmbeddings } from "@/lib/ai/embeddings";
 import { requireAuth } from "@/lib/auth/api";
 
 export async function POST() {
-  const { error } = await requireAuth();
+  const { session, error } = await requireAuth();
   if (error) return error;
 
   try {

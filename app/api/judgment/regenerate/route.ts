@@ -1,6 +1,6 @@
 import { anthropic } from "@/lib/ai/client";
 import { AI_MODELS } from "@/lib/ai/models";
-import { buildRegenerationPrompt } from "@/lib/ai/prompts";
+import { buildJudgmentRegenerationPrompt } from "@/lib/ai/prompts";
 import { requireAuth } from "@/lib/auth/api";
 
 export async function POST(request: Request) {
@@ -8,18 +8,18 @@ export async function POST(request: Request) {
   if (error) return error;
 
   try {
-    const { sectionTitle, currentContent, judgeNote, briefContext } =
+    const { sectionTitle, currentContent, judgeNote, judgmentContext } =
       await request.json();
 
     if (!sectionTitle || !currentContent || !judgeNote) {
       return new Response("Missing required fields", { status: 400 });
     }
 
-    const prompt = buildRegenerationPrompt(
+    const prompt = buildJudgmentRegenerationPrompt(
       sectionTitle,
       currentContent,
       judgeNote,
-      briefContext || ""
+      judgmentContext || ""
     );
 
     const stream = anthropic.messages.stream({
@@ -65,7 +65,7 @@ export async function POST(request: Request) {
       },
     });
   } catch (error: any) {
-    console.error("Regeneration error:", error);
+    console.error("Judgment regeneration error:", error);
     return new Response(JSON.stringify({ error: error.message }), {
       status: 500,
       headers: { "Content-Type": "application/json" },

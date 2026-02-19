@@ -1,6 +1,8 @@
 "use server";
 
 import { sql } from "@/lib/db";
+import { getUserId } from "@/lib/auth/session";
+import { logActivity } from "@/lib/activity/actions";
 import type {
   EnhancedBrief,
   EnhancedBriefSection,
@@ -21,10 +23,12 @@ export async function saveBrief(data: {
   uploadedDocuments: { id: string; fileName: string; documentType: string; totalPages: number }[];
   ragResults: RAGSearchResult[];
   sections: EnhancedBriefSection[];
-}): Promise<string> {
+}, userId?: string): Promise<string> {
+  const uid = userId ?? await getUserId();
+
   const rows = await sql(
-    `INSERT INTO briefs (case_title, case_number, court, status, extracted_data, uploaded_documents, rag_results, review_progress)
-     VALUES ($1, $2, $3, 'in_review', $4, $5, $6, $7)
+    `INSERT INTO briefs (case_title, case_number, court, status, extracted_data, uploaded_documents, rag_results, review_progress, user_id)
+     VALUES ($1, $2, $3, 'in_review', $4, $5, $6, $7, $8)
      RETURNING id`,
     [
       data.caseTitle,
@@ -34,6 +38,7 @@ export async function saveBrief(data: {
       JSON.stringify(data.uploadedDocuments),
       JSON.stringify(data.ragResults),
       JSON.stringify({ total: data.sections.length, approved: 0, flagged: 0 }),
+      uid,
     ]
   );
 
@@ -57,6 +62,8 @@ export async function saveBrief(data: {
     );
   }
 
+  await logActivity(uid, "created", "brief", briefId, data.caseTitle);
+
   return briefId;
 }
 
@@ -64,11 +71,14 @@ export async function saveBrief(data: {
 // Get a single brief by ID
 // ---------------------------------------------------------------------------
 export async function getBrief(
-  id: string
+  id: string,
+  userId?: string
 ): Promise<EnhancedBrief | null> {
+  const uid = userId ?? await getUserId();
+
   const briefRows = await sql(
-    `SELECT * FROM briefs WHERE id = $1`,
-    [id]
+    `SELECT * FROM briefs WHERE id = $1 AND user_id = $2`,
+    [id, uid]
   );
 
   if (briefRows.length === 0) return null;
@@ -156,15 +166,19 @@ export async function getBrief(
 }
 
 // ---------------------------------------------------------------------------
-// List all briefs
+// List all briefs (user-scoped)
 // ---------------------------------------------------------------------------
-export async function listBriefs(): Promise<EnhancedBrief[]> {
+export async function listBriefs(userId?: string): Promise<EnhancedBrief[]> {
+  const uid = userId ?? await getUserId();
+
   const rows = await sql(
     `SELECT b.*,
        (SELECT json_agg(json_build_object('id', s.id, 'title', s.title, 'content', substring(s.content from 1 for 200), 'sources', s.sources, 'reviewStatus', s.review_status, 'flagNote', s.flag_note, 'regenerationCount', s.regeneration_count) ORDER BY s.sort_order)
         FROM brief_sections s WHERE s.brief_id = b.id) as sections
      FROM briefs b
-     ORDER BY b.created_at DESC`
+     WHERE b.user_id = $1
+     ORDER BY b.created_at DESC`,
+    [uid]
   );
 
   return rows.map((row: any) => {
@@ -204,6 +218,15 @@ export async function updateSectionReview(
   status: SectionReviewStatus,
   flagNote?: string
 ): Promise<void> {
+  const uid = await getUserId();
+
+  // Verify ownership via brief
+  const ownerCheck = await sql(
+    `SELECT b.id FROM brief_sections bs JOIN briefs b ON b.id = bs.brief_id WHERE bs.id = $1 AND b.user_id = $2`,
+    [sectionId, uid]
+  );
+  if (ownerCheck.length === 0) throw new Error("Not found");
+
   await sql(
     `UPDATE brief_sections SET review_status = $1, flag_note = $2, updated_at = now() WHERE id = $3`,
     [status, flagNote || null, sectionId]
@@ -237,6 +260,15 @@ export async function updateSectionContent(
   content: string,
   incrementRegeneration?: boolean
 ): Promise<void> {
+  const uid = await getUserId();
+
+  // Verify ownership
+  const ownerCheck = await sql(
+    `SELECT b.id FROM brief_sections bs JOIN briefs b ON b.id = bs.brief_id WHERE bs.id = $1 AND b.user_id = $2`,
+    [sectionId, uid]
+  );
+  if (ownerCheck.length === 0) throw new Error("Not found");
+
   if (incrementRegeneration) {
     await sql(
       `UPDATE brief_sections SET content = $1, regeneration_count = regeneration_count + 1, review_status = 'pending_review', updated_at = now() WHERE id = $2`,
@@ -259,6 +291,15 @@ export async function saveChatMessage(
   content: string,
   citations?: any[]
 ): Promise<string> {
+  const uid = await getUserId();
+
+  // Verify ownership
+  const ownerCheck = await sql(
+    `SELECT id FROM briefs WHERE id = $1 AND user_id = $2`,
+    [briefId, uid]
+  );
+  if (ownerCheck.length === 0) throw new Error("Not found");
+
   const rows = await sql(
     `INSERT INTO brief_conversations (brief_id, role, content, citations)
      VALUES ($1, $2, $3, $4) RETURNING id`,
@@ -274,15 +315,24 @@ export async function updateBriefStatus(
   briefId: string,
   status: string
 ): Promise<void> {
+  const uid = await getUserId();
+
   await sql(
-    `UPDATE briefs SET status = $1, updated_at = now() WHERE id = $2`,
-    [status, briefId]
+    `UPDATE briefs SET status = $1, updated_at = now() WHERE id = $2 AND user_id = $3`,
+    [status, briefId, uid]
   );
+
+  if (status === "finalized") {
+    await logActivity(uid, "finalized", "brief", briefId);
+  }
 }
 
 // ---------------------------------------------------------------------------
 // Delete a brief
 // ---------------------------------------------------------------------------
 export async function deleteBrief(briefId: string): Promise<void> {
-  await sql(`DELETE FROM briefs WHERE id = $1`, [briefId]);
+  const uid = await getUserId();
+
+  await sql(`DELETE FROM briefs WHERE id = $1 AND user_id = $2`, [briefId, uid]);
+  await logActivity(uid, "deleted", "brief", briefId);
 }
