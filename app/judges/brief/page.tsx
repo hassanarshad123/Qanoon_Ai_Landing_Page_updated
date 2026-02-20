@@ -79,6 +79,7 @@ export default function BriefListPage() {
 
   const isPipelineRunning =
     pipeline.phase !== "idle" && pipeline.phase !== "complete" && pipeline.phase !== "error";
+  const showProgress = isPipelineRunning || saving || pipeline.phase === "error";
 
   const formatDate = (dateStr: string) => {
     return new Date(dateStr).toLocaleDateString("en-US", {
@@ -108,26 +109,48 @@ export default function BriefListPage() {
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-6">
-          {isPipelineRunning || saving ? (
+          {showProgress ? (
             /* Pipeline progress display */
             <Card className="border-[#A21CAF]/20 bg-gradient-to-br from-[#A21CAF]/[0.02] to-purple-50/30">
               <CardContent className="pt-6">
-                <div className="flex items-center gap-2 mb-4">
-                  <Loader2 className="h-5 w-5 text-[#A21CAF] animate-spin" />
-                  <h3 className="text-base font-semibold text-gray-900">
-                    {saving ? "Saving Brief..." : "Generating Brief..."}
-                  </h3>
-                </div>
-                <ExtractionProgress
-                  phase={pipeline.phase}
-                  progress={pipeline.progress}
-                  documentsProcessed={
-                    documentsReady?.filter((d) => d.status === "extracted").length || 0
-                  }
-                  totalDocuments={documentsReady?.length || 0}
-                />
-                {pipeline.error && (
-                  <p className="text-sm text-red-600 mt-3">{pipeline.error}</p>
+                {pipeline.phase === "error" ? (
+                  <div className="space-y-4">
+                    <div className="flex items-center gap-2">
+                      <div className="h-5 w-5 rounded-full bg-red-100 flex items-center justify-center">
+                        <span className="text-red-600 text-xs font-bold">!</span>
+                      </div>
+                      <h3 className="text-base font-semibold text-gray-900">
+                        Brief Generation Failed
+                      </h3>
+                    </div>
+                    <p className="text-sm text-red-600">
+                      {pipeline.error || "An unexpected error occurred during generation."}
+                    </p>
+                    <Button
+                      variant="outline"
+                      className="border-[#A21CAF] text-[#A21CAF] hover:bg-[#A21CAF]/5"
+                      onClick={() => pipeline.reset()}
+                    >
+                      Try Again
+                    </Button>
+                  </div>
+                ) : (
+                  <>
+                    <div className="flex items-center gap-2 mb-4">
+                      <Loader2 className="h-5 w-5 text-[#A21CAF] animate-spin" />
+                      <h3 className="text-base font-semibold text-gray-900">
+                        {saving ? "Saving Brief..." : "Generating Brief..."}
+                      </h3>
+                    </div>
+                    <ExtractionProgress
+                      phase={pipeline.phase}
+                      progress={pipeline.progress}
+                      documentsProcessed={
+                        documentsReady?.filter((d) => d.status === "extracted").length || 0
+                      }
+                      totalDocuments={documentsReady?.length || 0}
+                    />
+                  </>
                 )}
               </CardContent>
             </Card>

@@ -4,6 +4,9 @@ import { anthropic } from "@/lib/ai/client";
 import { AI_MODELS } from "@/lib/ai/models";
 import { buildPrecedentRankingPrompt } from "@/lib/ai/prompts";
 import { requireAuth } from "@/lib/auth/api";
+import { queryRAGBackend } from "@/lib/rag/client";
+
+export const maxDuration = 120;
 
 export async function POST(request: Request) {
   const { session, error } = await requireAuth();
@@ -52,34 +55,76 @@ export async function POST(request: Request) {
 
     const tsQuery = cleanTerms.join(" | ");
 
-    // Full-text search in Neon
-    let searchResults: any[];
-    if (tsQuery.trim()) {
-      searchResults = await sql(
-        `SELECT id, case_name, citation, court, year, legal_areas, keywords, headnotes, summary, ratio,
-                ts_rank(search_vector, to_tsquery('english', $1)) as rank
-         FROM precedents
-         WHERE search_vector @@ to_tsquery('english', $1)
-         ORDER BY rank DESC
-         LIMIT 15`,
-        [tsQuery]
-      );
-    } else {
-      // Fallback: return all precedents
-      searchResults = await sql(
-        `SELECT id, case_name, citation, court, year, legal_areas, keywords, headnotes, summary, ratio
-         FROM precedents
-         LIMIT 15`
-      );
-    }
+    // Full-text search in Neon + RAG backend in parallel
+    const ragQuery = searchTerms.slice(0, 10).join(" ");
 
-    if (searchResults.length === 0) {
-      // If no results from text search, return top precedents
-      searchResults = await sql(
-        `SELECT id, case_name, citation, court, year, legal_areas, keywords, headnotes, summary, ratio
-         FROM precedents
-         LIMIT 10`
+    const neonSearchPromise = (async () => {
+      let results: any[];
+      if (tsQuery.trim()) {
+        results = await sql(
+          `SELECT id, case_name, citation, court, year, legal_areas, keywords, headnotes, summary, ratio,
+                  ts_rank(search_vector, to_tsquery('english', $1)) as rank
+           FROM precedents
+           WHERE search_vector @@ to_tsquery('english', $1)
+           ORDER BY rank DESC
+           LIMIT 15`,
+          [tsQuery]
+        );
+      } else {
+        results = await sql(
+          `SELECT id, case_name, citation, court, year, legal_areas, keywords, headnotes, summary, ratio
+           FROM precedents
+           LIMIT 15`
+        );
+      }
+      if (results.length === 0) {
+        results = await sql(
+          `SELECT id, case_name, citation, court, year, legal_areas, keywords, headnotes, summary, ratio
+           FROM precedents
+           LIMIT 10`
+        );
+      }
+      return results;
+    })();
+
+    const ragBackendPromise = ragQuery.length >= 10
+      ? queryRAGBackend({ query: ragQuery, role: "judge" })
+      : Promise.resolve(null);
+
+    const [neonSettled, ragSettled] = await Promise.allSettled([
+      neonSearchPromise,
+      ragBackendPromise,
+    ]);
+
+    let searchResults: any[] =
+      neonSettled.status === "fulfilled" ? neonSettled.value : [];
+    const ragBackendResponse =
+      ragSettled.status === "fulfilled" ? ragSettled.value : null;
+
+    // Append RAG backend citations as rows in the same format for re-ranking
+    if (ragBackendResponse?.citations?.length) {
+      const existingCitations = new Set(
+        searchResults.map((r: any) =>
+          (r.citation || "").toLowerCase().replace(/[^a-z0-9]/g, "")
+        )
       );
+      for (const c of ragBackendResponse.citations) {
+        const normCit = c.citation_id.toLowerCase().replace(/[^a-z0-9]/g, "");
+        if (existingCitations.has(normCit)) continue;
+        existingCitations.add(normCit);
+        searchResults.push({
+          id: `rag-${c.citation_id}`,
+          case_name: c.case_title,
+          citation: c.citation_id,
+          court: c.court_name,
+          year: c.case_year,
+          legal_areas: "[]",
+          keywords: "[]",
+          headnotes: "[]",
+          summary: "",
+          ratio: "",
+        });
+      }
     }
 
     // Use Claude to re-rank the results

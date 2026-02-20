@@ -2,6 +2,8 @@ import { anthropic } from "@/lib/ai/client";
 import { AI_MODELS } from "@/lib/ai/models";
 import { buildJudgmentGenerationPrompt } from "@/lib/ai/prompts";
 import { hybridSearch } from "@/lib/research/rag";
+import { queryRAGBackend } from "@/lib/rag/client";
+import { mergeRAGResults } from "@/lib/rag/merge";
 import { requireAuth } from "@/lib/auth/api";
 import { createJudgment } from "@/lib/judgment/actions";
 import { getBrief } from "@/lib/brief/actions";
@@ -35,13 +37,19 @@ export async function POST(request: Request) {
       }
     }
 
-    // RAG search for relevant precedents
+    // RAG search for relevant precedents — Neon + RAG backend in parallel
     const searchQuery = [caseTitle, caseNumber, extractedData?.courtInfo?.caseType]
       .filter(Boolean)
       .join(" ");
     let ragResults: any[] = [];
     try {
-      ragResults = await hybridSearch(searchQuery, { limit: 8 });
+      const [neonSettled, ragBackendSettled] = await Promise.allSettled([
+        hybridSearch(searchQuery, { limit: 8 }),
+        queryRAGBackend({ query: searchQuery, role: "judge" }),
+      ]);
+      const neonResults = neonSettled.status === "fulfilled" ? neonSettled.value : [];
+      const ragBackendResponse = ragBackendSettled.status === "fulfilled" ? ragBackendSettled.value : null;
+      ragResults = mergeRAGResults(ragBackendResponse, neonResults);
     } catch {
       // Non-critical
     }

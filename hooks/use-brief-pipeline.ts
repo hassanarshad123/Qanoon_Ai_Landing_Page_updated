@@ -102,7 +102,7 @@ export function useBriefPipeline() {
           chunks.length > 1 ? "/api/brief/analyze-chunk" : "/api/brief/analyze";
 
         const controller = new AbortController();
-        const timeout = setTimeout(() => controller.abort(), 55_000);
+        const timeout = setTimeout(() => controller.abort(), 120_000);
 
         try {
           const analyzeRes = await fetch(endpoint, {

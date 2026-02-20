@@ -4,6 +4,8 @@ import { AI_MODELS } from "@/lib/ai/models";
 import { buildAnalysisPrompt } from "@/lib/ai/prompts";
 import { requireAuth } from "@/lib/auth/api";
 
+export const maxDuration = 120;
+
 export async function POST(request: Request) {
   const { session, error } = await requireAuth();
   if (error) return error;

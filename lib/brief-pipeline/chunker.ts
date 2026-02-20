@@ -3,8 +3,8 @@
  * and Vercel's request body limit.
  *
  * Limits per chunk:
- *   - ~150K tokens (~600K chars) — headroom below Claude's 200K token window
- *   - ~3.5MB request body — headroom below Vercel's 4.5MB limit
+ *   - ~75K tokens (~300K chars) — smaller chunks for faster per-chunk analysis
+ *   - ~1.75MB request body — headroom below Vercel's 4.5MB limit
  */
 
 export interface DocumentInput {
@@ -19,8 +19,8 @@ export interface DocumentChunk {
 }
 
 // Rough estimate: 1 token ≈ 4 characters
-const MAX_CHARS_PER_CHUNK = 600_000; // ~150K tokens
-const MAX_BYTES_PER_CHUNK = 3_500_000; // ~3.5MB
+const MAX_CHARS_PER_CHUNK = 300_000; // ~75K tokens — smaller chunks for faster per-chunk analysis
+const MAX_BYTES_PER_CHUNK = 1_750_000; // ~1.75MB
 
 function estimateBytes(docs: DocumentInput[]): number {
   // JSON overhead per document: {"fileName":"...","text":"..."} + array comma

@@ -6,6 +6,8 @@ import {
   buildTitleGenerationPrompt,
 } from "@/lib/ai/prompts";
 import { hybridSearch } from "@/lib/research/rag";
+import { queryRAGBackend } from "@/lib/rag/client";
+import { mergeRAGResults } from "@/lib/rag/merge";
 import { requireAuth } from "@/lib/auth/api";
 import {
   createConversation,
@@ -44,8 +46,14 @@ export async function POST(request: Request) {
       content: question,
     });
 
-    // 3. RAG search
-    const ragResults = await hybridSearch(question, { limit: 8 });
+    // 3. RAG search — Neon + RAG backend in parallel
+    const [neonSettled, ragBackendSettled] = await Promise.allSettled([
+      hybridSearch(question, { limit: 8 }),
+      queryRAGBackend({ query: question, role: "judge" }),
+    ]);
+    const neonResults = neonSettled.status === "fulfilled" ? neonSettled.value : [];
+    const ragBackendResponse = ragBackendSettled.status === "fulfilled" ? ragBackendSettled.value : null;
+    const ragResults = mergeRAGResults(ragBackendResponse, neonResults);
 
     // 4. Build prompts
     const systemPrompt = buildResearchSystemPrompt(caseContext || undefined);
