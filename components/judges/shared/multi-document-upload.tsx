@@ -142,15 +142,25 @@ export function MultiDocumentUpload({ onDocumentsReady }: MultiDocumentUploadPro
     documents.some((d) => d.status === "extracted");
   const hasErrors = documents.some((d) => d.status === "error");
 
-  // Stable identity for the documents snapshot — triggers when content actually changes
-  const documentsKey = useMemo(
-    () => documents.map((d) => `${d.id}:${d.status}`).join(","),
-    [documents]
-  );
+  // Stable key: only changes when terminal-status counts change (not on progress updates)
+  const documentsKey = useMemo(() => {
+    const extracted = documents.filter((d) => d.status === "extracted").length;
+    const skipped = documents.filter((d) => d.status === "skipped").length;
+    const errored = documents.filter((d) => d.status === "error").length;
+    return `${documents.length}:${extracted}:${skipped}:${errored}`;
+  }, [documents]);
 
-  // Auto-trigger onDocumentsReady when all documents reach terminal state
+  // Guard: fire onDocumentsReady exactly once per completion state
+  const firedForKeyRef = useRef<string | null>(null);
+
   useEffect(() => {
-    if (allReady) {
+    // Reset guard when documents are cleared
+    if (documents.length === 0) {
+      firedForKeyRef.current = null;
+      return;
+    }
+    if (allReady && firedForKeyRef.current !== documentsKey) {
+      firedForKeyRef.current = documentsKey;
       onDocumentsReadyRef.current(documents);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
