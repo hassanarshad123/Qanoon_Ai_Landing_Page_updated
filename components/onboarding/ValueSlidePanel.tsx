@@ -34,107 +34,130 @@ const ICON_MAP: Record<string, LucideIcon> = {
   BookOpen,
 };
 
+// ─── Accent icon positions (offsets from center) ─────────────────────
+const ACCENT_POSITIONS = [
+  { x: 48, y: -40 },   // top-right
+  { x: -48, y: 44 },   // bottom-left
+];
+
 // ─── Shared props ────────────────────────────────────────────────────
 interface ValueSlidePanelProps {
   role: UserRole | null;
   currentStep: number;
 }
 
-// ─── Apple-like cubic-bezier ─────────────────────────────────────────
-const ease = [0.25, 0.46, 0.45, 0.94] as const;
-
-// ─── Judge Premium Panel ─────────────────────────────────────────────
+// ─── Judge Premium Panel (dark, Notion-style) ────────────────────────
 function JudgePremiumPanel({ currentStep }: { currentStep: number }) {
   const step = JUDGE_PANEL_STEPS[currentStep] ?? JUDGE_PANEL_STEPS[0];
+  const MainIcon = ICON_MAP[step.icon] ?? Scale;
 
   return (
-    <div className="hidden lg:flex lg:flex-col lg:justify-between h-full bg-gradient-to-b from-slate-50 to-white p-10 relative overflow-hidden">
-      {/* Logo */}
-      <div className="flex items-center gap-3">
-        <div className="w-10 h-10 rounded-xl bg-purple-50 flex items-center justify-center">
-          <Scale className="w-5 h-5 text-purple-700" />
+    <div className="hidden lg:flex lg:flex-col h-full bg-gray-950 relative overflow-hidden">
+      {/* Logo — top-left */}
+      <div className="flex items-center gap-3 p-10 pb-0">
+        <div className="w-10 h-10 rounded-xl bg-purple-500/20 flex items-center justify-center">
+          <Scale className="w-5 h-5 text-purple-400" />
         </div>
-        <span className="font-serif text-xl font-semibold text-gray-900">
+        <span className="font-serif text-xl font-semibold text-white">
           QanoonAI
         </span>
       </div>
 
-      {/* Step content */}
-      <AnimatePresence mode="wait">
-        <motion.div
-          key={currentStep}
-          initial={{ opacity: 0, y: 12 }}
-          animate={{ opacity: 1, y: 0 }}
-          exit={{ opacity: 0, y: -8 }}
-          transition={{ duration: 0.3, ease }}
-          className="space-y-6"
-        >
-          {/* Tag */}
-          <span className="inline-block text-[11px] font-semibold tracking-[0.15em] uppercase text-purple-600">
-            {step.tag}
-          </span>
-
-          {/* Heading */}
-          <h2 className="text-[28px] leading-[1.2] font-serif font-bold text-gray-900 whitespace-pre-line">
-            {step.heading}
-          </h2>
-
-          {/* Subtitle */}
-          <p className="text-[15px] leading-relaxed text-gray-500 max-w-[300px]">
-            {step.subtitle}
-          </p>
-
-          {/* Features */}
+      {/* Center area — icon composition + heading */}
+      <div className="flex-1 flex flex-col items-center justify-center px-10">
+        <AnimatePresence mode="wait">
           <motion.div
-            className="space-y-4 pt-2"
-            initial="hidden"
-            animate="visible"
-            variants={{
-              visible: { transition: { staggerChildren: 0.08 } },
-            }}
+            key={currentStep}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.2 }}
+            className="flex flex-col items-center"
           >
-            {step.features.map((feature) => {
-              const Icon = ICON_MAP[feature.icon] ?? Scale;
-              return (
-                <motion.div
-                  key={feature.label}
-                  variants={{
-                    hidden: { opacity: 0, y: 10 },
-                    visible: {
-                      opacity: 1,
-                      y: 0,
-                      transition: { duration: 0.3, ease },
-                    },
-                  }}
-                  className="flex items-start gap-3"
-                >
-                  <div className="w-10 h-10 rounded-xl bg-purple-50 flex items-center justify-center shrink-0">
-                    <Icon className="w-[18px] h-[18px] text-purple-700" />
-                  </div>
-                  <div>
-                    <p className="text-sm font-medium text-gray-900">
-                      {feature.label}
-                    </p>
-                    <p className="text-[13px] leading-snug text-gray-500">
-                      {feature.description}
-                    </p>
-                  </div>
-                </motion.div>
-              );
-            })}
-          </motion.div>
-        </motion.div>
-      </AnimatePresence>
+            {/* Icon composition */}
+            <div className="relative w-40 h-40 flex items-center justify-center">
+              {/* Glow ring */}
+              <motion.div
+                className="absolute w-20 h-20 rounded-full bg-purple-500/10"
+                animate={{ scale: [1, 1.15, 1] }}
+                transition={{
+                  duration: 3,
+                  repeat: Infinity,
+                  ease: "easeInOut",
+                }}
+              />
 
-      {/* Step dots */}
-      <div className="flex gap-2">
+              {/* Main icon */}
+              <motion.div
+                initial={{ scale: 0.8, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                transition={{
+                  type: "spring",
+                  stiffness: 300,
+                  damping: 20,
+                }}
+                className="relative z-10"
+              >
+                <MainIcon className="w-12 h-12 text-purple-400" strokeWidth={1.5} />
+              </motion.div>
+
+              {/* Accent icons */}
+              {step.accents.map((name, i) => {
+                const AccentIcon = ICON_MAP[name] ?? Sparkles;
+                const pos = ACCENT_POSITIONS[i];
+                return (
+                  <motion.div
+                    key={name}
+                    className="absolute"
+                    style={{ left: `calc(50% + ${pos.x}px - 10px)`, top: `calc(50% + ${pos.y}px - 10px)` }}
+                    initial={{ scale: 0, opacity: 0 }}
+                    animate={{ scale: 1, opacity: 0.7 }}
+                    transition={{
+                      type: "spring",
+                      stiffness: 300,
+                      damping: 20,
+                      delay: 0.15 * (i + 1),
+                    }}
+                  >
+                    {/* Subtle float */}
+                    <motion.div
+                      animate={{ y: [0, -6, 0] }}
+                      transition={{
+                        duration: 4 + i,
+                        repeat: Infinity,
+                        ease: "easeInOut",
+                        delay: i * 0.5,
+                      }}
+                    >
+                      <AccentIcon className="w-5 h-5 text-purple-400/50" strokeWidth={1.5} />
+                    </motion.div>
+                  </motion.div>
+                );
+              })}
+            </div>
+
+            {/* Heading */}
+            <motion.h2
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.4, ease: "easeOut", delay: 0.25 }}
+              className="mt-6 text-2xl font-serif font-bold text-white text-center"
+            >
+              {step.heading}
+            </motion.h2>
+          </motion.div>
+        </AnimatePresence>
+      </div>
+
+      {/* Step dots — bottom center */}
+      <div className="flex justify-center gap-2 p-10 pt-0">
         {JUDGE_PANEL_STEPS.map((_, i) => (
           <div
             key={i}
-            className={`h-1.5 rounded-full transition-all duration-300 ${
+            className={`h-2 rounded-full transition-all duration-300 ${
               i === currentStep
-                ? "w-6 bg-purple-600"
-                : "w-1.5 bg-gray-200"
+                ? "w-6 bg-purple-400"
+                : "w-2 bg-white/20"
             }`}
           />
         ))}

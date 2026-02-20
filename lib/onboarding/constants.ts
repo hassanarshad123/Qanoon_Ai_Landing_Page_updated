@@ -213,50 +213,16 @@ export const LEGAL_CONCERN_AREAS = [
   "Other",
 ] as const;
 
-// --- Judge Premium Panel ---
+// --- Judge Premium Panel (minimal, Notion-style) ---
 
-export interface PanelFeature {
+export interface JudgePanelStep {
   icon: string;
-  label: string;
-  description: string;
-}
-
-export interface PanelStepContent {
-  tag: string;
+  accents: string[];
   heading: string;
-  subtitle: string;
-  features: PanelFeature[];
 }
 
-export const JUDGE_PANEL_STEPS: PanelStepContent[] = [
-  {
-    tag: "Welcome",
-    heading: "Your AI-Powered\nBench",
-    subtitle: "Everything a modern judge needs — research, drafting, and case management in one place.",
-    features: [
-      { icon: "Scale", label: "Built for the Judiciary", description: "Tailored tools for judicial officers at every court level." },
-      { icon: "Shield", label: "Private & Secure", description: "Your data stays yours. End-to-end encryption by default." },
-      { icon: "Sparkles", label: "Powered by AI", description: "Advanced AI trained on Pakistan's legal corpus." },
-    ],
-  },
-  {
-    tag: "Your Tools",
-    heading: "Tools for\nYour Bench",
-    subtitle: "AI-assisted workflows designed around how judges actually work.",
-    features: [
-      { icon: "FileText", label: "Case Brief Generation", description: "Summarize complex case files into structured briefs instantly." },
-      { icon: "Gavel", label: "Judgment Drafting", description: "Draft well-structured judgments with relevant citations." },
-      { icon: "StickyNote", label: "Personal Notes", description: "Annotate cases and keep private bench notes organized." },
-    ],
-  },
-  {
-    tag: "Research",
-    heading: "Pakistan's Legal\nKnowledge Base",
-    subtitle: "Comprehensive access to the legal resources that matter most.",
-    features: [
-      { icon: "Search", label: "300,000+ Judgments", description: "Search across Pakistan's largest indexed judgment database." },
-      { icon: "FileStack", label: "Document Management", description: "Upload, organize, and reference case documents effortlessly." },
-      { icon: "BookOpen", label: "Legal Q&A", description: "Ask questions in plain language, get cited legal answers." },
-    ],
-  },
+export const JUDGE_PANEL_STEPS: JudgePanelStep[] = [
+  { icon: "Scale",  accents: ["Shield", "Sparkles"],    heading: "Welcome" },
+  { icon: "Gavel",  accents: ["FileText", "StickyNote"], heading: "Your Tools" },
+  { icon: "Search", accents: ["BookOpen", "FileStack"],  heading: "Research" },
 ];
