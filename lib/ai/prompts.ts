@@ -1,15 +1,22 @@
 import type { ExtractedCaseData, RAGSearchResult } from "@/lib/mock/types";
 
 export function buildAnalysisPrompt(
-  documentTexts: { fileName: string; text: string }[]
+  documentTexts: { fileName: string; text: string }[],
+  chunkIndex?: number,
+  totalChunks?: number
 ): string {
   const docs = documentTexts
     .map((d, i) => `--- DOCUMENT ${i + 1}: ${d.fileName} ---\n${d.text}`)
     .join("\n\n");
 
+  const chunkNote =
+    totalChunks != null && totalChunks > 1
+      ? `\n\nNOTE: This is batch ${(chunkIndex ?? 0) + 1} of ${totalChunks}. Extract all information from THESE documents only. Other batches are being analyzed separately and results will be merged.\n`
+      : "";
+
   return `You are a senior Pakistani legal expert with deep expertise in constitutional, civil, criminal, family, tax, and corporate law. Analyze the following court documents thoroughly and extract structured data.
 
-Be exhaustive — identify every party, every legal issue, every statute reference, every argument made by each side.
+Be exhaustive — identify every party, every legal issue, every statute reference, every argument made by each side.${chunkNote}
 
 DOCUMENTS:
 ${docs}
@@ -127,7 +134,9 @@ IMPORTANT:
 - Write in formal legal language appropriate for a Pakistani court
 - Reference specific provisions (e.g., "Article 16 of the Constitution", "Section 144 CrPC")
 - Cite precedents using their full citations (e.g., "PLD 1988 SC 416")
-- Be thorough and analytical — this brief will aid a judge in decision-making`;
+- Be thorough and analytical — this brief will aid a judge in decision-making
+
+FORMATTING: Do NOT use markdown formatting. No **, no *, no ##, no \` marks. Write in plain text only. For lists use "1." numbering. For emphasis use ALL CAPS sparingly. No bold, no italic, no markup of any kind.`;
 }
 
 export function buildRegenerationPrompt(
@@ -149,7 +158,9 @@ ${currentContent}
 JUDGE'S FEEDBACK:
 ${judgeNote}
 
-Rewrite the section incorporating the judge's instructions. Maintain formal legal language and proper formatting consistent with the original. Ensure all citations and references remain accurate. Output only the rewritten section content — no XML tags, no metadata, just the improved content.`;
+Rewrite the section incorporating the judge's instructions. Maintain formal legal language and proper formatting consistent with the original. Ensure all citations and references remain accurate. Output only the rewritten section content — no XML tags, no metadata, just the improved content.
+
+FORMATTING: Do NOT use markdown formatting. No **, no *, no ##, no \` marks. Write in plain text only. For lists use "1." numbering. For emphasis use ALL CAPS sparingly. No bold, no italic, no markup of any kind.`;
 }
 
 export function buildChatPrompt(
@@ -349,7 +360,9 @@ IMPORTANT:
 - Reference specific provisions (e.g., "Section 9 of the Contract Act, 1872", "Article 199 of the Constitution")
 - Cite precedents using full citations (e.g., "PLD 2018 SC 416")
 - Each section should be substantive and detailed
-- The Analysis section should be the most comprehensive`;
+- The Analysis section should be the most comprehensive
+
+FORMATTING: Do NOT use markdown formatting. No **, no *, no ##, no \` marks. Write in plain text only. For lists use "1." numbering. For emphasis use ALL CAPS sparingly. No bold, no italic, no markup of any kind.`;
 }
 
 export function buildJudgmentRegenerationPrompt(
@@ -371,7 +384,9 @@ ${currentContent}
 JUDGE'S INSTRUCTIONS:
 ${judgeNote}
 
-Rewrite the section incorporating the judge's instructions. Maintain formal judicial language consistent with Pakistani court judgments. Ensure all citations and statutory references remain accurate. Output only the rewritten section content — no XML tags, no metadata.`;
+Rewrite the section incorporating the judge's instructions. Maintain formal judicial language consistent with Pakistani court judgments. Ensure all citations and statutory references remain accurate. Output only the rewritten section content — no XML tags, no metadata.
+
+FORMATTING: Do NOT use markdown formatting. No **, no *, no ##, no \` marks. Write in plain text only. For lists use "1." numbering. For emphasis use ALL CAPS sparingly. No bold, no italic, no markup of any kind.`;
 }
 
 export function buildJudgmentChatPrompt(

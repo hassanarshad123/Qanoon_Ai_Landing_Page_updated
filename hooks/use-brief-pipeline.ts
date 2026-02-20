@@ -7,6 +7,9 @@ import type {
   RAGSearchResult,
   EnhancedBriefSection,
 } from "@/lib/mock/types";
+import { chunkDocuments } from "@/lib/brief-pipeline/chunker";
+import { mergeAnalysisResults } from "@/lib/brief-pipeline/merge-analysis";
+import { stripMarkdown } from "@/lib/utils/strip-markdown";
 
 export type PipelinePhase =
   | "idle"
@@ -45,7 +48,7 @@ function parseSections(fullText: string): EnhancedBriefSection[] {
     sections.push({
       id: match[1],
       title: match[2],
-      content: match[3].trim(),
+      content: stripMarkdown(match[3].trim()),
       sources: [],
       reviewStatus: "pending_review",
       regenerationCount: 0,
@@ -74,27 +77,61 @@ export function useBriefPipeline() {
         return;
       }
 
-      // Phase 1: Analyze documents with Claude
+      // Phase 1: Analyze documents with Claude (chunked for large uploads)
       setPhase("analyzing");
       setProgress({ step: 1, total: 5, label: PHASE_LABELS.analyzing });
 
-      const analyzeRes = await fetch("/api/brief/analyze", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          documents: extractedDocs.map(d => ({
-            fileName: d.fileName,
-            text: d.extractedText,
-          })),
-        }),
-      });
+      const docInputs = extractedDocs.map(d => ({
+        fileName: d.fileName,
+        text: d.extractedText,
+      }));
 
-      if (!analyzeRes.ok) {
-        const err = await analyzeRes.json().catch(() => ({ error: "Analysis failed" }));
-        throw new Error(err.error || "Document analysis failed");
+      const chunks = chunkDocuments(docInputs);
+      const chunkResults: ExtractedCaseData[] = [];
+
+      for (const chunk of chunks) {
+        if (chunks.length > 1) {
+          setProgress({
+            step: 1,
+            total: 5,
+            label: `Analyzing documents... (batch ${chunk.chunkIndex + 1} of ${chunk.totalChunks})`,
+          });
+        }
+
+        const endpoint =
+          chunks.length > 1 ? "/api/brief/analyze-chunk" : "/api/brief/analyze";
+
+        const controller = new AbortController();
+        const timeout = setTimeout(() => controller.abort(), 55_000);
+
+        try {
+          const analyzeRes = await fetch(endpoint, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            signal: controller.signal,
+            body: JSON.stringify({
+              documents: chunk.documents,
+              ...(chunks.length > 1 && {
+                chunkIndex: chunk.chunkIndex,
+                totalChunks: chunk.totalChunks,
+              }),
+            }),
+          });
+
+          if (!analyzeRes.ok) {
+            const err = await analyzeRes.json().catch(() => ({ error: "Analysis failed" }));
+            throw new Error(err.error || "Document analysis failed");
+          }
+
+          const chunkData: ExtractedCaseData = await analyzeRes.json();
+          chunkResults.push(chunkData);
+        } finally {
+          clearTimeout(timeout);
+        }
       }
 
-      const data: ExtractedCaseData = await analyzeRes.json();
+      // Merge chunk results (no-op if single chunk)
+      const data = mergeAnalysisResults(chunkResults);
       // Attach raw document info
       data.rawDocuments = extractedDocs.map(d => ({
         id: d.id,
@@ -108,11 +145,19 @@ export function useBriefPipeline() {
       setPhase("matching_precedents");
       setProgress({ step: 2, total: 5, label: PHASE_LABELS.matching_precedents });
 
-      const precedentRes = await fetch("/api/brief/precedents", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ extractedData: data }),
-      });
+      const precedentController = new AbortController();
+      const precedentTimeout = setTimeout(() => precedentController.abort(), 55_000);
+      let precedentRes: Response;
+      try {
+        precedentRes = await fetch("/api/brief/precedents", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          signal: precedentController.signal,
+          body: JSON.stringify({ extractedData: data }),
+        });
+      } finally {
+        clearTimeout(precedentTimeout);
+      }
 
       let results: RAGSearchResult[] = [];
       if (precedentRes.ok) {
@@ -152,26 +197,27 @@ export function useBriefPipeline() {
           if (line.startsWith("data: ")) {
             const payload = line.slice(6);
             if (payload === "[DONE]") break;
+            let parsed: any;
             try {
-              const parsed = JSON.parse(payload);
-              if (parsed.text) {
-                fullText += parsed.text;
-                // Parse sections progressively
-                const currentSections = parseSections(fullText);
-                if (currentSections.length > 0) {
-                  setGeneratedSections(currentSections);
-                  setProgress({
-                    step: 3,
-                    total: 5,
-                    label: `Generating sections... (${currentSections.length}/10)`,
-                  });
-                }
+              parsed = JSON.parse(payload);
+            } catch {
+              // Ignore partial JSON chunks — expected with SSE
+              continue;
+            }
+            if (parsed.error) {
+              throw new Error(parsed.error);
+            }
+            if (parsed.text) {
+              fullText += parsed.text;
+              const currentSections = parseSections(fullText);
+              if (currentSections.length > 0) {
+                setGeneratedSections(currentSections);
+                setProgress({
+                  step: 3,
+                  total: 5,
+                  label: `Generating sections... (${currentSections.length}/10)`,
+                });
               }
-              if (parsed.error) {
-                throw new Error(parsed.error);
-              }
-            } catch (e) {
-              // Ignore parse errors from partial chunks
             }
           }
         }

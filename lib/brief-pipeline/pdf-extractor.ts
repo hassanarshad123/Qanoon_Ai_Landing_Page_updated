@@ -9,7 +9,10 @@ export interface PDFExtractionResult {
   fullText: string;
 }
 
-export async function extractTextFromPDF(file: File): Promise<PDFExtractionResult> {
+export async function extractTextFromPDF(
+  file: File,
+  onProgress?: (percent: number) => void
+): Promise<PDFExtractionResult> {
   const pdfjsLib = await import("pdfjs-dist");
   pdfjsLib.GlobalWorkerOptions.workerSrc = "/pdf.worker.min.mjs";
 
@@ -41,6 +44,7 @@ export async function extractTextFromPDF(file: File): Promise<PDFExtractionResul
     } catch {
       pages.push({ pageNumber: i, text: `[Page ${i}: extraction failed]` });
     }
+    onProgress?.(Math.round((i / totalPages) * 100));
   }
 
   const fullText = pages.map(p => p.text).join("\n\n");

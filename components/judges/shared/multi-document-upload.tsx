@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback, useRef, useEffect } from "react";
+import { useState, useCallback, useRef, useEffect, useMemo } from "react";
 import {
   Upload,
   FileText,
@@ -53,10 +53,16 @@ async function traverseEntries(entries: FileSystemEntry[]): Promise<File[]> {
       }
     } else if (entry.isDirectory) {
       const reader = (entry as FileSystemDirectoryEntry).createReader();
-      const dirEntries = await new Promise<FileSystemEntry[]>((resolve, reject) => {
-        reader.readEntries(resolve, reject);
-      });
-      for (const dirEntry of dirEntries) {
+      // readEntries() returns batches of ~100 max — loop until empty
+      let allDirEntries: FileSystemEntry[] = [];
+      let batch: FileSystemEntry[];
+      do {
+        batch = await new Promise<FileSystemEntry[]>((resolve, reject) => {
+          reader.readEntries(resolve, reject);
+        });
+        allDirEntries.push(...batch);
+      } while (batch.length > 0);
+      for (const dirEntry of allDirEntries) {
         await readEntry(dirEntry);
       }
     }
@@ -74,6 +80,8 @@ export function MultiDocumentUpload({ onDocumentsReady }: MultiDocumentUploadPro
   const [isDragging, setIsDragging] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const folderInputRef = useRef<HTMLInputElement>(null);
+  const onDocumentsReadyRef = useRef(onDocumentsReady);
+  onDocumentsReadyRef.current = onDocumentsReady;
 
   // Set webkitdirectory imperatively (not in React's type definitions)
   useEffect(() => {
@@ -134,13 +142,19 @@ export function MultiDocumentUpload({ onDocumentsReady }: MultiDocumentUploadPro
     documents.some((d) => d.status === "extracted");
   const hasErrors = documents.some((d) => d.status === "error");
 
+  // Stable identity for the documents snapshot — triggers when content actually changes
+  const documentsKey = useMemo(
+    () => documents.map((d) => `${d.id}:${d.status}`).join(","),
+    [documents]
+  );
+
   // Auto-trigger onDocumentsReady when all documents reach terminal state
   useEffect(() => {
     if (allReady) {
-      onDocumentsReady(documents);
+      onDocumentsReadyRef.current(documents);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [allReady]);
+  }, [allReady, documentsKey]);
   const isProcessing = documents.some((d) => d.status === "extracting" || d.status === "pending");
 
   const statusIcon = (status: UploadedDocument["status"]) => {
@@ -262,9 +276,7 @@ export function MultiDocumentUpload({ onDocumentsReady }: MultiDocumentUploadPro
                   {doc.status === "extracting" && <span>Extracting text...</span>}
                   {doc.status === "skipped" && (
                     <span className="text-amber-600">
-                      {doc.fileFormat === "doc"
-                        ? "Legacy .doc — convert to .docx"
-                        : "Image — no text extracted"}
+                      Legacy .doc — convert to .docx
                     </span>
                   )}
                   {doc.status === "error" && (

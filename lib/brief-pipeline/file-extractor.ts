@@ -1,6 +1,7 @@
 import type { FileFormat } from "@/lib/mock/types";
 import { extractTextFromPDF } from "./pdf-extractor";
 import type { PDFExtractionResult } from "./pdf-extractor";
+import { extractTextFromImage } from "./ocr-extractor";
 
 export interface ExtractionResult {
   totalPages: number;
@@ -113,22 +114,23 @@ async function extractRtf(file: File): Promise<ExtractionResult> {
   };
 }
 
-function imagePlaceholder(file: File): ExtractionResult {
-  const text = `[Image file: ${file.name} — OCR not available. This file has been noted but text could not be extracted.]`;
+async function extractImage(file: File): Promise<ExtractionResult> {
+  const text = await extractTextFromImage(file);
   return {
-    totalPages: 0,
-    pages: [],
+    totalPages: 1,
+    pages: [{ pageNumber: 1, text }],
     fullText: text,
   };
 }
 
 export async function extractTextFromFile(
   file: File,
-  format: FileFormat
+  format: FileFormat,
+  onProgress?: (percent: number) => void
 ): Promise<ExtractionResult> {
   switch (format) {
     case "pdf":
-      return extractTextFromPDF(file);
+      return extractTextFromPDF(file, onProgress);
     case "docx":
       return extractDocx(file);
     case "doc":
@@ -146,7 +148,7 @@ export async function extractTextFromFile(
     case "rtf":
       return extractRtf(file);
     case "image":
-      return imagePlaceholder(file);
+      return extractImage(file);
     case "unsupported":
       throw new Error(`Unsupported file format: ${file.name}`);
     default:

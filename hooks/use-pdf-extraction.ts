@@ -3,6 +3,7 @@
 import { useState, useCallback } from "react";
 import type { UploadedDocument, UploadDocumentType, FileFormat } from "@/lib/mock/types";
 import { detectFileFormat, extractTextFromFile } from "@/lib/brief-pipeline/file-extractor";
+import { processWithConcurrency } from "@/lib/utils/concurrency";
 
 export function useDocumentExtraction() {
   const [documents, setDocuments] = useState<UploadedDocument[]>([]);
@@ -27,22 +28,27 @@ export function useDocumentExtraction() {
 
     setDocuments((prev) => [...prev, ...newDocs]);
 
-    // Mark all as extracting
+    // Mark skipped files (only .doc); everything else starts extracting
     setDocuments((prev) =>
       prev.map((d) => {
         const isNew = newDocs.some((nd) => nd.id === d.id);
         if (!isNew) return d;
-        if (d.fileFormat === "image" || d.fileFormat === "doc") return { ...d, status: "skipped" as const, progress: 100 };
+        if (d.fileFormat === "doc") return { ...d, status: "skipped" as const, progress: 100 };
         return { ...d, status: "extracting" as const, progress: 10 };
       })
     );
 
-    // Extract all files in parallel
-    const extractions = newDocs.map(async (doc) => {
-      if (doc.fileFormat === "image" || doc.fileFormat === "doc") return; // already marked skipped
+    // Filter to extractable docs (everything except .doc)
+    const extractable = newDocs.filter((doc) => doc.fileFormat !== "doc");
 
+    // Extract with bounded concurrency (max 5 simultaneous) to avoid memory exhaustion
+    await processWithConcurrency(extractable, 5, async (doc) => {
       try {
-        const result = await extractTextFromFile(doc.file, doc.fileFormat);
+        const result = await extractTextFromFile(doc.file, doc.fileFormat, (percent) => {
+          setDocuments((prev) =>
+            prev.map((d) => (d.id === doc.id ? { ...d, progress: Math.max(10, percent) } : d))
+          );
+        });
 
         setDocuments((prev) =>
           prev.map((d) =>
@@ -73,8 +79,6 @@ export function useDocumentExtraction() {
         );
       }
     });
-
-    await Promise.allSettled(extractions);
   }, []);
 
   const removeFile = useCallback((id: string) => {
