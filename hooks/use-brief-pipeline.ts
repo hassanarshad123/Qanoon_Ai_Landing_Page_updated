@@ -36,6 +36,9 @@ const PHASE_LABELS: Record<string, string> = {
   complete: "Brief generation complete",
 };
 
+/** Small delay helper to space out API calls and avoid rate limits */
+const delay = (ms: number) => new Promise<void>((resolve) => setTimeout(resolve, ms));
+
 // ---------------------------------------------------------------------------
 // Parse streamed sections from Claude's XML-delimited output
 // ---------------------------------------------------------------------------
@@ -141,6 +144,10 @@ export function useBriefPipeline() {
       }));
       setExtractedData(data);
 
+      // Delay between analyze and precedents to avoid rate limits
+      setProgress({ step: 1, total: 5, label: "Preparing precedent search..." });
+      await delay(10_000);
+
       // Phase 2: Match precedents with AI-ranked search
       setPhase("matching_precedents");
       setProgress({ step: 2, total: 5, label: PHASE_LABELS.matching_precedents });
@@ -164,6 +171,10 @@ export function useBriefPipeline() {
         results = await precedentRes.json();
       }
       setRagResults(results);
+
+      // Delay between precedents and generate to avoid rate limits
+      setProgress({ step: 2, total: 5, label: "Preparing brief generation..." });
+      await delay(8_000);
 
       // Phase 3: Generate sections with Claude (streaming)
       setPhase("generating_sections");

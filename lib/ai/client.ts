@@ -9,7 +9,11 @@ function getClient(): Anthropic {
       console.error("[QanoonAI] ANTHROPIC_API_KEY is not set — AI features will fail");
       throw new Error("ANTHROPIC_API_KEY is not configured");
     }
-    _anthropic = new Anthropic({ apiKey });
+    _anthropic = new Anthropic({
+      apiKey,
+      maxRetries: 4,
+      timeout: 120_000,
+    });
   }
   return _anthropic;
 }

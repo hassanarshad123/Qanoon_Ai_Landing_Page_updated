@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { LayoutDashboard, Users, Scale, ChevronLeft, ChevronRight } from "lucide-react";
+import { LayoutDashboard, Users, Scale, ChevronLeft, ChevronRight, FlaskConical } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { UserMenu } from "@/components/shared/UserMenu";
@@ -16,6 +16,7 @@ import {
 const pages = [
   { href: "/admin", label: "Dashboard", icon: LayoutDashboard },
   { href: "/admin/users", label: "Users", icon: Users },
+  { href: "/admin/rag-test", label: "RAG Test", icon: FlaskConical },
 ];
 
 interface AdminSidebarProps {

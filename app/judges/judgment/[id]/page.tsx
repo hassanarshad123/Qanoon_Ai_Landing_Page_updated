@@ -168,8 +168,13 @@ export default function JudgmentDetailPage() {
         return;
       }
 
+      // Send full content only for the target section, truncate others
       const judgmentContext = judgment.sections
-        .map((s) => `## ${s.title}\n${s.content}`)
+        .map((s) =>
+          s.id === sectionId
+            ? `## ${s.title}\n${s.content}`
+            : `## ${s.title}\n${s.content.slice(0, 200)}`
+        )
         .join("\n\n");
 
       try {
@@ -238,9 +243,16 @@ export default function JudgmentDetailPage() {
 
       saveJudgmentChat(id, "user", message).catch(console.error);
 
+      // Truncate sections to reduce token usage
       const judgmentContext = judgment.sections
-        .map((s) => `## ${s.title}\n${s.content}`)
+        .map((s) => `## ${s.title}\n${s.content.slice(0, 300)}...`)
         .join("\n\n");
+
+      // Limit chat history to last 10 messages (5 turns) to stay under rate limit
+      const recentMessages = judgment.conversation.slice(-10);
+      const safeMessages = recentMessages[0]?.role === "assistant"
+        ? recentMessages.slice(1)
+        : recentMessages;
 
       try {
         const response = await fetch("/api/judgment/chat", {
@@ -248,7 +260,7 @@ export default function JudgmentDetailPage() {
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
             judgmentContext,
-            messages: judgment.conversation.map((m) => ({
+            messages: safeMessages.map((m) => ({
               role: m.role,
               content: m.content,
             })),

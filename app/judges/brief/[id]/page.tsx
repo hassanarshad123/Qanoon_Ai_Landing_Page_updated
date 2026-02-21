@@ -243,10 +243,16 @@ export default function BriefDetailPage() {
       // Save user message to DB
       saveChatMessage(id, "user", message).catch(console.error);
 
-      // Build brief context for Claude
+      // Build brief context for Claude — truncate sections to reduce token usage
       const briefContext = brief.sections
-        .map((s) => `## ${s.title}\n${s.content}`)
+        .map((s) => `## ${s.title}\n${s.content.slice(0, 300)}...`)
         .join("\n\n");
+
+      // Limit chat history to last 10 messages (5 turns) to stay under rate limit
+      const recentMessages = conversationMessages.slice(-10);
+      const safeMessages = recentMessages[0]?.role === "assistant"
+        ? recentMessages.slice(1)
+        : recentMessages;
 
       try {
         const response = await fetch("/api/brief/chat", {
@@ -254,7 +260,7 @@ export default function BriefDetailPage() {
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
             briefContext,
-            messages: conversationMessages.map((m) => ({
+            messages: safeMessages.map((m) => ({
               role: m.role,
               content: m.content,
             })),
@@ -385,8 +391,13 @@ export default function BriefDetailPage() {
         return;
       }
 
+      // Send full content only for the target section, truncate others
       const briefContext = brief.sections
-        .map((s) => `## ${s.title}\n${s.content}`)
+        .map((s) =>
+          s.id === sectionId
+            ? `## ${s.title}\n${s.content}`
+            : `## ${s.title}\n${s.content.slice(0, 200)}`
+        )
         .join("\n\n");
 
       try {
