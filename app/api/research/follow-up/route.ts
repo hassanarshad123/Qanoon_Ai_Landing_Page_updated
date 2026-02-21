@@ -4,9 +4,7 @@ import {
   buildResearchSystemPrompt,
   buildResearchUserMessage,
 } from "@/lib/ai/prompts";
-import { hybridSearch } from "@/lib/research/rag";
-import { queryRAGBackend } from "@/lib/rag/client";
-import { mergeRAGResults } from "@/lib/rag/merge";
+import { search, toRAGSearchResult } from "@/lib/rag";
 import { requireAuth } from "@/lib/auth/api";
 import {
   getConversation,
@@ -43,14 +41,14 @@ export async function POST(request: Request) {
       content: question,
     });
 
-    // 3. Fresh RAG search — Neon + RAG backend in parallel
-    const [neonSettled, ragBackendSettled] = await Promise.allSettled([
-      hybridSearch(question, { limit: 8 }),
-      queryRAGBackend({ query: question, role: "judge" }),
-    ]);
-    const neonResults = neonSettled.status === "fulfilled" ? neonSettled.value : [];
-    const ragBackendResponse = ragBackendSettled.status === "fulfilled" ? ragBackendSettled.value : null;
-    const ragResults = mergeRAGResults(ragBackendResponse, neonResults);
+    // 3. Unified RAG search
+    const searchResults = await search({
+      query: question,
+      includeChunks: true,
+      groupByJudgment: true,
+      limit: 8,
+    });
+    const ragResults = searchResults.map(toRAGSearchResult);
 
     // 4. Build prompts with full history
     const systemPrompt = buildResearchSystemPrompt(caseContext || undefined);

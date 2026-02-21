@@ -8,59 +8,94 @@ export async function POST() {
   if (error) return error;
 
   try {
+    // Phase 1: Embed document-level precedents
     const rows = await sql(
       `SELECT id, case_name, citation, summary, ratio, headnotes, keywords FROM precedents WHERE embedding IS NULL`
     );
 
-    if (rows.length === 0) {
-      return NextResponse.json({ message: "All precedents already embedded", count: 0 });
+    let docEmbedded = 0;
+
+    if (rows.length > 0) {
+      const texts = rows.map((r: any) => {
+        const headnotes =
+          typeof r.headnotes === "string"
+            ? JSON.parse(r.headnotes)
+            : r.headnotes || [];
+        const keywords =
+          typeof r.keywords === "string"
+            ? JSON.parse(r.keywords)
+            : r.keywords || [];
+        return [
+          r.case_name,
+          r.citation,
+          r.summary,
+          r.ratio,
+          headnotes.join(". "),
+          keywords.join(", "),
+        ]
+          .filter(Boolean)
+          .join(" | ");
+      });
+
+      const BATCH = 8;
+      for (let i = 0; i < texts.length; i += BATCH) {
+        const batch = texts.slice(i, i + BATCH);
+        const batchRows = rows.slice(i, i + BATCH);
+        const embeddings = await generateEmbeddings(batch);
+
+        for (let j = 0; j < batchRows.length; j++) {
+          const emb = embeddings[j];
+          if (emb) {
+            await sql(
+              `UPDATE precedents SET embedding = $1::vector WHERE id = $2`,
+              [`[${emb.join(",")}]`, batchRows[j].id]
+            );
+            docEmbedded++;
+          }
+        }
+
+        // Rate limit delay between batches
+        if (i + BATCH < texts.length) {
+          await new Promise((r) => setTimeout(r, 200));
+        }
+      }
     }
 
-    const texts = rows.map((r: any) => {
-      const headnotes =
-        typeof r.headnotes === "string"
-          ? JSON.parse(r.headnotes)
-          : r.headnotes || [];
-      const keywords =
-        typeof r.keywords === "string"
-          ? JSON.parse(r.keywords)
-          : r.keywords || [];
-      return [
-        r.case_name,
-        r.citation,
-        r.summary,
-        r.ratio,
-        headnotes.join(". "),
-        keywords.join(", "),
-      ]
-        .filter(Boolean)
-        .join(" | ");
-    });
+    // Phase 2: Embed chunks that are missing embeddings
+    const chunkRows = await sql(
+      `SELECT id, content FROM case_law_chunks WHERE embedding IS NULL LIMIT 500`
+    );
 
-    // Batch in groups of 10
-    const BATCH = 10;
-    let embedded = 0;
+    let chunkEmbedded = 0;
 
-    for (let i = 0; i < texts.length; i += BATCH) {
-      const batch = texts.slice(i, i + BATCH);
-      const batchRows = rows.slice(i, i + BATCH);
-      const embeddings = await generateEmbeddings(batch);
+    if (chunkRows.length > 0) {
+      const BATCH = 8;
+      for (let i = 0; i < chunkRows.length; i += BATCH) {
+        const batch = chunkRows.slice(i, i + BATCH);
+        const texts = batch.map((r: any) => r.content);
+        const embeddings = await generateEmbeddings(texts);
 
-      for (let j = 0; j < batchRows.length; j++) {
-        const emb = embeddings[j];
-        if (emb) {
-          await sql(
-            `UPDATE precedents SET embedding = $1::vector WHERE id = $2`,
-            [`[${emb.join(",")}]`, batchRows[j].id]
-          );
-          embedded++;
+        for (let j = 0; j < batch.length; j++) {
+          const emb = embeddings[j];
+          if (emb) {
+            await sql(
+              `UPDATE case_law_chunks SET embedding = $1::vector WHERE id = $2`,
+              [`[${emb.join(",")}]`, batch[j].id]
+            );
+            chunkEmbedded++;
+          }
+        }
+
+        if (i + BATCH < chunkRows.length) {
+          await new Promise((r) => setTimeout(r, 200));
         }
       }
     }
 
     return NextResponse.json({
-      message: `Embedded ${embedded} of ${rows.length} precedents`,
-      count: embedded,
+      message: `Embedded ${docEmbedded} precedents and ${chunkEmbedded} chunks`,
+      documents: { total: rows.length, embedded: docEmbedded },
+      chunks: { total: chunkRows.length, embedded: chunkEmbedded },
     });
   } catch (error: any) {
     console.error("Embed error:", error);

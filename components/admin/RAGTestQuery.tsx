@@ -22,16 +22,27 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { toast } from "sonner";
-import type { RAGCitation } from "@/lib/rag/client";
+
+interface SearchResultItem {
+  judgment: {
+    id: string;
+    caseName: string;
+    citation: string;
+    court: string;
+    year: number;
+    legalAreas: string[];
+    courtTier: string | null;
+    jurisdiction: string;
+  };
+  relevanceScore: number;
+  matchedKeywords: string[];
+  matchedAreas: string[];
+}
 
 interface QueryResult {
   query: string;
-  role: string;
-  synthesis: string;
-  citations: RAGCitation[];
-  bilingual_note: string | null;
-  request_id: string | null;
-  total_citations: number;
+  resultCount: number;
+  results: SearchResultItem[];
   responseTimeMs: number;
 }
 
@@ -59,15 +70,15 @@ export function RAGTestQuery() {
     try {
       const filters: Record<string, unknown> = {};
       if (courtTiers.trim()) {
-        filters.court_tiers = courtTiers.split(",").map((s) => s.trim()).filter(Boolean);
+        filters.courtTier = courtTiers.split(",")[0]?.trim();
       }
-      if (yearFrom) filters.year_from = parseInt(yearFrom, 10);
-      if (yearTo) filters.year_to = parseInt(yearTo, 10);
+      if (yearFrom) filters.yearFrom = parseInt(yearFrom, 10);
+      if (yearTo) filters.yearTo = parseInt(yearTo, 10);
 
       const res = await fetch("/api/admin/rag/query", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ query: query.trim(), role, filters }),
+        body: JSON.stringify({ query: query.trim(), filters, limit: 10 }),
       });
 
       if (!res.ok) {
@@ -180,46 +191,38 @@ export function RAGTestQuery() {
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="flex flex-wrap gap-3 text-sm">
-              {result.request_id && (
-                <Badge variant="outline">ID: {result.request_id}</Badge>
-              )}
               <Badge variant="outline">{result.responseTimeMs}ms</Badge>
               <Badge variant="outline">
-                {result.total_citations} citation{result.total_citations !== 1 ? "s" : ""}
+                {result.resultCount} result{result.resultCount !== 1 ? "s" : ""}
               </Badge>
             </div>
 
-            <div>
-              <p className="text-xs font-medium text-gray-500 mb-1">Synthesis</p>
-              <div className="bg-gray-50 rounded-lg p-4 max-h-64 overflow-y-auto text-sm whitespace-pre-wrap">
-                {result.synthesis}
-              </div>
-            </div>
-
-            {result.citations.length > 0 && (
+            {result.results.length > 0 && (
               <div>
-                <p className="text-xs font-medium text-gray-500 mb-1">Citations</p>
+                <p className="text-xs font-medium text-gray-500 mb-1">Search Results</p>
                 <div className="border rounded-lg overflow-auto">
                   <Table>
                     <TableHeader>
                       <TableRow>
-                        <TableHead>Citation ID</TableHead>
-                        <TableHead>Case Title</TableHead>
+                        <TableHead>Citation</TableHead>
+                        <TableHead>Case Name</TableHead>
                         <TableHead>Court</TableHead>
                         <TableHead>Tier</TableHead>
                         <TableHead>Year</TableHead>
+                        <TableHead>Score</TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
-                      {result.citations.map((c) => (
-                        <TableRow key={c.citation_id}>
+                      {result.results.map((r) => (
+                        <TableRow key={r.judgment.id}>
                           <TableCell className="font-mono text-xs">
-                            {c.citation_id}
+                            {r.judgment.citation}
                           </TableCell>
-                          <TableCell>{c.case_title}</TableCell>
-                          <TableCell>{c.court_name}</TableCell>
-                          <TableCell>{c.court_tier}</TableCell>
-                          <TableCell>{c.case_year}</TableCell>
+                          <TableCell>{r.judgment.caseName}</TableCell>
+                          <TableCell>{r.judgment.court}</TableCell>
+                          <TableCell>{r.judgment.courtTier ?? "—"}</TableCell>
+                          <TableCell>{r.judgment.year}</TableCell>
+                          <TableCell>{r.relevanceScore}%</TableCell>
                         </TableRow>
                       ))}
                     </TableBody>

@@ -1,13 +1,12 @@
 import { NextResponse } from "next/server";
 import { requireAdmin } from "@/lib/auth/api";
-import { queryRAGBackend } from "@/lib/rag/client";
-import type { RAGChatRequest } from "@/lib/rag/client";
+import { search } from "@/lib/rag";
 
 export async function POST(request: Request) {
   const { error } = await requireAdmin();
   if (error) return error;
 
-  let body: RAGChatRequest;
+  let body: any;
   try {
     body = await request.json();
   } catch {
@@ -22,15 +21,35 @@ export async function POST(request: Request) {
   }
 
   const start = Date.now();
-  const result = await queryRAGBackend(body);
+
+  const results = await search({
+    query: body.query,
+    filters: body.filters,
+    limit: body.limit ?? 10,
+    includeChunks: body.includeChunks ?? false,
+  });
+
   const responseTimeMs = Date.now() - start;
 
-  if (!result) {
-    return NextResponse.json(
-      { error: "RAG backend returned no result (not configured or unreachable)" },
-      { status: 502 },
-    );
-  }
-
-  return NextResponse.json({ ...result, responseTimeMs });
+  return NextResponse.json({
+    query: body.query,
+    resultCount: results.length,
+    results: results.map((r) => ({
+      judgment: {
+        id: r.judgment.id,
+        caseName: r.judgment.caseName,
+        citation: r.judgment.citation,
+        court: r.judgment.court,
+        year: r.judgment.year,
+        legalAreas: r.judgment.legalAreas,
+        courtTier: r.judgment.courtTier,
+        jurisdiction: r.judgment.jurisdiction,
+      },
+      relevanceScore: r.relevanceScore,
+      matchedKeywords: r.matchedKeywords,
+      matchedAreas: r.matchedAreas,
+      matchedChunks: r.matchedChunks,
+    })),
+    responseTimeMs,
+  });
 }

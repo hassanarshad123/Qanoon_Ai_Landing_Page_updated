@@ -1,10 +1,9 @@
 import { NextResponse } from "next/server";
-import { sql } from "@/lib/db";
 import { anthropic } from "@/lib/ai/client";
 import { AI_MODELS } from "@/lib/ai/models";
 import { buildPrecedentRankingPrompt } from "@/lib/ai/prompts";
 import { requireAuth } from "@/lib/auth/api";
-import { queryRAGBackend } from "@/lib/rag/client";
+import { search, toRAGSearchResult } from "@/lib/rag";
 
 export const maxDuration = 120;
 
@@ -22,7 +21,7 @@ export async function POST(request: Request) {
       );
     }
 
-    // Build search terms from extracted data
+    // Build search query from extracted data
     const searchTerms: string[] = [];
 
     if (extractedData.legalIssues) {
@@ -45,87 +44,21 @@ export async function POST(request: Request) {
       searchTerms.push(extractedData.courtInfo.caseType);
     }
 
-    // Build ts_query from search terms — combine with OR for broad matching
-    const cleanTerms = searchTerms
-      .join(" ")
-      .replace(/[^a-zA-Z0-9\s]/g, " ")
-      .split(/\s+/)
-      .filter((t) => t.length > 2)
-      .slice(0, 30); // Limit terms
-
-    const tsQuery = cleanTerms.join(" | ");
-
-    // Full-text search in Neon + RAG backend in parallel
+    // Unified RAG search
     const ragQuery = searchTerms.slice(0, 10).join(" ");
-
-    const neonSearchPromise = (async () => {
-      let results: any[];
-      if (tsQuery.trim()) {
-        results = await sql(
-          `SELECT id, case_name, citation, court, year, legal_areas, keywords, headnotes, summary, ratio,
-                  ts_rank(search_vector, to_tsquery('english', $1)) as rank
-           FROM precedents
-           WHERE search_vector @@ to_tsquery('english', $1)
-           ORDER BY rank DESC
-           LIMIT 15`,
-          [tsQuery]
-        );
-      } else {
-        results = await sql(
-          `SELECT id, case_name, citation, court, year, legal_areas, keywords, headnotes, summary, ratio
-           FROM precedents
-           LIMIT 15`
-        );
-      }
-      if (results.length === 0) {
-        results = await sql(
-          `SELECT id, case_name, citation, court, year, legal_areas, keywords, headnotes, summary, ratio
-           FROM precedents
-           LIMIT 10`
-        );
-      }
-      return results;
-    })();
-
-    const ragBackendPromise = ragQuery.length >= 10
-      ? queryRAGBackend({ query: ragQuery, role: "judge" })
-      : Promise.resolve(null);
-
-    const [neonSettled, ragSettled] = await Promise.allSettled([
-      neonSearchPromise,
-      ragBackendPromise,
-    ]);
-
-    let searchResults: any[] =
-      neonSettled.status === "fulfilled" ? neonSettled.value : [];
-    const ragBackendResponse =
-      ragSettled.status === "fulfilled" ? ragSettled.value : null;
-
-    // Append RAG backend citations as rows in the same format for re-ranking
-    if (ragBackendResponse?.citations?.length) {
-      const existingCitations = new Set(
-        searchResults.map((r: any) =>
-          (r.citation || "").toLowerCase().replace(/[^a-z0-9]/g, "")
-        )
-      );
-      for (const c of ragBackendResponse.citations) {
-        const normCit = c.citation_id.toLowerCase().replace(/[^a-z0-9]/g, "");
-        if (existingCitations.has(normCit)) continue;
-        existingCitations.add(normCit);
-        searchResults.push({
-          id: `rag-${c.citation_id}`,
-          case_name: c.case_title,
-          citation: c.citation_id,
-          court: c.court_name,
-          year: c.case_year,
-          legal_areas: "[]",
-          keywords: "[]",
-          headnotes: "[]",
-          summary: "",
-          ratio: "",
-        });
-      }
-    }
+    const searchResults = await search({ query: ragQuery, limit: 15 });
+    const searchResultsMapped = searchResults.map((r) => ({
+      id: r.judgment.id,
+      case_name: r.judgment.caseName,
+      citation: r.judgment.citation,
+      court: r.judgment.court,
+      year: r.judgment.year,
+      legal_areas: r.judgment.legalAreas,
+      keywords: r.judgment.keywords,
+      headnotes: r.judgment.headnotes,
+      summary: r.judgment.summary,
+      ratio: r.judgment.ratio,
+    }));
 
     // Use Claude to re-rank the results
     const legalIssues = (extractedData.legalIssues || []).map(
@@ -138,16 +71,13 @@ export async function POST(request: Request) {
 
     const rankingPrompt = buildPrecedentRankingPrompt(
       { legalIssues, statutes, caseType },
-      searchResults.map((r: any) => ({
+      searchResultsMapped.map((r: any) => ({
         id: r.id,
         caseName: r.case_name,
         citation: r.citation,
         summary: r.summary,
         ratio: r.ratio,
-        legalAreas:
-          typeof r.legal_areas === "string"
-            ? JSON.parse(r.legal_areas)
-            : r.legal_areas || [],
+        legalAreas: Array.isArray(r.legal_areas) ? r.legal_areas : [],
       }))
     );
 
@@ -171,7 +101,7 @@ export async function POST(request: Request) {
         rankings = JSON.parse(jsonText);
       } catch {
         // Fallback: use search order with default scores
-        rankings = searchResults.map((r: any, i: number) => ({
+        rankings = searchResultsMapped.map((r: any, i: number) => ({
           id: r.id,
           relevanceScore: Math.max(90 - i * 5, 40),
           matchedKeywords: [],
@@ -186,21 +116,12 @@ export async function POST(request: Request) {
       .filter((rank: any) => rank.relevanceScore > 30)
       .slice(0, 10)
       .map((rank: any) => {
-        const dbRow = searchResults.find((r: any) => r.id === rank.id);
+        const dbRow = searchResultsMapped.find((r: any) => r.id === rank.id);
         if (!dbRow) return null;
 
-        const legalAreas =
-          typeof dbRow.legal_areas === "string"
-            ? JSON.parse(dbRow.legal_areas)
-            : dbRow.legal_areas || [];
-        const keywords =
-          typeof dbRow.keywords === "string"
-            ? JSON.parse(dbRow.keywords)
-            : dbRow.keywords || [];
-        const headnotes =
-          typeof dbRow.headnotes === "string"
-            ? JSON.parse(dbRow.headnotes)
-            : dbRow.headnotes || [];
+        const legalAreas = dbRow.legal_areas || [];
+        const keywords = dbRow.keywords || [];
+        const headnotes = dbRow.headnotes || [];
 
         return {
           precedent: {

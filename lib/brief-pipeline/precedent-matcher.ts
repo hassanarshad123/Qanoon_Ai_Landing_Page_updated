@@ -1,5 +1,6 @@
-import type { ExtractedCaseData, RAGSearchResult } from "@/lib/mock/types";
-import { searchPrecedents } from "@/lib/mock/rag-api";
+import type { ExtractedCaseData } from "@/lib/mock/types";
+import { search, toRAGSearchResult } from "@/lib/rag";
+import type { RAGSearchResult } from "@/lib/rag/types";
 
 export async function matchPrecedents(data: ExtractedCaseData): Promise<RAGSearchResult[]> {
   const keywords = new Set<string>();
@@ -58,9 +59,13 @@ export async function matchPrecedents(data: ExtractedCaseData): Promise<RAGSearc
     return [];
   }
 
-  return searchPrecedents({
-    keywords: keywordArray,
-    legalAreas: areaArray,
-    maxResults: 10,
+  // Use unified RAG search with keyword-based query and legal area filters
+  const query = keywordArray.join(" ");
+  const results = await search({
+    query,
+    filters: areaArray.length > 0 ? { legalAreas: areaArray } : undefined,
+    limit: 10,
   });
+
+  return results.map(toRAGSearchResult);
 }
