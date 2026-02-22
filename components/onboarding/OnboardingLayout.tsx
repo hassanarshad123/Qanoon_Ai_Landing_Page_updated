@@ -25,9 +25,40 @@ export function OnboardingLayout({ role, currentStep, totalSteps, children }: On
 
       {/* Right panel — form area */}
       <div className="flex-1 flex flex-col min-h-screen bg-white">
-        {/* Progress bar */}
+        {/* Mobile accent bar — gradient stripe (hidden on desktop where left panel shows) */}
         {showProgress && (
-          <div className="px-6 sm:px-10 pt-6">
+          <div
+            className="lg:hidden h-1.5"
+            style={{
+              background: `linear-gradient(to right, ${colors.primary}, ${colors.hover})`,
+            }}
+          />
+        )}
+
+        {/* Mobile header — brand + step counter + inline progress (hidden on desktop) */}
+        {showProgress && (
+          <div className="lg:hidden px-6 pt-4 pb-3">
+            <div className="flex items-center justify-between mb-3">
+              <span className="font-serif text-lg font-semibold text-gray-900">QanoonAI</span>
+              <span className="text-xs font-medium text-gray-400">
+                Step {currentStep + 1} of {totalSteps}
+              </span>
+            </div>
+            <div className="h-1 w-full bg-gray-100 rounded-full overflow-hidden">
+              <div
+                className="h-full rounded-full transition-all duration-500 ease-out"
+                style={{
+                  width: `${totalSteps > 1 ? (currentStep / (totalSteps - 1)) * 100 : 0}%`,
+                  backgroundColor: colors.primary,
+                }}
+              />
+            </div>
+          </div>
+        )}
+
+        {/* Desktop progress bar (hidden on mobile) */}
+        {showProgress && (
+          <div className="hidden lg:block px-6 sm:px-10 pt-6">
             <OnboardingProgressBar
               currentStep={currentStep}
               totalSteps={totalSteps}
@@ -36,7 +67,7 @@ export function OnboardingLayout({ role, currentStep, totalSteps, children }: On
           </div>
         )}
 
-        {/* Mobile brand bar (visible only on mobile when no progress) */}
+        {/* Mobile brand bar (visible only on mobile when no progress / role selection step) */}
         {!showProgress && (
           <div className="lg:hidden px-6 pt-6">
             <span className="font-serif text-lg font-semibold text-gray-900">QanoonAI</span>
