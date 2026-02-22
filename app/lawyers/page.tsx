@@ -90,7 +90,7 @@ export default function LawyerDashboard() {
   return (
     <div className="space-y-8">
       {/* Greeting */}
-      <div>
+      <div data-tour="lawyer-greeting">
         <p className="text-sm font-medium text-[#2563EB] tracking-wide uppercase mb-1">
           {getGreeting()}
         </p>
@@ -105,7 +105,7 @@ export default function LawyerDashboard() {
       </div>
 
       {/* Stat Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div data-tour="lawyer-stats" className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         <Card>
           <CardContent className="pt-6">
             <div className="flex items-center justify-between">
@@ -165,7 +165,7 @@ export default function LawyerDashboard() {
 
       {/* Schedule + Quick Actions */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <Card className="lg:col-span-2">
+        <Card data-tour="lawyer-schedule" className="lg:col-span-2">
           <CardHeader>
             <div className="flex items-center justify-between">
               <CardTitle className="text-base">Today&apos;s Schedule</CardTitle>
@@ -181,7 +181,7 @@ export default function LawyerDashboard() {
           </CardContent>
         </Card>
 
-        <Card>
+        <Card data-tour="lawyer-quick-actions">
           <CardHeader>
             <CardTitle className="text-base">Quick Actions</CardTitle>
           </CardHeader>
@@ -203,7 +203,7 @@ export default function LawyerDashboard() {
       </div>
 
       {/* Recent Activity */}
-      <Card>
+      <Card data-tour="lawyer-activity">
         <CardHeader>
           <CardTitle className="text-base">Recent Activity</CardTitle>
         </CardHeader>

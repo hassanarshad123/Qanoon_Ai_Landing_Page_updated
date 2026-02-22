@@ -86,11 +86,21 @@ const config: Config = {
           '0%, 100%': { opacity: '1' },
           '50%': { opacity: '0' },
         },
+        'tour-pulse': {
+          '0%, 100%': { boxShadow: '0 0 0 0 rgba(37, 99, 235, 0.4)' },
+          '50%': { boxShadow: '0 0 0 8px rgba(37, 99, 235, 0)' },
+        },
+        'tour-deplete': {
+          from: { width: '100%' },
+          to: { width: '0%' },
+        },
       },
       animation: {
         'accordion-down': 'accordion-down 0.2s ease-out',
         'accordion-up': 'accordion-up 0.2s ease-out',
         blink: 'blink 1s step-end infinite',
+        'tour-pulse': 'tour-pulse 2s ease-in-out infinite',
+        'tour-deplete': 'tour-deplete 8s linear forwards',
       },
     },
   },

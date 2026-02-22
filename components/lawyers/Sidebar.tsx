@@ -42,8 +42,8 @@ import {
 import { UserMenu } from "@/components/shared/UserMenu";
 
 const topItems = [
-  { href: "/lawyers", label: "Home", icon: LayoutDashboard },
-  { href: "/lawyers/all-tools", label: "All Tools", icon: Grid3X3 },
+  { href: "/lawyers", label: "Home", icon: LayoutDashboard, tourId: "nav-home" },
+  { href: "/lawyers/all-tools", label: "All Tools", icon: Grid3X3, tourId: "nav-all-tools" },
 ];
 
 const sidebarGroups = [
@@ -52,12 +52,12 @@ const sidebarGroups = [
     label: "AI Tools",
     icon: Scale,
     items: [
-      { href: "/lawyers/brief", label: "Case Brief", icon: FileText },
-      { href: "/lawyers/petition", label: "Petition Drafter", icon: FilePen },
-      { href: "/lawyers/research", label: "Legal Research", icon: Search },
-      { href: "/lawyers/case-finder", label: "Case Law Finder", icon: BookOpen },
-      { href: "/lawyers/statute-analyzer", label: "Statute Analyzer", icon: Scale },
-      { href: "/lawyers/contract-review", label: "Contract Review", icon: FileCheck },
+      { href: "/lawyers/brief", label: "Case Brief", icon: FileText, tourId: "nav-brief" },
+      { href: "/lawyers/petition", label: "Petition Drafter", icon: FilePen, tourId: "nav-petition" },
+      { href: "/lawyers/research", label: "Legal Research", icon: Search, tourId: "nav-research" },
+      { href: "/lawyers/case-finder", label: "Case Law Finder", icon: BookOpen, tourId: "nav-case-finder" },
+      { href: "/lawyers/statute-analyzer", label: "Statute Analyzer", icon: Scale, tourId: "nav-statute-analyzer" },
+      { href: "/lawyers/contract-review", label: "Contract Review", icon: FileCheck, tourId: "nav-contract-review" },
     ],
   },
   {
@@ -65,12 +65,12 @@ const sidebarGroups = [
     label: "Database & Research",
     icon: Library,
     items: [
-      { href: "/lawyers/case-law", label: "Case Law Repository", icon: Library },
-      { href: "/lawyers/statutes", label: "Statute Library", icon: BookMarked },
-      { href: "/lawyers/legal-forms", label: "Legal Forms", icon: FileStack },
-      { href: "/lawyers/court-directory", label: "Court Directory", icon: Building2 },
-      { href: "/lawyers/case-tracker", label: "Case Tracker", icon: ClipboardList },
-      { href: "/lawyers/amendments", label: "Amendment Alerts", icon: Bell },
+      { href: "/lawyers/case-law", label: "Case Law Repository", icon: Library, tourId: "nav-case-law" },
+      { href: "/lawyers/statutes", label: "Statute Library", icon: BookMarked, tourId: "nav-statutes" },
+      { href: "/lawyers/legal-forms", label: "Legal Forms", icon: FileStack, tourId: "nav-legal-forms" },
+      { href: "/lawyers/court-directory", label: "Court Directory", icon: Building2, tourId: "nav-court-directory" },
+      { href: "/lawyers/case-tracker", label: "Case Tracker", icon: ClipboardList, tourId: "nav-case-tracker" },
+      { href: "/lawyers/amendments", label: "Amendment Alerts", icon: Bell, tourId: "nav-amendments" },
     ],
   },
   {
@@ -78,11 +78,11 @@ const sidebarGroups = [
     label: "Practice Management",
     icon: Users,
     items: [
-      { href: "/lawyers/clients", label: "Clients", icon: Users },
-      { href: "/lawyers/calendar", label: "Calendar", icon: CalendarDays },
-      { href: "/lawyers/documents", label: "Documents", icon: FolderOpen },
-      { href: "/lawyers/billing", label: "Billing", icon: Receipt },
-      { href: "/lawyers/files", label: "File Manager", icon: HardDrive },
+      { href: "/lawyers/clients", label: "Clients", icon: Users, tourId: "nav-clients" },
+      { href: "/lawyers/calendar", label: "Calendar", icon: CalendarDays, tourId: "nav-calendar" },
+      { href: "/lawyers/documents", label: "Documents", icon: FolderOpen, tourId: "nav-documents" },
+      { href: "/lawyers/billing", label: "Billing", icon: Receipt, tourId: "nav-billing" },
+      { href: "/lawyers/files", label: "File Manager", icon: HardDrive, tourId: "nav-files" },
     ],
   },
 ];
@@ -104,7 +104,7 @@ export function LawyerSidebar({ collapsed, onToggle }: SidebarProps) {
   )?.id;
 
   const renderLink = (
-    item: { href: string; label: string; icon: React.ElementType },
+    item: { href: string; label: string; icon: React.ElementType; tourId?: string },
     indent = false
   ) => {
     const active = isActive(item.href);
@@ -113,6 +113,7 @@ export function LawyerSidebar({ collapsed, onToggle }: SidebarProps) {
     const linkContent = (
       <Link
         href={item.href}
+        data-tour={item.tourId}
         className={cn(
           "mx-2 flex items-center rounded-lg transition-colors",
           collapsed ? "justify-center px-2 py-2.5" : "gap-3 px-3 py-2.5",
@@ -207,7 +208,10 @@ export function LawyerSidebar({ collapsed, onToggle }: SidebarProps) {
             >
               {sidebarGroups.map((group) => (
                 <AccordionItem key={group.id} value={group.id} className="border-0">
-                  <AccordionTrigger className="mx-2 px-3 py-2.5 rounded-lg text-xs font-semibold uppercase tracking-wider text-gray-400 hover:bg-gray-50 hover:no-underline [&[data-state=open]]:text-[#2563EB]">
+                  <AccordionTrigger
+                    data-tour-group={group.id}
+                    className="mx-2 px-3 py-2.5 rounded-lg text-xs font-semibold uppercase tracking-wider text-gray-400 hover:bg-gray-50 hover:no-underline [&[data-state=open]]:text-[#2563EB]"
+                  >
                     {group.label}
                   </AccordionTrigger>
                   <AccordionContent className="pb-2 pt-0">
