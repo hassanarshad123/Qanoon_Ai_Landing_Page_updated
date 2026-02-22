@@ -31,6 +31,8 @@ import type {
   ActivityItem,
   Amendment,
 } from "@/lib/mock-lawyer/types";
+import { getLawyerDashboardData, type LawyerDashboardData } from "@/lib/actions/lawyer-dashboard";
+import type { ActivityEntry } from "@/lib/actions/activity";
 
 const iconMap: Record<string, React.ElementType> = {
   scale: Scale,
@@ -59,17 +61,49 @@ function getGreeting() {
   return "Good evening";
 }
 
+const activityEntityIcons: Record<string, React.ElementType> = {
+  brief: FileText,
+  judgment: Scale,
+  research: Search,
+  note: BookOpen,
+  document: FileText,
+};
+
+function formatActivityText(entry: ActivityEntry): string {
+  const verb = entry.action === "created" ? "Created" : entry.action === "updated" ? "Updated" : entry.action === "deleted" ? "Deleted" : entry.action === "finalized" ? "Finalized" : "Viewed";
+  const type = entry.entityType === "brief" ? "brief" : entry.entityType === "judgment" ? "judgment" : entry.entityType === "research" ? "research session" : entry.entityType === "note" ? "note" : "document";
+  const title = entry.entityTitle ? `: ${entry.entityTitle}` : "";
+  return `${verb} ${type}${title}`;
+}
+
+function formatTimeAgo(isoDate: string): string {
+  const diff = Date.now() - new Date(isoDate).getTime();
+  const mins = Math.floor(diff / 60000);
+  if (mins < 1) return "Just now";
+  if (mins < 60) return `${mins}m ago`;
+  const hours = Math.floor(mins / 60);
+  if (hours < 24) return `${hours}h ago`;
+  const days = Math.floor(hours / 24);
+  return `${days}d ago`;
+}
+
 export default function LawyerDashboard() {
   const [stats, setStats] = useState<DashboardStats | null>(null);
   const [events, setEvents] = useState<CalendarEvent[]>([]);
   const [activity, setActivity] = useState<ActivityItem[]>([]);
   const [amendments, setAmendments] = useState<Amendment[]>([]);
+  const [dashboardData, setDashboardData] = useState<LawyerDashboardData | null>(null);
+  const [dashboardLoading, setDashboardLoading] = useState(true);
 
   useEffect(() => {
     getDashboardStats().then(setStats);
     getCalendarEvents().then((evts) => setEvents(evts.slice(0, 5)));
     getActivityItems().then(setActivity);
     getAmendments().then((amds) => setAmendments(amds.filter((a) => a.impact === "High").slice(0, 2)));
+    getLawyerDashboardData()
+      .then(setDashboardData)
+      .catch((err) => console.error("Failed to load dashboard data:", err))
+      .finally(() => setDashboardLoading(false));
   }, []);
 
   const today = new Date().toLocaleDateString("en-US", {
@@ -87,7 +121,11 @@ export default function LawyerDashboard() {
           {getGreeting()}
         </p>
         <h1 className="text-4xl font-bold font-serif text-gray-900">
-          Advocate <span className="text-[#2563EB]">Fatima</span>
+          {dashboardLoading ? (
+            <span className="inline-block h-10 w-48 bg-gray-200 rounded animate-pulse" />
+          ) : (
+            <>Advocate <span className="text-[#2563EB]">{dashboardData?.profile.fullName?.split(" ")[0] || "Counsel"}</span></>
+          )}
         </h1>
         <p className="mt-2 text-gray-500">{today}</p>
       </div>
@@ -249,20 +287,35 @@ export default function LawyerDashboard() {
         <CardContent>
           <ScrollArea className="h-[300px]">
             <div className="space-y-4">
-              {activity.map((item) => {
-                const Icon = iconMap[item.icon] || FileText;
-                return (
-                  <div key={item.id} className="flex gap-3">
-                    <div className="h-8 w-8 rounded-full bg-gray-100 flex items-center justify-center shrink-0">
-                      <Icon className="h-4 w-4 text-gray-600" />
-                    </div>
-                    <div>
-                      <p className="text-sm text-gray-900">{item.text}</p>
-                      <p className="text-xs text-gray-400">{item.timestamp}</p>
-                    </div>
-                  </div>
-                );
-              })}
+              {dashboardData && dashboardData.recentActivity.length > 0
+                ? dashboardData.recentActivity.map((entry) => {
+                    const Icon = activityEntityIcons[entry.entityType] || FileText;
+                    return (
+                      <div key={entry.id} className="flex gap-3">
+                        <div className="h-8 w-8 rounded-full bg-gray-100 flex items-center justify-center shrink-0">
+                          <Icon className="h-4 w-4 text-gray-600" />
+                        </div>
+                        <div>
+                          <p className="text-sm text-gray-900">{formatActivityText(entry)}</p>
+                          <p className="text-xs text-gray-400">{formatTimeAgo(entry.createdAt)}</p>
+                        </div>
+                      </div>
+                    );
+                  })
+                : activity.map((item) => {
+                    const Icon = iconMap[item.icon] || FileText;
+                    return (
+                      <div key={item.id} className="flex gap-3">
+                        <div className="h-8 w-8 rounded-full bg-gray-100 flex items-center justify-center shrink-0">
+                          <Icon className="h-4 w-4 text-gray-600" />
+                        </div>
+                        <div>
+                          <p className="text-sm text-gray-900">{item.text}</p>
+                          <p className="text-xs text-gray-400">{item.timestamp}</p>
+                        </div>
+                      </div>
+                    );
+                  })}
             </div>
           </ScrollArea>
         </CardContent>

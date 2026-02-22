@@ -80,6 +80,50 @@ export async function submitOnboarding(
             updated_at = now()
         `;
       }
+
+      // Auto-create lawyer_profiles row for lawyers
+      if (role === "lawyer") {
+        const practiceDetails = data.practiceDetails as
+          | { barCouncilNumber?: string; yearsOfExperience?: string; practiceAreas?: string[] }
+          | undefined;
+        const location = data.location as
+          | { province?: string; city?: string; primaryCourt?: string }
+          | undefined;
+        const firmInfo = data.firmInfo as
+          | { firmType?: string; firmName?: string }
+          | undefined;
+
+        await sql`
+          INSERT INTO lawyer_profiles (user_id, full_name, email, phone, bar_council_number, years_of_experience, practice_areas, province, city, primary_court, firm_type, firm_name)
+          VALUES (
+            ${userId},
+            ${fullName},
+            ${email},
+            ${phone},
+            ${practiceDetails?.barCouncilNumber ?? null},
+            ${practiceDetails?.yearsOfExperience ?? null},
+            ${practiceDetails?.practiceAreas ?? []},
+            ${location?.province ?? null},
+            ${location?.city ?? null},
+            ${location?.primaryCourt ?? null},
+            ${firmInfo?.firmType ?? null},
+            ${firmInfo?.firmName ?? null}
+          )
+          ON CONFLICT (user_id) DO UPDATE SET
+            full_name = COALESCE(EXCLUDED.full_name, lawyer_profiles.full_name),
+            email = COALESCE(EXCLUDED.email, lawyer_profiles.email),
+            phone = COALESCE(EXCLUDED.phone, lawyer_profiles.phone),
+            bar_council_number = COALESCE(EXCLUDED.bar_council_number, lawyer_profiles.bar_council_number),
+            years_of_experience = COALESCE(EXCLUDED.years_of_experience, lawyer_profiles.years_of_experience),
+            practice_areas = COALESCE(EXCLUDED.practice_areas, lawyer_profiles.practice_areas),
+            province = COALESCE(EXCLUDED.province, lawyer_profiles.province),
+            city = COALESCE(EXCLUDED.city, lawyer_profiles.city),
+            primary_court = COALESCE(EXCLUDED.primary_court, lawyer_profiles.primary_court),
+            firm_type = COALESCE(EXCLUDED.firm_type, lawyer_profiles.firm_type),
+            firm_name = COALESCE(EXCLUDED.firm_name, lawyer_profiles.firm_name),
+            updated_at = now()
+        `;
+      }
     }
 
     return { success: true, error: null };

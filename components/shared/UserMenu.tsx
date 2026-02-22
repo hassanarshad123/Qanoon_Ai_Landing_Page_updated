@@ -80,7 +80,13 @@ export function UserMenu({ collapsed = false }: UserMenuProps) {
         </DropdownMenuLabel>
         <DropdownMenuSeparator />
         <DropdownMenuItem asChild>
-          <Link href="/judges/profile">
+          <Link href={
+            session.user.role === "judge" ? "/judges/profile"
+            : session.user.role === "lawyer" ? "/lawyers/profile"
+            : session.user.role === "law_student" ? "/students/profile"
+            : session.user.role === "common_person" ? "/citizens/profile"
+            : "/profile"
+          }>
             <User className="mr-2 h-4 w-4" />
             Profile
           </Link>

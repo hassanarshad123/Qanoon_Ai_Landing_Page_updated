@@ -32,6 +32,7 @@ const labelMap: Record<string, string> = {
   documents: "Documents",
   billing: "Billing",
   files: "File Manager",
+  profile: "Profile",
 };
 
 export function LawyerBreadcrumbs() {
