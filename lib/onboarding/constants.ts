@@ -213,35 +213,108 @@ export const LEGAL_CONCERN_AREAS = [
   "Other",
 ] as const;
 
-// --- Judge Premium Panel (minimal, Notion-style) ---
+// --- Judge Premium Panel ---
 
 export interface JudgePanelStep {
   icon: string;
-  accents: string[];
   heading: string;
+  description: string;
+  features: { icon: string; label: string }[];
 }
 
 export const JUDGE_PANEL_STEPS: JudgePanelStep[] = [
-  { icon: "Scale",  accents: ["Shield", "Sparkles"],    heading: "Welcome" },
-  { icon: "Gavel",  accents: ["FileText", "StickyNote"], heading: "Your Tools" },
-  { icon: "Search", accents: ["BookOpen", "FileStack"],  heading: "Research" },
+  {
+    icon: "Scale",
+    heading: "Welcome, Your Honor",
+    description: "A secure, AI-powered workspace designed for the judiciary of Pakistan.",
+    features: [
+      { icon: "Shield", label: "Encrypted" },
+      { icon: "Sparkles", label: "AI-Powered" },
+      { icon: "Lock", label: "Private" },
+    ],
+  },
+  {
+    icon: "Gavel",
+    heading: "Your Bench Tools",
+    description: "Judgment drafting, case analysis, and precedent research tailored to your court level.",
+    features: [
+      { icon: "FileText", label: "Judgments" },
+      { icon: "Search", label: "Research" },
+      { icon: "BookOpen", label: "Precedents" },
+    ],
+  },
+  {
+    icon: "MapPin",
+    heading: "Jurisdiction Insights",
+    description: "Court-specific case law and local legal intelligence at your fingertips.",
+    features: [
+      { icon: "Building2", label: "Court Data" },
+      { icon: "FileStack", label: "Case Law" },
+      { icon: "BarChart", label: "Analytics" },
+    ],
+  },
 ];
 
 // --- Lawyer Premium Panel ---
 
 export interface LawyerPanelStep {
   icon: string;
-  accents: string[];
   heading: string;
   description: string;
+  features: { icon: string; label: string }[];
 }
 
 export const LAWYER_PANEL_STEPS: LawyerPanelStep[] = [
-  { icon: "Scale",     accents: ["Sparkles", "Shield"],    heading: "Welcome",            description: "Pakistan's first AI legal platform, built for practitioners like you" },
-  { icon: "Briefcase", accents: ["FileText", "Search"],    heading: "Your Practice",      description: "AI tools calibrated to your areas of expertise" },
-  { icon: "MapPin",    accents: ["Building2", "Gavel"],    heading: "Local Intelligence", description: "Jurisdiction-specific case law and court insights" },
-  { icon: "Building",  accents: ["Users", "BarChart"],     heading: "Your Workspace",     description: "Tailored workflows for your firm's size and needs" },
-  { icon: "Rocket",    accents: ["Zap", "Star"],           heading: "Ready to Go",        description: "300,000+ judgments. 44 AI tools. Your practice, amplified." },
+  {
+    icon: "Scale",
+    heading: "Welcome to QanoonAI",
+    description: "Pakistan's first AI legal platform, built for practitioners like you.",
+    features: [
+      { icon: "Sparkles", label: "AI-Powered" },
+      { icon: "Shield", label: "Secure" },
+      { icon: "Zap", label: "Fast" },
+    ],
+  },
+  {
+    icon: "Briefcase",
+    heading: "Your Practice",
+    description: "AI tools calibrated to your areas of expertise and experience.",
+    features: [
+      { icon: "FileText", label: "Briefs" },
+      { icon: "Search", label: "Research" },
+      { icon: "BookOpen", label: "Case Law" },
+    ],
+  },
+  {
+    icon: "MapPin",
+    heading: "Local Intelligence",
+    description: "Jurisdiction-specific case law and court insights for your region.",
+    features: [
+      { icon: "Building2", label: "Courts" },
+      { icon: "Gavel", label: "Precedents" },
+      { icon: "FileStack", label: "Statutes" },
+    ],
+  },
+  {
+    icon: "Building",
+    heading: "Your Workspace",
+    description: "Tailored workflows for your firm's size and daily needs.",
+    features: [
+      { icon: "Users", label: "Team" },
+      { icon: "BarChart", label: "Dashboard" },
+      { icon: "Clock", label: "Tracking" },
+    ],
+  },
+  {
+    icon: "Rocket",
+    heading: "Ready to Go",
+    description: "300,000+ judgments. 44 AI tools. Your practice, amplified.",
+    features: [
+      { icon: "Zap", label: "44 Tools" },
+      { icon: "Star", label: "Premium" },
+      { icon: "BarChart", label: "Insights" },
+    ],
+  },
 ];
 
 // --- Signup Premium Panel ---

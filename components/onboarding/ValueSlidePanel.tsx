@@ -7,7 +7,6 @@ import {
   Sparkles,
   FileText,
   Gavel,
-  StickyNote,
   Search,
   FileStack,
   BookOpen,
@@ -20,6 +19,8 @@ import {
   BarChart,
   Zap,
   Star,
+  Lock,
+  Clock,
 } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
 import type { UserRole } from "@/lib/onboarding/types";
@@ -31,14 +32,13 @@ import {
 } from "@/lib/onboarding/constants";
 import type { LucideIcon } from "lucide-react";
 
-// ─── Icon map for judge panel ────────────────────────────────────────
+// ─── Icon map ───────────────────────────────────────────────────────
 const ICON_MAP: Record<string, LucideIcon> = {
   Scale,
   Shield,
   Sparkles,
   FileText,
   Gavel,
-  StickyNote,
   Search,
   FileStack,
   BookOpen,
@@ -51,38 +51,35 @@ const ICON_MAP: Record<string, LucideIcon> = {
   BarChart,
   Zap,
   Star,
+  Lock,
+  Clock,
 };
 
-// ─── Accent icon positions (offsets from center) ─────────────────────
-const ACCENT_POSITIONS = [
-  { x: 48, y: -40 },   // top-right
-  { x: -48, y: 44 },   // bottom-left
-];
-
-// ─── Shared props ────────────────────────────────────────────────────
+// ─── Shared props ───────────────────────────────────────────────────
 interface ValueSlidePanelProps {
   role: UserRole | null;
   currentStep: number;
 }
 
-// ─── Judge Premium Panel (dark, Notion-style) ────────────────────────
+// ─── Judge Premium Panel (light purple gradient) ────────────────────
 function JudgePremiumPanel({ currentStep }: { currentStep: number }) {
   const step = JUDGE_PANEL_STEPS[currentStep] ?? JUDGE_PANEL_STEPS[0];
   const MainIcon = ICON_MAP[step.icon] ?? Scale;
+  const accentColor = "#A21CAF";
 
   return (
-    <div className="hidden lg:flex lg:flex-col h-full bg-gray-950 relative overflow-hidden">
+    <div className="hidden lg:flex lg:flex-col h-full bg-gradient-to-br from-[#faf7ff] to-[#f0e6ff] relative overflow-hidden">
       {/* Logo — top-left */}
       <div className="flex items-center gap-3 p-10 pb-0">
-        <div className="w-10 h-10 rounded-xl bg-purple-500/20 flex items-center justify-center">
-          <Scale className="w-5 h-5 text-purple-400" />
+        <div className="w-10 h-10 rounded-xl flex items-center justify-center bg-[#A21CAF]/10">
+          <Scale className="w-5 h-5 text-[#A21CAF]" />
         </div>
-        <span className="font-serif text-xl font-semibold text-white">
+        <span className="font-serif text-xl font-semibold text-gray-900">
           QanoonAI
         </span>
       </div>
 
-      {/* Center area — icon composition + heading */}
+      {/* Center area — icon + heading + description + features */}
       <div className="flex-1 flex flex-col items-center justify-center px-10">
         <AnimatePresence mode="wait">
           <motion.div
@@ -93,77 +90,59 @@ function JudgePremiumPanel({ currentStep }: { currentStep: number }) {
             transition={{ duration: 0.2 }}
             className="flex flex-col items-center"
           >
-            {/* Icon composition */}
-            <div className="relative w-40 h-40 flex items-center justify-center">
-              {/* Glow ring */}
-              <motion.div
-                className="absolute w-20 h-20 rounded-full bg-purple-500/10"
-                animate={{ scale: [1, 1.15, 1] }}
-                transition={{
-                  duration: 3,
-                  repeat: Infinity,
-                  ease: "easeInOut",
-                }}
-              />
+            {/* Icon container */}
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ duration: 0.35, ease: "easeOut" }}
+              className="w-14 h-14 rounded-2xl flex items-center justify-center"
+              style={{ backgroundColor: accentColor + "1A" }}
+            >
+              <MainIcon className="w-7 h-7" style={{ color: accentColor }} strokeWidth={1.5} />
+            </motion.div>
 
-              {/* Main icon */}
-              <motion.div
-                initial={{ scale: 0.8, opacity: 0 }}
-                animate={{ scale: 1, opacity: 1 }}
-                transition={{
-                  type: "spring",
-                  stiffness: 300,
-                  damping: 20,
-                }}
-                className="relative z-10"
-              >
-                <MainIcon className="w-12 h-12 text-purple-400" strokeWidth={1.5} />
-              </motion.div>
+            {/* Heading */}
+            <motion.h2
+              initial={{ opacity: 0, y: 6 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.3, ease: "easeOut", delay: 0.1 }}
+              className="mt-6 text-2xl font-serif font-bold text-gray-900 text-center"
+            >
+              {step.heading}
+            </motion.h2>
 
-              {/* Accent icons */}
-              {step.accents.map((name, i) => {
-                const AccentIcon = ICON_MAP[name] ?? Sparkles;
-                const pos = ACCENT_POSITIONS[i];
+            {/* Description */}
+            <motion.p
+              initial={{ opacity: 0, y: 6 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.3, ease: "easeOut", delay: 0.15 }}
+              className="mt-3 text-sm text-gray-500 text-center max-w-xs"
+            >
+              {step.description}
+            </motion.p>
+
+            {/* Feature chips */}
+            <div className="flex items-center gap-2 mt-6">
+              {step.features.map((feature, i) => {
+                const FeatureIcon = ICON_MAP[feature.icon] ?? Scale;
                 return (
                   <motion.div
-                    key={name}
-                    className="absolute"
-                    style={{ left: `calc(50% + ${pos.x}px - 10px)`, top: `calc(50% + ${pos.y}px - 10px)` }}
-                    initial={{ scale: 0, opacity: 0 }}
-                    animate={{ scale: 1, opacity: 0.7 }}
+                    key={feature.label}
+                    initial={{ opacity: 0, y: 4 }}
+                    animate={{ opacity: 1, y: 0 }}
                     transition={{
-                      type: "spring",
-                      stiffness: 300,
-                      damping: 20,
-                      delay: 0.15 * (i + 1),
+                      duration: 0.25,
+                      ease: "easeOut",
+                      delay: 0.2 + i * 0.05,
                     }}
+                    className="flex items-center gap-1.5 px-3 py-1.5 bg-white border border-gray-200 rounded-full shadow-sm"
                   >
-                    {/* Subtle float */}
-                    <motion.div
-                      animate={{ y: [0, -6, 0] }}
-                      transition={{
-                        duration: 4 + i,
-                        repeat: Infinity,
-                        ease: "easeInOut",
-                        delay: i * 0.5,
-                      }}
-                    >
-                      <AccentIcon className="w-5 h-5 text-purple-400/50" strokeWidth={1.5} />
-                    </motion.div>
+                    <FeatureIcon className="w-3.5 h-3.5 text-gray-500" strokeWidth={1.5} />
+                    <span className="text-xs font-medium text-gray-600">{feature.label}</span>
                   </motion.div>
                 );
               })}
             </div>
-
-            {/* Heading */}
-            <motion.h2
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.4, ease: "easeOut", delay: 0.25 }}
-              className="mt-6 text-2xl font-serif font-bold text-white text-center"
-            >
-              {step.heading}
-            </motion.h2>
           </motion.div>
         </AnimatePresence>
       </div>
@@ -171,13 +150,14 @@ function JudgePremiumPanel({ currentStep }: { currentStep: number }) {
       {/* Step dots — bottom center */}
       <div className="flex justify-center gap-2 p-10 pt-0">
         {JUDGE_PANEL_STEPS.map((_, i) => (
-          <div
+          <motion.div
             key={i}
-            className={`h-2 rounded-full transition-all duration-300 ${
-              i === currentStep
-                ? "w-6 bg-purple-400"
-                : "w-2 bg-white/20"
-            }`}
+            className="h-2 rounded-full"
+            animate={{
+              width: i === currentStep ? 24 : 8,
+              backgroundColor: i === currentStep ? accentColor : "#D1D5DB",
+            }}
+            transition={{ duration: 0.3 }}
           />
         ))}
       </div>
@@ -185,24 +165,25 @@ function JudgePremiumPanel({ currentStep }: { currentStep: number }) {
   );
 }
 
-// ─── Lawyer Premium Panel (dark, blue accents) ─────────────────────
+// ─── Lawyer Premium Panel (light blue gradient) ─────────────────────
 function LawyerPremiumPanel({ currentStep }: { currentStep: number }) {
   const step = LAWYER_PANEL_STEPS[currentStep] ?? LAWYER_PANEL_STEPS[0];
   const MainIcon = ICON_MAP[step.icon] ?? Scale;
+  const accentColor = "#2563EB";
 
   return (
-    <div className="hidden lg:flex lg:flex-col h-full bg-gray-950 relative overflow-hidden">
+    <div className="hidden lg:flex lg:flex-col h-full bg-gradient-to-br from-[#f5f8ff] to-[#e0ecff] relative overflow-hidden">
       {/* Logo — top-left */}
       <div className="flex items-center gap-3 p-10 pb-0">
-        <div className="w-10 h-10 rounded-xl bg-blue-500/20 flex items-center justify-center">
-          <Scale className="w-5 h-5 text-blue-400" />
+        <div className="w-10 h-10 rounded-xl flex items-center justify-center bg-[#2563EB]/10">
+          <Scale className="w-5 h-5 text-[#2563EB]" />
         </div>
-        <span className="font-serif text-xl font-semibold text-white">
+        <span className="font-serif text-xl font-semibold text-gray-900">
           QanoonAI
         </span>
       </div>
 
-      {/* Center area — icon composition + heading + description */}
+      {/* Center area — icon + heading + description + features */}
       <div className="flex-1 flex flex-col items-center justify-center px-10">
         <AnimatePresence mode="wait">
           <motion.div
@@ -213,86 +194,59 @@ function LawyerPremiumPanel({ currentStep }: { currentStep: number }) {
             transition={{ duration: 0.2 }}
             className="flex flex-col items-center"
           >
-            {/* Icon composition */}
-            <div className="relative w-40 h-40 flex items-center justify-center">
-              {/* Glow ring */}
-              <motion.div
-                className="absolute w-20 h-20 rounded-full bg-blue-500/10"
-                animate={{ scale: [1, 1.15, 1] }}
-                transition={{
-                  duration: 3,
-                  repeat: Infinity,
-                  ease: "easeInOut",
-                }}
-              />
-
-              {/* Main icon */}
-              <motion.div
-                initial={{ scale: 0.8, opacity: 0 }}
-                animate={{ scale: 1, opacity: 1 }}
-                transition={{
-                  type: "spring",
-                  stiffness: 300,
-                  damping: 20,
-                }}
-                className="relative z-10"
-              >
-                <MainIcon className="w-12 h-12 text-blue-400" strokeWidth={1.5} />
-              </motion.div>
-
-              {/* Accent icons */}
-              {step.accents.map((name, i) => {
-                const AccentIcon = ICON_MAP[name] ?? Sparkles;
-                const pos = ACCENT_POSITIONS[i];
-                return (
-                  <motion.div
-                    key={name}
-                    className="absolute"
-                    style={{ left: `calc(50% + ${pos.x}px - 10px)`, top: `calc(50% + ${pos.y}px - 10px)` }}
-                    initial={{ scale: 0, opacity: 0 }}
-                    animate={{ scale: 1, opacity: 0.7 }}
-                    transition={{
-                      type: "spring",
-                      stiffness: 300,
-                      damping: 20,
-                      delay: 0.15 * (i + 1),
-                    }}
-                  >
-                    <motion.div
-                      animate={{ y: [0, -6, 0] }}
-                      transition={{
-                        duration: 4 + i,
-                        repeat: Infinity,
-                        ease: "easeInOut",
-                        delay: i * 0.5,
-                      }}
-                    >
-                      <AccentIcon className="w-5 h-5 text-blue-400/50" strokeWidth={1.5} />
-                    </motion.div>
-                  </motion.div>
-                );
-              })}
-            </div>
+            {/* Icon container */}
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ duration: 0.35, ease: "easeOut" }}
+              className="w-14 h-14 rounded-2xl flex items-center justify-center"
+              style={{ backgroundColor: accentColor + "1A" }}
+            >
+              <MainIcon className="w-7 h-7" style={{ color: accentColor }} strokeWidth={1.5} />
+            </motion.div>
 
             {/* Heading */}
             <motion.h2
-              initial={{ opacity: 0, y: 10 }}
+              initial={{ opacity: 0, y: 6 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.4, ease: "easeOut", delay: 0.25 }}
-              className="mt-6 text-2xl font-serif font-bold text-white text-center"
+              transition={{ duration: 0.3, ease: "easeOut", delay: 0.1 }}
+              className="mt-6 text-2xl font-serif font-bold text-gray-900 text-center"
             >
               {step.heading}
             </motion.h2>
 
             {/* Description */}
             <motion.p
-              initial={{ opacity: 0, y: 10 }}
+              initial={{ opacity: 0, y: 6 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.4, ease: "easeOut", delay: 0.35 }}
-              className="mt-3 text-sm text-gray-400 text-center max-w-xs"
+              transition={{ duration: 0.3, ease: "easeOut", delay: 0.15 }}
+              className="mt-3 text-sm text-gray-500 text-center max-w-xs"
             >
               {step.description}
             </motion.p>
+
+            {/* Feature chips */}
+            <div className="flex items-center gap-2 mt-6">
+              {step.features.map((feature, i) => {
+                const FeatureIcon = ICON_MAP[feature.icon] ?? Scale;
+                return (
+                  <motion.div
+                    key={feature.label}
+                    initial={{ opacity: 0, y: 4 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{
+                      duration: 0.25,
+                      ease: "easeOut",
+                      delay: 0.2 + i * 0.05,
+                    }}
+                    className="flex items-center gap-1.5 px-3 py-1.5 bg-white border border-gray-200 rounded-full shadow-sm"
+                  >
+                    <FeatureIcon className="w-3.5 h-3.5 text-gray-500" strokeWidth={1.5} />
+                    <span className="text-xs font-medium text-gray-600">{feature.label}</span>
+                  </motion.div>
+                );
+              })}
+            </div>
           </motion.div>
         </AnimatePresence>
       </div>
@@ -300,13 +254,14 @@ function LawyerPremiumPanel({ currentStep }: { currentStep: number }) {
       {/* Step dots — bottom center */}
       <div className="flex justify-center gap-2 p-10 pt-0">
         {LAWYER_PANEL_STEPS.map((_, i) => (
-          <div
+          <motion.div
             key={i}
-            className={`h-2 rounded-full transition-all duration-300 ${
-              i === currentStep
-                ? "w-6 bg-blue-400"
-                : "w-2 bg-white/20"
-            }`}
+            className="h-2 rounded-full"
+            animate={{
+              width: i === currentStep ? 24 : 8,
+              backgroundColor: i === currentStep ? accentColor : "#D1D5DB",
+            }}
+            transition={{ duration: 0.3 }}
           />
         ))}
       </div>
@@ -397,7 +352,7 @@ function LegacySlidePanel({
   );
 }
 
-// ─── Exported component ──────────────────────────────────────────────
+// ─── Exported component ─────────────────────────────────────────────
 export function ValueSlidePanel({ role, currentStep }: ValueSlidePanelProps) {
   if (role === "judge") {
     return <JudgePremiumPanel currentStep={currentStep} />;
