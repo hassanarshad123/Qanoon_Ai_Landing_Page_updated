@@ -243,3 +243,27 @@ export const LAWYER_PANEL_STEPS: LawyerPanelStep[] = [
   { icon: "Building",  accents: ["Users", "BarChart"],     heading: "Your Workspace",     description: "Tailored workflows for your firm's size and needs" },
   { icon: "Rocket",    accents: ["Zap", "Star"],           heading: "Ready to Go",        description: "300,000+ judgments. 44 AI tools. Your practice, amplified." },
 ];
+
+// --- Signup Premium Panel ---
+
+export interface SignupPanelStep {
+  icon: string;
+  accents: string[];
+  heading: string;
+  description: string;
+}
+
+export const SIGNUP_PANEL_STEPS: SignupPanelStep[] = [
+  {
+    icon: "Scale",
+    accents: ["Sparkles", "Shield"],
+    heading: "Pakistan's Legal AI",
+    description: "AI-powered tools for every legal professional — research, draft, and manage cases intelligently.",
+  },
+  {
+    icon: "UserCheck",
+    accents: ["Zap", "Star"],
+    heading: "Your Workspace Awaits",
+    description: "Set up your account in minutes and start using QanoonAI tailored to your role.",
+  },
+];

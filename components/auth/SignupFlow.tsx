@@ -14,6 +14,7 @@ import { toast } from "sonner";
 import Link from "next/link";
 import { Scale, Gavel, GraduationCap, Users, ArrowLeft, Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils/cn";
+import { SignupPremiumPanel } from "./SignupPremiumPanel";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -122,79 +123,15 @@ export function SignupFlow() {
   }
 
   const roleColors = selectedRole ? ROLE_COLORS[selectedRole] : null;
+  const accentColor = step === 1 && selectedRole
+    ? ROLE_COLORS[selectedRole].primary
+    : "#A21CAF";
 
   return (
     <div className="flex min-h-screen">
-      {/* Left panel — gradient */}
-      <div className="hidden lg:flex lg:w-[40%] lg:min-h-screen relative overflow-hidden">
-        {/* Base purple gradient (always present) */}
-        <div
-          className={cn(
-            "absolute inset-0 bg-gradient-to-br from-purple-600 to-purple-800 transition-opacity duration-700",
-            selectedRole ? "opacity-0" : "opacity-100"
-          )}
-        />
-        {/* Role-specific gradient (fades in on selection) */}
-        {selectedRole && (
-          <div
-            className={cn(
-              "absolute inset-0 bg-gradient-to-br transition-opacity duration-700",
-              ROLE_COLORS[selectedRole].gradient,
-              step === 1 ? "opacity-100" : "opacity-0"
-            )}
-          />
-        )}
-
-        {/* Content overlay */}
-        <div className="relative z-10 flex flex-col justify-between h-full text-white p-10">
-          {/* Decorative pattern */}
-          <div className="absolute inset-0 opacity-5">
-            <div className="absolute top-10 right-10 w-64 h-64 border border-white rounded-full" />
-            <div className="absolute bottom-20 left-10 w-40 h-40 border border-white rounded-full" />
-            <div className="absolute top-1/2 right-1/3 w-20 h-20 border border-white rounded-full" />
-          </div>
-
-          {/* Logo */}
-          <div className="relative z-10">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-xl bg-white/20 flex items-center justify-center backdrop-blur-sm">
-                <Scale className="w-5 h-5 text-white" />
-              </div>
-              <span className="font-serif text-xl font-semibold">QanoonAI</span>
-            </div>
-          </div>
-
-          {/* Value text */}
-          <div className="relative z-10 space-y-6">
-            <div className="inline-block px-4 py-2 rounded-full bg-white/15 backdrop-blur-sm">
-              <span className="text-sm font-semibold tracking-wide">
-                {step === 0 ? "Pakistan's Legal AI Platform" : "Join 500+ legal professionals"}
-              </span>
-            </div>
-            <h2 className="text-3xl font-serif font-bold leading-tight">
-              {step === 0
-                ? "AI-powered tools for every legal professional"
-                : "Create your account"}
-            </h2>
-            <p className="text-white/80 text-lg leading-relaxed max-w-sm">
-              {step === 0
-                ? "Research, draft, and manage cases faster with intelligent AI that understands Pakistani law."
-                : "Set up your workspace and start using QanoonAI in minutes."}
-            </p>
-          </div>
-
-          {/* Slide indicators */}
-          <div className="relative z-10 flex gap-2">
-            {[0, 1].map((i) => (
-              <div
-                key={i}
-                className={`h-1.5 rounded-full transition-all duration-300 ${
-                  i === step ? "w-8 bg-white" : "w-3 bg-white/30"
-                }`}
-              />
-            ))}
-          </div>
-        </div>
+      {/* Left panel — premium animated */}
+      <div className="hidden lg:flex lg:w-[40%] lg:min-h-screen">
+        <SignupPremiumPanel step={step} accentColor={accentColor} />
       </div>
 
       {/* Right panel */}
