@@ -248,22 +248,30 @@ export const LAWYER_PANEL_STEPS: LawyerPanelStep[] = [
 
 export interface SignupPanelStep {
   icon: string;
-  accents: string[];
   heading: string;
   description: string;
+  features: { icon: string; label: string }[];
 }
 
 export const SIGNUP_PANEL_STEPS: SignupPanelStep[] = [
   {
     icon: "Scale",
-    accents: ["Sparkles", "Shield"],
     heading: "Pakistan's Legal AI",
     description: "AI-powered tools for every legal professional — research, draft, and manage cases intelligently.",
+    features: [
+      { icon: "Search", label: "Research" },
+      { icon: "FileText", label: "Draft" },
+      { icon: "BarChart3", label: "Manage" },
+    ],
   },
   {
     icon: "UserCheck",
-    accents: ["Zap", "Star"],
     heading: "Your Workspace Awaits",
     description: "Set up your account in minutes and start using QanoonAI tailored to your role.",
+    features: [
+      { icon: "Zap", label: "AI Tools" },
+      { icon: "Shield", label: "Secure" },
+      { icon: "Clock", label: "Minutes" },
+    ],
   },
 ];
