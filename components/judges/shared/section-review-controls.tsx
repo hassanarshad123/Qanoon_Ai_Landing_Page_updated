@@ -10,7 +10,7 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover";
 import { Textarea } from "@/components/ui/textarea";
-import type { SectionReviewStatus } from "@/lib/mock/types";
+import type { SectionReviewStatus } from "@/lib/brief-pipeline/types";
 
 interface SectionReviewControlsProps {
   reviewStatus: SectionReviewStatus;

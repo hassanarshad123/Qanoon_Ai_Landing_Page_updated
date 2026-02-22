@@ -48,7 +48,7 @@ import {
 import { PageHeader } from "@/components/judges/shared/page-header";
 import { DocumentUploadZone } from "@/components/judges/shared/document-upload-zone";
 import { EmptyState } from "@/components/judges/shared/empty-state";
-import { listDocuments, type DocumentRecord } from "@/lib/documents/actions";
+import { listDocuments, type DocumentRecord } from "@/lib/actions/documents";
 import { toast } from "sonner";
 
 const docTypeStyles: Record<string, string> = {

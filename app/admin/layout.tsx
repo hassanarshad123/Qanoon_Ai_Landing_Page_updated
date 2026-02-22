@@ -12,7 +12,7 @@ import {
   SheetTrigger,
 } from "@/components/ui/sheet";
 import { AdminSidebar } from "@/components/admin/AdminSidebar";
-import { cn } from "@/lib/utils";
+import { cn } from "@/lib/utils/cn";
 
 const SIDEBAR_COLLAPSED_KEY = "admin-sidebar-collapsed";
 

@@ -26,7 +26,7 @@ import type {
   ResearchMessage,
   Citation,
 } from "@/lib/mock-lawyer/types";
-import { cn } from "@/lib/utils";
+import { cn } from "@/lib/utils/cn";
 import { toast } from "sonner";
 
 // Simulated AI follow-up responses for demo purposes

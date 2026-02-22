@@ -1,4 +1,4 @@
-import type { ExtractedCaseData } from "@/lib/mock/types";
+import type { ExtractedCaseData } from "./types";
 
 /**
  * Merge multiple ExtractedCaseData results (from chunked analysis) into one.

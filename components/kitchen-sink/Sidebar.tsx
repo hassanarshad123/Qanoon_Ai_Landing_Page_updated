@@ -15,7 +15,7 @@ import {
   BarChart3,
   Home,
 } from "lucide-react";
-import { cn } from "@/lib/utils";
+import { cn } from "@/lib/utils/cn";
 
 const pages = [
   { href: "/kitchen-sink", label: "Overview", icon: Home },

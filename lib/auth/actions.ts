@@ -3,7 +3,7 @@
 import { signupSchema, forgotPasswordSchema, resetPasswordSchema } from "./schemas";
 import { createUser, getUserByEmail, updateUserPassword } from "./user";
 import { createPasswordResetToken, validatePasswordResetToken, consumePasswordResetToken } from "./password-reset";
-import { sendPasswordResetEmail } from "@/lib/email/send";
+import { sendPasswordResetEmail } from "@/lib/email";
 import bcrypt from "bcryptjs";
 
 type ActionResult = { success: boolean; error?: string };

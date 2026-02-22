@@ -14,7 +14,7 @@ import {
 } from "@/components/ui/sheet";
 import { CalculatorSidebar } from "@/components/calculators/Sidebar";
 import { CalculatorBreadcrumbs } from "@/components/calculators/Breadcrumbs";
-import { cn } from "@/lib/utils";
+import { cn } from "@/lib/utils/cn";
 
 const SIDEBAR_COLLAPSED_KEY = "calculators-sidebar-collapsed";
 

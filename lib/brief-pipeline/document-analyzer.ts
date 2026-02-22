@@ -8,7 +8,7 @@ import type {
   ExtractedLegalIssue,
   ExtractedStatuteRef,
   ExtractedArgument,
-} from "@/lib/mock/types";
+} from "./types";
 
 function makeSource(doc: UploadedDocument, pageNumber: number, snippet?: string): SourceReference {
   return {

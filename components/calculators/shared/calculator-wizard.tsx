@@ -3,7 +3,7 @@
 import { useState, ReactNode } from "react";
 import { Check, ArrowLeft, ArrowRight, RotateCcw } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { cn } from "@/lib/utils";
+import { cn } from "@/lib/utils/cn";
 import type { WizardStep } from "@/lib/calculators/types";
 
 interface CalculatorWizardProps {

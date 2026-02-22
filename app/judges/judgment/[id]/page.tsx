@@ -34,7 +34,7 @@ import {
   saveJudgmentChat,
   type Judgment,
   type JudgmentSection,
-} from "@/lib/judgment/actions";
+} from "@/lib/actions/judgment";
 import { toast } from "sonner";
 
 const AI_SUGGESTIONS = [

@@ -1,4 +1,4 @@
-import type { ExtractedCaseData } from "@/lib/mock/types";
+import type { ExtractedCaseData } from "./types";
 import { search, toRAGSearchResult } from "@/lib/rag";
 import type { RAGSearchResult } from "@/lib/rag/types";
 

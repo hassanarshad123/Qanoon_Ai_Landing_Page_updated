@@ -5,7 +5,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Scale, ExternalLink, BookmarkPlus } from "lucide-react";
-import type { Precedent } from "@/lib/mock/types";
+import type { Precedent } from "@/lib/types/portal";
 
 interface PrecedentCardProps {
   precedent: Precedent;

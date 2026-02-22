@@ -7,8 +7,7 @@ import { notes as notesData } from "./notes";
 import { folders, tags } from "./folders";
 import { hearings } from "./hearings";
 import { activityItems } from "./activity";
-import type { Case, Document, Brief, Judgment, ResearchConversation, Note, Folder, Tag, Hearing, ActivityItem, DashboardStats, EnhancedBrief, EnhancedBriefSection, EnhancedBriefStatus, RAGSearchResult } from "./types";
-import { searchPrecedents as ragSearch } from "./rag-api";
+import type { Case, Document, Brief, Judgment, ResearchConversation, Note, Folder, Tag, Hearing, ActivityItem, DashboardStats, EnhancedBrief, EnhancedBriefSection, EnhancedBriefStatus } from "./types";
 
 const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
 const randomDelay = () => delay(300 + Math.random() * 200);
@@ -59,13 +58,6 @@ export async function updateBriefStatus(
   if (!brief) return false;
   (brief as any).status = status;
   return true;
-}
-
-export async function getRAGPrecedents(
-  keywords: string[],
-  legalAreas: string[]
-): Promise<RAGSearchResult[]> {
-  return ragSearch({ keywords, legalAreas, maxResults: 10 });
 }
 
 // Judgments

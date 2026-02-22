@@ -16,7 +16,7 @@ import {
   ArrowRight,
   Lock,
 } from "lucide-react";
-import { cn } from "@/lib/utils";
+import { cn } from "@/lib/utils/cn";
 import type { CalculatorMeta } from "@/lib/calculators/types";
 
 const iconMap: Record<string, React.ElementType> = {

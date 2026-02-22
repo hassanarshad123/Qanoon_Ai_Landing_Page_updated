@@ -226,3 +226,20 @@ export const JUDGE_PANEL_STEPS: JudgePanelStep[] = [
   { icon: "Gavel",  accents: ["FileText", "StickyNote"], heading: "Your Tools" },
   { icon: "Search", accents: ["BookOpen", "FileStack"],  heading: "Research" },
 ];
+
+// --- Lawyer Premium Panel ---
+
+export interface LawyerPanelStep {
+  icon: string;
+  accents: string[];
+  heading: string;
+  description: string;
+}
+
+export const LAWYER_PANEL_STEPS: LawyerPanelStep[] = [
+  { icon: "Scale",     accents: ["Sparkles", "Shield"],    heading: "Welcome",            description: "Pakistan's first AI legal platform, built for practitioners like you" },
+  { icon: "Briefcase", accents: ["FileText", "Search"],    heading: "Your Practice",      description: "AI tools calibrated to your areas of expertise" },
+  { icon: "MapPin",    accents: ["Building2", "Gavel"],    heading: "Local Intelligence", description: "Jurisdiction-specific case law and court insights" },
+  { icon: "Building",  accents: ["Users", "BarChart"],     heading: "Your Workspace",     description: "Tailored workflows for your firm's size and needs" },
+  { icon: "Rocket",    accents: ["Zap", "Star"],           heading: "Ready to Go",        description: "300,000+ judgments. 44 AI tools. Your practice, amplified." },
+];

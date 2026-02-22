@@ -1,7 +1,7 @@
 "use client";
 
 import { Scale, Gavel, GraduationCap, Users } from "lucide-react";
-import { cn } from "@/lib/utils";
+import { cn } from "@/lib/utils/cn";
 import { ROLE_COLORS } from "@/lib/onboarding/constants";
 import type { UserRole } from "@/lib/onboarding/types";
 

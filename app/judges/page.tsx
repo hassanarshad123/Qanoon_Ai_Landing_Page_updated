@@ -18,8 +18,8 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { getDashboardData, type DashboardData } from "@/lib/dashboard/actions";
-import type { ActivityEntry } from "@/lib/activity/actions";
+import { getDashboardData, type DashboardData } from "@/lib/actions/dashboard";
+import type { ActivityEntry } from "@/lib/actions/activity";
 
 const quickActions = [
   { label: "Generate Brief", href: "/judges/brief", icon: FileText, color: "bg-[#A21CAF]/10 text-[#A21CAF]" },

@@ -7,7 +7,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import type { UploadDocumentType } from "@/lib/mock/types";
+import type { UploadDocumentType } from "@/lib/brief-pipeline/types";
 
 const DOCUMENT_TYPES: UploadDocumentType[] = [
   "Petition",

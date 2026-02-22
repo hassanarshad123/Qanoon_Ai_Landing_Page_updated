@@ -42,16 +42,10 @@ import {
   updateSectionContent,
   updateBriefStatus as dbUpdateBriefStatus,
   saveChatMessage,
-} from "@/lib/brief/actions";
-import type {
-  Brief,
-  EnhancedBrief,
-  EnhancedBriefSection,
-  BriefConversationMessage,
-  Citation,
-  Precedent,
-  SectionReviewStatus,
-} from "@/lib/mock/types";
+} from "@/lib/actions/brief";
+import type { Brief, EnhancedBrief, BriefConversationMessage } from "@/lib/mock/types";
+import type { EnhancedBriefSection, SectionReviewStatus } from "@/lib/brief-pipeline/types";
+import type { Citation, Precedent } from "@/lib/types/portal";
 
 // -------------------------------------------------------------------
 // Prompt suggestions

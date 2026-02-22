@@ -4,9 +4,9 @@ import { useState, useCallback } from "react";
 import type {
   UploadedDocument,
   ExtractedCaseData,
-  RAGSearchResult,
   EnhancedBriefSection,
-} from "@/lib/mock/types";
+} from "@/lib/brief-pipeline/types";
+import type { RAGSearchResult } from "@/lib/rag/types";
 import { chunkDocuments } from "@/lib/brief-pipeline/chunker";
 import { mergeAnalysisResults } from "@/lib/brief-pipeline/merge-analysis";
 import { stripMarkdown } from "@/lib/utils/strip-markdown";

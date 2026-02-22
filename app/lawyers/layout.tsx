@@ -14,7 +14,7 @@ import {
 } from "@/components/ui/sheet";
 import { LawyerSidebar } from "@/components/lawyers/Sidebar";
 import { LawyerBreadcrumbs } from "@/components/lawyers/Breadcrumbs";
-import { cn } from "@/lib/utils";
+import { cn } from "@/lib/utils/cn";
 
 const SIDEBAR_COLLAPSED_KEY = "lawyers-sidebar-collapsed";
 

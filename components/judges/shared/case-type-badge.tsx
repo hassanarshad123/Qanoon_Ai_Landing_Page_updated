@@ -1,7 +1,7 @@
 "use client";
 
 import { Badge } from "@/components/ui/badge";
-import type { CaseType } from "@/lib/mock/types";
+import type { CaseType } from "@/lib/types/portal";
 
 const typeStyles: Record<CaseType, string> = {
   Constitutional: "border-purple-300 text-purple-700",

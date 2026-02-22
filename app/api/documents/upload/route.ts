@@ -1,6 +1,6 @@
 import { put } from "@vercel/blob";
 import { requireAuth } from "@/lib/auth/api";
-import { createDocumentRecord } from "@/lib/documents/actions";
+import { createDocumentRecord } from "@/lib/actions/documents";
 
 export async function POST(request: Request) {
   const { session, error } = await requireAuth();

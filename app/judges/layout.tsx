@@ -15,7 +15,7 @@ import {
 import { Sidebar } from "@/components/judges/Sidebar";
 import { JudgesBreadcrumbs } from "@/components/judges/Breadcrumbs";
 import { ProductTour } from "@/components/judges/shared/product-tour";
-import { cn } from "@/lib/utils";
+import { cn } from "@/lib/utils/cn";
 
 const SIDEBAR_COLLAPSED_KEY = "judges-sidebar-collapsed";
 

@@ -42,7 +42,7 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
-import { cn } from "@/lib/utils";
+import { cn } from "@/lib/utils/cn";
 
 const caseSchema = z.object({
   title: z.string().min(3, "Title must be at least 3 characters"),

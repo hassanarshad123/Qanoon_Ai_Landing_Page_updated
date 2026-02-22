@@ -2,7 +2,6 @@
 
 import { useState } from "react";
 import { Gavel, Briefcase, Users, Building2, ArrowRight } from "lucide-react";
-import { useRouter } from "next/navigation";
 
 const userTypes = [
   { id: "judges", label: "Judges", icon: Gavel },
@@ -99,7 +98,6 @@ function LegalDataPreview() {
 }
 
 export default function UseCasesSection() {
-  const router = useRouter();
   const [activeUserType, setActiveUserType] = useState("judges");
 
   return (
@@ -152,10 +150,10 @@ export default function UseCasesSection() {
               <p className="text-gray-600 leading-relaxed mb-8">
                 {useCaseContent[activeUserType].description}
               </p>
-              <button onClick={() => router.push('/onboarding')} className="inline-flex items-center gap-2 bg-gray-900 text-white px-5 py-2.5 rounded-lg text-sm font-medium hover:bg-black transition-colors">
+              <a href={useCaseContent[activeUserType].href} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-2 bg-gray-900 text-white px-5 py-2.5 rounded-lg text-sm font-medium hover:bg-black transition-colors">
                 {useCaseContent[activeUserType].cta}
                 <ArrowRight className="w-4 h-4" />
-              </button>
+              </a>
             </div>
             <div className="p-8 lg:p-12">
               <LegalDataPreview />

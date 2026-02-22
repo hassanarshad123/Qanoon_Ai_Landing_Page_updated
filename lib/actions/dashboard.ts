@@ -2,8 +2,8 @@
 
 import { sql } from "@/lib/db";
 import { getUserId } from "@/lib/auth/session";
-import { getOrCreateProfile, type JudgeProfile } from "@/lib/judge/profile";
-import { getRecentActivity, type ActivityEntry } from "@/lib/activity/actions";
+import { getOrCreateProfile, type JudgeProfile } from "@/lib/actions/judge-profile";
+import { getRecentActivity, type ActivityEntry } from "@/lib/actions/activity";
 
 export interface DashboardData {
   profile: JudgeProfile;

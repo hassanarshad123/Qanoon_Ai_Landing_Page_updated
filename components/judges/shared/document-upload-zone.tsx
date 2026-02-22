@@ -3,7 +3,7 @@
 import { useState, useCallback, useRef } from "react";
 import { Upload, FileText, X, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { cn } from "@/lib/utils";
+import { cn } from "@/lib/utils/cn";
 
 interface DocumentUploadZoneProps {
   onUploadComplete?: (doc: { id: string; fileName: string; blobUrl: string }) => void;

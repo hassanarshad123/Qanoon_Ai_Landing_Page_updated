@@ -1,11 +1,60 @@
-// All types for the judicial portal mock data
+// Mock portal types — used by mock data files and some judge portal UI
+// Production types have been extracted to:
+//   - lib/brief-pipeline/types.ts (brief pipeline types)
+//   - lib/types/portal.ts (shared portal UI types)
+//   - lib/rag/types.ts (RAG types)
 
-export type CaseStatus = "Active" | "Pending" | "Closed" | "Urgent" | "Reserved" | "Adjourned" | "Dismissed" | "Decreed";
-export type CaseType = "Constitutional" | "Civil" | "Criminal" | "Family" | "Tax" | "Corporate" | "Writ" | "Appeal";
+// Re-export from canonical locations for backward compatibility
+export type {
+  Citation,
+  Precedent,
+  CaseStatus,
+  CaseType,
+  BriefStatus,
+  JudgmentStatus,
+  NoteFolder,
+  Tag,
+  Folder,
+  Note,
+} from "@/lib/types/portal";
+
+export type {
+  FileFormat,
+  UploadDocumentType,
+  UploadedDocument,
+  SourceReference,
+  ExtractedParty,
+  ExtractedFact,
+  ExtractedLegalIssue,
+  ExtractedStatuteRef,
+  ExtractedArgument,
+  ExtractedCourtInfo,
+  ExtractedCaseData,
+  SectionReviewStatus,
+  EnhancedBriefSection,
+} from "@/lib/brief-pipeline/types";
+
+export type {
+  RAGPrecedent,
+  RAGSearchResult,
+} from "@/lib/rag/types";
+
+// Import types needed for interfaces below
+import type { Citation } from "@/lib/types/portal";
+import type { BriefStatus, JudgmentStatus, NoteFolder } from "@/lib/types/portal";
+import type {
+  SourceReference,
+  ExtractedCaseData,
+  UploadDocumentType,
+  EnhancedBriefSection,
+} from "@/lib/brief-pipeline/types";
+import type { RAGSearchResult } from "@/lib/rag/types";
+
+// =====================================================================
+// Mock-specific types (used only by mock data files)
+// =====================================================================
+
 export type DocumentType = "Petition" | "Written Arguments" | "Court Order" | "Evidence" | "Affidavit" | "Judgment" | "Notice" | "Bail Application";
-export type BriefStatus = "Generating" | "Complete" | "Draft";
-export type JudgmentStatus = "Draft" | "Under Review" | "Finalized";
-export type NoteFolder = "General" | "Case Research" | "Brief Notes" | "Judgment Drafts" | "Hearing Prep";
 
 export interface Case {
   id: string;
@@ -13,8 +62,8 @@ export interface Case {
   number: string;
   court: string;
   citation: string;
-  status: CaseStatus;
-  type: CaseType;
+  status: import("@/lib/types/portal").CaseStatus;
+  type: import("@/lib/types/portal").CaseType;
   judge: string;
   filed: string;
   nextHearing: string;
@@ -74,28 +123,7 @@ export interface Judgment {
   status: JudgmentStatus;
   createdAt: string;
   sections: JudgmentSection[];
-  suggestedPrecedents: Precedent[];
-}
-
-export interface Citation {
-  id: string;
-  caseName: string;
-  citation: string;
-  court: string;
-  year: string;
-  relevance: string;
-  snippet: string;
-}
-
-export interface Precedent {
-  id: string;
-  caseName: string;
-  citation: string;
-  court: string;
-  year: string;
-  relevance: string;
-  summary: string;
-  relevanceScore: number;
+  suggestedPrecedents: import("@/lib/types/portal").Precedent[];
 }
 
 export interface ResearchMessage {
@@ -111,31 +139,6 @@ export interface ResearchConversation {
   title: string;
   createdAt: string;
   messages: ResearchMessage[];
-}
-
-export interface Tag {
-  id: string;
-  name: string;
-  color: string;
-}
-
-export interface Folder {
-  id: string;
-  name: NoteFolder;
-  count: number;
-}
-
-export interface Note {
-  id: string;
-  title: string;
-  content: string;
-  folder: NoteFolder;
-  tags: string[];
-  sourceId?: string;
-  sourceType?: "brief" | "judgment" | "research";
-  sourceLabel?: string;
-  createdAt: string;
-  updatedAt: string;
 }
 
 export interface Hearing {
@@ -162,140 +165,6 @@ export interface DashboardStats {
   todayHearings: number;
   pendingJudgments: number;
   documentsThisWeek: number;
-}
-
-// =====================================================================
-// Enhanced Brief Pipeline Types
-// =====================================================================
-
-export type FileFormat =
-  | "pdf"
-  | "docx"
-  | "doc"
-  | "xlsx"
-  | "xls"
-  | "csv"
-  | "txt"
-  | "rtf"
-  | "image"
-  | "unsupported";
-
-export type UploadDocumentType =
-  | "Petition"
-  | "Written Arguments"
-  | "Evidence"
-  | "Affidavit"
-  | "Court Order"
-  | "Previous Judgment"
-  | "FIR"
-  | "Statutory Extract"
-  | "Contract"
-  | "Spreadsheet"
-  | "Other";
-
-export interface UploadedDocument {
-  id: string;
-  file: File;
-  fileName: string;
-  fileSize: number;
-  documentType: UploadDocumentType;
-  fileFormat: FileFormat;
-  status: "pending" | "extracting" | "extracted" | "skipped" | "error";
-  progress: number;
-  totalPages: number;
-  extractedText: string;
-  pages: { pageNumber: number; text: string }[];
-  error?: string;
-}
-
-export interface SourceReference {
-  documentId: string;
-  documentName: string;
-  documentType: UploadDocumentType;
-  pageNumber: number;
-  snippet?: string;
-}
-
-export interface ExtractedParty {
-  name: string;
-  role: "petitioner" | "respondent" | "appellant" | "other";
-  counsel?: string;
-  sources: SourceReference[];
-}
-
-export interface ExtractedFact {
-  content: string;
-  date?: string;
-  order: number;
-  sources: SourceReference[];
-}
-
-export interface ExtractedLegalIssue {
-  content: string;
-  relatedStatutes: string[];
-  sources: SourceReference[];
-}
-
-export interface ExtractedStatuteRef {
-  name: string;
-  provisions: string[];
-  context?: string;
-  sources: SourceReference[];
-}
-
-export interface ExtractedArgument {
-  content: string;
-  side: "petitioner" | "respondent";
-  supportingCitations: string[];
-  sources: SourceReference[];
-}
-
-export interface ExtractedCourtInfo {
-  courtName: string;
-  caseNumber: string;
-  caseType: string;
-  filingDate?: string;
-  judge?: string;
-  sources: SourceReference[];
-}
-
-export interface ExtractedCaseData {
-  courtInfo: ExtractedCourtInfo | null;
-  parties: ExtractedParty[];
-  facts: ExtractedFact[];
-  legalIssues: ExtractedLegalIssue[];
-  statutes: ExtractedStatuteRef[];
-  arguments: ExtractedArgument[];
-  rawDocuments: { id: string; fileName: string; documentType: UploadDocumentType; totalPages: number }[];
-}
-
-export interface RAGPrecedent {
-  id: string;
-  caseName: string;
-  citation: string;
-  court: string;
-  year: number;
-  legalAreas: string[];
-  keywords: string[];
-  headnotes: string[];
-  summary: string;
-  ratio: string;
-}
-
-export interface RAGSearchResult {
-  precedent: RAGPrecedent;
-  relevanceScore: number;
-  matchedKeywords: string[];
-  matchedAreas: string[];
-}
-
-export type SectionReviewStatus = "pending_review" | "approved" | "flagged";
-
-export interface EnhancedBriefSection extends BriefSection {
-  sources: SourceReference[];
-  reviewStatus: SectionReviewStatus;
-  flagNote?: string;
-  regenerationCount: number;
 }
 
 export type EnhancedBriefStatus =

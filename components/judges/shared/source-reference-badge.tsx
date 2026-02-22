@@ -7,7 +7,7 @@ import {
   HoverCardContent,
   HoverCardTrigger,
 } from "@/components/ui/hover-card";
-import type { SourceReference } from "@/lib/mock/types";
+import type { SourceReference } from "@/lib/brief-pipeline/types";
 
 interface SourceReferenceBadgeProps {
   source: SourceReference;

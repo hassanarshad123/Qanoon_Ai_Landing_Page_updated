@@ -15,7 +15,7 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { ArrowLeft, ArrowRight } from "lucide-react";
-import { cn } from "@/lib/utils";
+import { cn } from "@/lib/utils/cn";
 import { FIRM_TYPES } from "@/lib/onboarding/constants";
 import type { LawyerFirmInfo as LawyerFirmInfoType } from "@/lib/onboarding/types";
 

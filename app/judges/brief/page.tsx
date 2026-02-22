@@ -14,8 +14,9 @@ import { CaseSelector } from "@/components/judges/shared/case-selector";
 import { EmptyState } from "@/components/judges/shared/empty-state";
 import { ExtractionProgress } from "@/components/judges/shared/extraction-progress";
 import { useBriefPipeline } from "@/hooks/use-brief-pipeline";
-import { listBriefs, saveBrief } from "@/lib/brief/actions";
-import type { Brief, EnhancedBrief, UploadedDocument } from "@/lib/mock/types";
+import { listBriefs, saveBrief } from "@/lib/actions/brief";
+import type { Brief, EnhancedBrief } from "@/lib/mock/types";
+import type { UploadedDocument } from "@/lib/brief-pipeline/types";
 
 export default function BriefListPage() {
   const router = useRouter();

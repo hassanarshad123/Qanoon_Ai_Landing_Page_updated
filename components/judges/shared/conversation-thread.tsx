@@ -1,9 +1,9 @@
 "use client";
 
 import { Scale, User } from "lucide-react";
-import { cn } from "@/lib/utils";
+import { cn } from "@/lib/utils/cn";
 import { CitationBadge } from "./citation-badge";
-import type { Citation } from "@/lib/mock/types";
+import type { Citation } from "@/lib/types/portal";
 
 interface Message {
   id: string;

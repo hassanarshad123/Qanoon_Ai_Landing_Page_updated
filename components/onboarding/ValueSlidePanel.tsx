@@ -11,6 +11,15 @@ import {
   Search,
   FileStack,
   BookOpen,
+  Briefcase,
+  MapPin,
+  Building,
+  Building2,
+  Rocket,
+  Users,
+  BarChart,
+  Zap,
+  Star,
 } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
 import type { UserRole } from "@/lib/onboarding/types";
@@ -18,6 +27,7 @@ import {
   VALUE_SLIDES,
   ROLE_COLORS,
   JUDGE_PANEL_STEPS,
+  LAWYER_PANEL_STEPS,
 } from "@/lib/onboarding/constants";
 import type { LucideIcon } from "lucide-react";
 
@@ -32,6 +42,15 @@ const ICON_MAP: Record<string, LucideIcon> = {
   Search,
   FileStack,
   BookOpen,
+  Briefcase,
+  MapPin,
+  Building,
+  Building2,
+  Rocket,
+  Users,
+  BarChart,
+  Zap,
+  Star,
 };
 
 // ─── Accent icon positions (offsets from center) ─────────────────────
@@ -166,6 +185,135 @@ function JudgePremiumPanel({ currentStep }: { currentStep: number }) {
   );
 }
 
+// ─── Lawyer Premium Panel (dark, blue accents) ─────────────────────
+function LawyerPremiumPanel({ currentStep }: { currentStep: number }) {
+  const step = LAWYER_PANEL_STEPS[currentStep] ?? LAWYER_PANEL_STEPS[0];
+  const MainIcon = ICON_MAP[step.icon] ?? Scale;
+
+  return (
+    <div className="hidden lg:flex lg:flex-col h-full bg-gray-950 relative overflow-hidden">
+      {/* Logo — top-left */}
+      <div className="flex items-center gap-3 p-10 pb-0">
+        <div className="w-10 h-10 rounded-xl bg-blue-500/20 flex items-center justify-center">
+          <Scale className="w-5 h-5 text-blue-400" />
+        </div>
+        <span className="font-serif text-xl font-semibold text-white">
+          QanoonAI
+        </span>
+      </div>
+
+      {/* Center area — icon composition + heading + description */}
+      <div className="flex-1 flex flex-col items-center justify-center px-10">
+        <AnimatePresence mode="wait">
+          <motion.div
+            key={currentStep}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.2 }}
+            className="flex flex-col items-center"
+          >
+            {/* Icon composition */}
+            <div className="relative w-40 h-40 flex items-center justify-center">
+              {/* Glow ring */}
+              <motion.div
+                className="absolute w-20 h-20 rounded-full bg-blue-500/10"
+                animate={{ scale: [1, 1.15, 1] }}
+                transition={{
+                  duration: 3,
+                  repeat: Infinity,
+                  ease: "easeInOut",
+                }}
+              />
+
+              {/* Main icon */}
+              <motion.div
+                initial={{ scale: 0.8, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                transition={{
+                  type: "spring",
+                  stiffness: 300,
+                  damping: 20,
+                }}
+                className="relative z-10"
+              >
+                <MainIcon className="w-12 h-12 text-blue-400" strokeWidth={1.5} />
+              </motion.div>
+
+              {/* Accent icons */}
+              {step.accents.map((name, i) => {
+                const AccentIcon = ICON_MAP[name] ?? Sparkles;
+                const pos = ACCENT_POSITIONS[i];
+                return (
+                  <motion.div
+                    key={name}
+                    className="absolute"
+                    style={{ left: `calc(50% + ${pos.x}px - 10px)`, top: `calc(50% + ${pos.y}px - 10px)` }}
+                    initial={{ scale: 0, opacity: 0 }}
+                    animate={{ scale: 1, opacity: 0.7 }}
+                    transition={{
+                      type: "spring",
+                      stiffness: 300,
+                      damping: 20,
+                      delay: 0.15 * (i + 1),
+                    }}
+                  >
+                    <motion.div
+                      animate={{ y: [0, -6, 0] }}
+                      transition={{
+                        duration: 4 + i,
+                        repeat: Infinity,
+                        ease: "easeInOut",
+                        delay: i * 0.5,
+                      }}
+                    >
+                      <AccentIcon className="w-5 h-5 text-blue-400/50" strokeWidth={1.5} />
+                    </motion.div>
+                  </motion.div>
+                );
+              })}
+            </div>
+
+            {/* Heading */}
+            <motion.h2
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.4, ease: "easeOut", delay: 0.25 }}
+              className="mt-6 text-2xl font-serif font-bold text-white text-center"
+            >
+              {step.heading}
+            </motion.h2>
+
+            {/* Description */}
+            <motion.p
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.4, ease: "easeOut", delay: 0.35 }}
+              className="mt-3 text-sm text-gray-400 text-center max-w-xs"
+            >
+              {step.description}
+            </motion.p>
+          </motion.div>
+        </AnimatePresence>
+      </div>
+
+      {/* Step dots — bottom center */}
+      <div className="flex justify-center gap-2 p-10 pt-0">
+        {LAWYER_PANEL_STEPS.map((_, i) => (
+          <div
+            key={i}
+            className={`h-2 rounded-full transition-all duration-300 ${
+              i === currentStep
+                ? "w-6 bg-blue-400"
+                : "w-2 bg-white/20"
+            }`}
+          />
+        ))}
+      </div>
+    </div>
+  );
+}
+
 // ─── Legacy Panel (all other roles) ─────────────────────────────────
 function LegacySlidePanel({
   role,
@@ -253,6 +401,9 @@ function LegacySlidePanel({
 export function ValueSlidePanel({ role, currentStep }: ValueSlidePanelProps) {
   if (role === "judge") {
     return <JudgePremiumPanel currentStep={currentStep} />;
+  }
+  if (role === "lawyer") {
+    return <LawyerPremiumPanel currentStep={currentStep} />;
   }
   return <LegacySlidePanel role={role} currentStep={currentStep} />;
 }

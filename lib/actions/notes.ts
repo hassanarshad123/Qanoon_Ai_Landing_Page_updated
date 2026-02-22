@@ -2,8 +2,8 @@
 
 import { sql } from "@/lib/db";
 import { getUserId } from "@/lib/auth/session";
-import { logActivity } from "@/lib/activity/actions";
-import type { Note, NoteFolder, Tag, Folder } from "@/lib/mock/types";
+import { logActivity } from "@/lib/actions/activity";
+import type { Note, NoteFolder, Tag, Folder } from "@/lib/types/portal";
 
 // ---------------------------------------------------------------------------
 // Create a new note

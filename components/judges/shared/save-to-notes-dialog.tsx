@@ -24,9 +24,9 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
-import { createNote, getTags, listFolders } from "@/lib/notes/actions";
+import { createNote, getTags, listFolders } from "@/lib/actions/notes";
 import { useEffect } from "react";
-import type { Tag, Folder } from "@/lib/mock/types";
+import type { Tag, Folder } from "@/lib/types/portal";
 
 interface SaveToNotesDialogProps {
   title?: string;

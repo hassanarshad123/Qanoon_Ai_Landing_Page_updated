@@ -16,8 +16,8 @@ import {
 import { Button } from "@/components/ui/button";
 import { DocumentTypeSelector } from "./document-type-selector";
 import { useDocumentExtraction } from "@/hooks/use-pdf-extraction";
-import { cn } from "@/lib/utils";
-import type { UploadedDocument, FileFormat } from "@/lib/mock/types";
+import { cn } from "@/lib/utils/cn";
+import type { UploadedDocument, FileFormat } from "@/lib/brief-pipeline/types";
 
 const ACCEPTED_EXTENSIONS = [
   ".pdf", ".docx", ".doc", ".xlsx", ".xls", ".csv", ".txt", ".rtf",

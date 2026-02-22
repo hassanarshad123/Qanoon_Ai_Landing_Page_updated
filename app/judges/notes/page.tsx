@@ -31,8 +31,8 @@ import {
   createNote,
   createFolder,
   deleteFolder,
-} from "@/lib/notes/actions";
-import type { Note, Folder, Tag as TagType } from "@/lib/mock/types";
+} from "@/lib/actions/notes";
+import type { Note, Folder, Tag as TagType } from "@/lib/types/portal";
 
 export default function NotesLibraryPage() {
   const router = useRouter();

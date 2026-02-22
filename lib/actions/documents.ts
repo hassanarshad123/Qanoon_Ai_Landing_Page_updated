@@ -2,7 +2,7 @@
 
 import { sql } from "@/lib/db";
 import { getUserId } from "@/lib/auth/session";
-import { logActivity } from "@/lib/activity/actions";
+import { logActivity } from "@/lib/actions/activity";
 
 export interface DocumentRecord {
   id: string;

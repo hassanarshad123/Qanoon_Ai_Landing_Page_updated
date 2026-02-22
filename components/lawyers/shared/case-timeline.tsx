@@ -1,6 +1,6 @@
 "use client";
 
-import { cn } from "@/lib/utils";
+import { cn } from "@/lib/utils/cn";
 import type { TrackedCaseEvent } from "@/lib/mock-lawyer/types";
 
 const typeColors: Record<string, string> = {

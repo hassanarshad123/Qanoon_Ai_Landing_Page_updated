@@ -2,15 +2,14 @@
 
 import { sql } from "@/lib/db";
 import { getUserId } from "@/lib/auth/session";
-import { logActivity } from "@/lib/activity/actions";
+import { logActivity } from "@/lib/actions/activity";
+import type { EnhancedBrief, BriefConversationMessage } from "@/lib/mock/types";
 import type {
-  EnhancedBrief,
   EnhancedBriefSection,
   ExtractedCaseData,
-  RAGSearchResult,
-  BriefConversationMessage,
   SectionReviewStatus,
-} from "@/lib/mock/types";
+} from "@/lib/brief-pipeline/types";
+import type { RAGSearchResult } from "@/lib/rag/types";
 
 // ---------------------------------------------------------------------------
 // Save a new brief with all sections

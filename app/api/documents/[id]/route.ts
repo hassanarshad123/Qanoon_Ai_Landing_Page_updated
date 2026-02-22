@@ -1,6 +1,6 @@
 import { del } from "@vercel/blob";
 import { requireAuth } from "@/lib/auth/api";
-import { getDocument, deleteDocument } from "@/lib/documents/actions";
+import { getDocument, deleteDocument } from "@/lib/actions/documents";
 
 export async function GET(
   _request: Request,

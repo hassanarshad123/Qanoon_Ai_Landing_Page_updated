@@ -20,7 +20,7 @@ import { useResearchChat } from "@/hooks/use-research-chat";
 import { getConversation, togglePin } from "@/lib/research/actions";
 import type { ResearchMessageDB } from "@/lib/research/types";
 import type { StructuredResearchResponse } from "@/lib/research/types";
-import { cn } from "@/lib/utils";
+import { cn } from "@/lib/utils/cn";
 import { toast } from "sonner";
 
 const followUpPrompts = [

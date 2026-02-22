@@ -5,8 +5,8 @@ import { usePathname } from "next/navigation";
 import { useSession } from "next-auth/react";
 import { driver } from "driver.js";
 import "driver.js/dist/driver.css";
-import { isTourCompleted, markTourComplete } from "@/lib/judge/profile";
-import { judgeTourSteps } from "@/lib/tour/judge-tour";
+import { isTourCompleted, markTourComplete } from "@/lib/actions/judge-profile";
+import { judgeTourSteps } from "@/lib/actions/judge-tour";
 import { WelcomeModal } from "./welcome-modal";
 
 export function ProductTour() {

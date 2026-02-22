@@ -1,4 +1,5 @@
-import type { Citation, RAGSearchResult } from "@/lib/mock/types";
+import type { Citation } from "@/lib/types/portal";
+import type { RAGSearchResult } from "@/lib/rag/types";
 
 export type ResearchMode = "general" | "case_linked";
 

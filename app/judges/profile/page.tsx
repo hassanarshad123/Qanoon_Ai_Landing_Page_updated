@@ -18,7 +18,7 @@ import {
   getOrCreateProfile,
   updateJudgeProfile,
   type JudgeProfile,
-} from "@/lib/judge/profile";
+} from "@/lib/actions/judge-profile";
 import { getUserId } from "@/lib/auth/session";
 import { toast } from "sonner";
 

@@ -1,4 +1,4 @@
-import type { FileFormat } from "@/lib/mock/types";
+import type { FileFormat } from "./types";
 import { extractTextFromPDF } from "./pdf-extractor";
 import type { PDFExtractionResult } from "./pdf-extractor";
 import { extractTextFromImage } from "./ocr-extractor";

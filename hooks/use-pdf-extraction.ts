@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useCallback, useRef } from "react";
-import type { UploadedDocument, UploadDocumentType, FileFormat } from "@/lib/mock/types";
+import type { UploadedDocument, UploadDocumentType, FileFormat } from "@/lib/brief-pipeline/types";
 import { detectFileFormat, extractTextFromFile } from "@/lib/brief-pipeline/file-extractor";
 import { processWithConcurrency } from "@/lib/utils/concurrency";
 

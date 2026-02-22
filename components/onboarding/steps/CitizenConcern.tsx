@@ -16,7 +16,7 @@ import {
 } from "@/components/ui/form";
 import { ArrowLeft, ArrowRight } from "lucide-react";
 import { LEGAL_CONCERN_AREAS } from "@/lib/onboarding/constants";
-import { cn } from "@/lib/utils";
+import { cn } from "@/lib/utils/cn";
 import type { CitizenConcern as CitizenConcernType } from "@/lib/onboarding/types";
 
 type FormValues = z.infer<typeof citizenConcernSchema>;

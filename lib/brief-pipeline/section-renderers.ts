@@ -1,9 +1,9 @@
 import type {
   ExtractedCaseData,
-  RAGSearchResult,
   EnhancedBriefSection,
   SourceReference,
-} from "@/lib/mock/types";
+} from "./types";
+import type { RAGSearchResult } from "@/lib/rag/types";
 
 function makeSection(
   id: string,

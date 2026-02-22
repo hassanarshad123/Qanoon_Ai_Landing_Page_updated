@@ -13,7 +13,7 @@ import type { UserRole } from "@/lib/onboarding/types";
 import { toast } from "sonner";
 import Link from "next/link";
 import { Scale, Gavel, GraduationCap, Users, ArrowLeft, Loader2 } from "lucide-react";
-import { cn } from "@/lib/utils";
+import { cn } from "@/lib/utils/cn";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {

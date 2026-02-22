@@ -25,7 +25,7 @@ import { ExportMenu } from "@/components/judges/shared/export-menu";
 import { useAISimulation } from "@/hooks/use-ai-simulation";
 import { getStatuteAnalysisById } from "@/lib/mock-lawyer/api";
 import type { StatuteAnalysis, ResearchMessage } from "@/lib/mock-lawyer/types";
-import { cn } from "@/lib/utils";
+import { cn } from "@/lib/utils/cn";
 import { toast } from "sonner";
 
 const aiSteps = [

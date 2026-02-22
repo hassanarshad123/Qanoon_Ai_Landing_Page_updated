@@ -3,7 +3,8 @@
 import { useState, useCallback } from "react";
 import type { ResearchMessageDB } from "@/lib/research/types";
 import type { StructuredResearchResponse } from "@/lib/research/types";
-import type { Citation, RAGSearchResult } from "@/lib/mock/types";
+import type { Citation } from "@/lib/types/portal";
+import type { RAGSearchResult } from "@/lib/rag/types";
 import { getMessages } from "@/lib/research/actions";
 
 export function useResearchChat() {

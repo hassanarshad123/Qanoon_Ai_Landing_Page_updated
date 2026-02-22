@@ -4,7 +4,7 @@ import { useState, useMemo } from "react";
 import { Scale } from "lucide-react";
 import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import { cn } from "@/lib/utils";
+import { cn } from "@/lib/utils/cn";
 import { CalculatorWizard } from "@/components/calculators/shared/calculator-wizard";
 import { CalculatorResult } from "@/components/calculators/shared/calculator-result";
 import { CalculatorBreakdown } from "@/components/calculators/shared/calculator-breakdown";

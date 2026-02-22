@@ -43,9 +43,9 @@ import {
   updateNoteTitle,
   updateNoteMetadata,
   deleteNote,
-} from "@/lib/notes/actions";
+} from "@/lib/actions/notes";
 import { useAutoSave, type SaveStatus } from "@/hooks/use-auto-save";
-import type { Note, Folder, Tag } from "@/lib/mock/types";
+import type { Note, Folder, Tag } from "@/lib/types/portal";
 
 function getSourceHref(note: Note): string | null {
   if (!note.sourceId || !note.sourceType) return null;

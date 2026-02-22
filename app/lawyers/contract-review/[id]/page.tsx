@@ -33,7 +33,7 @@ import { RiskBadge } from "@/components/lawyers/shared/risk-badge";
 import { useAISimulation } from "@/hooks/use-ai-simulation";
 import { getContractReviewById } from "@/lib/mock-lawyer/api";
 import type { ContractReview, ContractClause } from "@/lib/mock-lawyer/types";
-import { cn } from "@/lib/utils";
+import { cn } from "@/lib/utils/cn";
 import { toast } from "sonner";
 
 const aiSteps = [

@@ -3,9 +3,9 @@ import { AI_MODELS } from "@/lib/ai/models";
 import { buildJudgmentGenerationPrompt } from "@/lib/ai/prompts";
 import { search, toRAGSearchResult } from "@/lib/rag";
 import { requireAuth } from "@/lib/auth/api";
-import { createJudgment } from "@/lib/judgment/actions";
-import { getBrief } from "@/lib/brief/actions";
-import { getOrCreateProfile } from "@/lib/judge/profile";
+import { createJudgment } from "@/lib/actions/judgment";
+import { getBrief } from "@/lib/actions/brief";
+import { getOrCreateProfile } from "@/lib/actions/judge-profile";
 
 export async function POST(request: Request) {
   const { session, error } = await requireAuth();

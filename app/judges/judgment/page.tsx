@@ -19,8 +19,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { PageHeader } from "@/components/judges/shared/page-header";
 import { LegalStatusBadge } from "@/components/judges/shared/legal-status-badge";
 import { EmptyState } from "@/components/judges/shared/empty-state";
-import { listJudgments, type JudgmentListItem } from "@/lib/judgment/actions";
-import { listBriefs } from "@/lib/brief/actions";
+import { listJudgments, type JudgmentListItem } from "@/lib/actions/judgment";
+import { listBriefs } from "@/lib/actions/brief";
 import type { EnhancedBrief } from "@/lib/mock/types";
 import { toast } from "sonner";
 

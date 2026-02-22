@@ -1,7 +1,7 @@
 "use client";
 
 import { Badge } from "@/components/ui/badge";
-import type { CaseStatus, BriefStatus, JudgmentStatus } from "@/lib/mock/types";
+import type { CaseStatus, BriefStatus, JudgmentStatus } from "@/lib/types/portal";
 
 const statusStyles: Record<string, string> = {
   Active: "bg-emerald-100 text-emerald-700 hover:bg-emerald-100",

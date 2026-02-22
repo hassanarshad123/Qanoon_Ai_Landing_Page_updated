@@ -8,7 +8,7 @@ import {
   HoverCardTrigger,
 } from "@/components/ui/hover-card";
 import { Scale } from "lucide-react";
-import type { Citation } from "@/lib/mock/types";
+import type { Citation } from "@/lib/types/portal";
 
 interface CitationBadgeProps {
   citation: Citation;

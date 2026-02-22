@@ -15,7 +15,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { Card, CardContent } from "@/components/ui/card";
-import { getDocument, type DocumentRecord } from "@/lib/documents/actions";
+import { getDocument, type DocumentRecord } from "@/lib/actions/documents";
 import { toast } from "sonner";
 
 const docTypeStyles: Record<string, string> = {

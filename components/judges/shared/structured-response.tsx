@@ -9,9 +9,9 @@ import {
   ScrollText,
 } from "lucide-react";
 import type { StructuredResearchResponse } from "@/lib/research/types";
-import type { Citation } from "@/lib/mock/types";
+import type { Citation } from "@/lib/types/portal";
 import { CitationBadge } from "./citation-badge";
-import { cn } from "@/lib/utils";
+import { cn } from "@/lib/utils/cn";
 
 interface StructuredResponseProps {
   response: Partial<StructuredResearchResponse>;

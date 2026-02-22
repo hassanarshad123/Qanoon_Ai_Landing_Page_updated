@@ -4,7 +4,7 @@ import {
   FileText, Shield, AlertTriangle, RotateCcw, Eye,
   Heart, Unlock, MoreHorizontal,
 } from "lucide-react";
-import { cn } from "@/lib/utils";
+import { cn } from "@/lib/utils/cn";
 import type { PetitionType } from "@/lib/mock-lawyer/types";
 
 const petitionTypes: { type: PetitionType; icon: React.ElementType; description: string }[] = [
