@@ -1,30 +1,25 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { Search } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { PageHeader } from "@/components/judges/shared/page-header";
 import { ToolCard } from "@/components/lawyers/shared/tool-card";
-import { getTools } from "@/lib/mock-lawyer/api";
-import type { LawyerTool } from "@/lib/mock-lawyer/types";
+import { lawyerTools } from "@/lib/constants/lawyer-tools";
+import type { LawyerTool } from "@/lib/types/lawyer-portal";
 
 const groups = ["AI Tools", "Database & Research", "Practice Management"] as const;
 
 export default function AllToolsPage() {
-  const [tools, setTools] = useState<LawyerTool[]>([]);
   const [search, setSearch] = useState("");
 
-  useEffect(() => {
-    getTools().then(setTools);
-  }, []);
-
   const filtered = search
-    ? tools.filter(
+    ? lawyerTools.filter(
         (t) =>
           t.name.toLowerCase().includes(search.toLowerCase()) ||
           t.description.toLowerCase().includes(search.toLowerCase())
       )
-    : tools;
+    : lawyerTools;
 
   return (
     <div className="space-y-8">

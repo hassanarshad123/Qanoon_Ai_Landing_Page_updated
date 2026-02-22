@@ -1,7 +1,7 @@
 "use client";
 
 import { cn } from "@/lib/utils/cn";
-import type { TrackedCaseEvent } from "@/lib/mock-lawyer/types";
+import type { TrackedCaseEvent } from "@/lib/types/lawyer-portal";
 
 const typeColors: Record<string, string> = {
   Filed: "bg-[#2563EB]",

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import {
@@ -24,29 +24,18 @@ import {
 } from "@/components/ui/select";
 import { PageHeader } from "@/components/judges/shared/page-header";
 import { EmptyState } from "@/components/judges/shared/empty-state";
-import { getStatutes, getStatuteAnalyses } from "@/lib/mock-lawyer/api";
-import type { Statute, StatuteAnalysis } from "@/lib/mock-lawyer/types";
+import type { Statute, StatuteAnalysis } from "@/lib/types/lawyer-portal";
 
 export default function StatuteAnalyzerPage() {
   const router = useRouter();
-  const [statutes, setStatutes] = useState<Statute[]>([]);
-  const [analyses, setAnalyses] = useState<StatuteAnalysis[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [statutes] = useState<Statute[]>([]);
+  const [analyses] = useState<StatuteAnalysis[]>([]);
+  const [loading] = useState(false);
 
   // Form state
   const [selectedStatute, setSelectedStatute] = useState("");
   const [sectionNumber, setSectionNumber] = useState("");
   const [question, setQuestion] = useState("");
-
-  useEffect(() => {
-    Promise.all([getStatutes(), getStatuteAnalyses()]).then(
-      ([statuteData, analysisData]) => {
-        setStatutes(statuteData);
-        setAnalyses(analysisData);
-        setLoading(false);
-      }
-    );
-  }, []);
 
   const handleAnalyze = () => {
     if (!selectedStatute) return;

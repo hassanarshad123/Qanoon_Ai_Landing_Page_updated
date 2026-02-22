@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import Link from "next/link";
 import { FileText, Plus, Sparkles } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -10,8 +10,7 @@ import { Separator } from "@/components/ui/separator";
 import { PageHeader } from "@/components/judges/shared/page-header";
 import { DocumentUploadZone } from "@/components/judges/shared/document-upload-zone";
 import { EmptyState } from "@/components/judges/shared/empty-state";
-import { getBriefs, getLawyerCases } from "@/lib/mock-lawyer/api";
-import type { LawyerBrief, LawyerCase } from "@/lib/mock-lawyer/types";
+import type { LawyerBrief, LawyerCase } from "@/lib/types/lawyer-portal";
 
 // ---------------------------------------------------------------------------
 // Status badge helper
@@ -57,18 +56,10 @@ function LawyerCaseSelect({
 // PAGE COMPONENT
 // ===========================================================================
 export default function LawyerBriefListPage() {
-  const [briefs, setBriefs] = useState<LawyerBrief[]>([]);
-  const [cases, setCases] = useState<LawyerCase[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [briefs] = useState<LawyerBrief[]>([]);
+  const [cases] = useState<LawyerCase[]>([]);
+  const [loading] = useState(false);
   const [selectedCase, setSelectedCase] = useState<string>("");
-
-  useEffect(() => {
-    Promise.all([getBriefs(), getLawyerCases()]).then(([b, c]) => {
-      setBriefs(b);
-      setCases(c);
-      setLoading(false);
-    });
-  }, []);
 
   const formatDate = (dateStr: string) =>
     new Date(dateStr).toLocaleDateString("en-US", {

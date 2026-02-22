@@ -23,8 +23,7 @@ import { AIProgressSteps } from "@/components/judges/shared/ai-progress-steps";
 import { ConversationInput } from "@/components/judges/shared/conversation-input";
 import { ExportMenu } from "@/components/judges/shared/export-menu";
 import { useAISimulation } from "@/hooks/use-ai-simulation";
-import { getStatuteAnalysisById } from "@/lib/mock-lawyer/api";
-import type { StatuteAnalysis, ResearchMessage } from "@/lib/mock-lawyer/types";
+import type { StatuteAnalysis, ResearchMessage } from "@/lib/types/lawyer-portal";
 import { cn } from "@/lib/utils/cn";
 import { toast } from "sonner";
 
@@ -66,25 +65,11 @@ export default function StatuteAnalysisDetailPage() {
 
   const [analysis, setAnalysis] = useState<StatuteAnalysis | null>(null);
   const [messages, setMessages] = useState<ResearchMessage[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
   const [isTyping, setIsTyping] = useState(false);
   const bottomRef = useRef<HTMLDivElement>(null);
 
   const simulation = useAISimulation(aiSteps);
-
-  // Load analysis
-  useEffect(() => {
-    if (!id) return;
-    getStatuteAnalysisById(id).then((data) => {
-      if (data) {
-        setAnalysis(data);
-        setMessages(data.conversation);
-        // Start AI progress animation
-        simulation.start();
-      }
-      setLoading(false);
-    });
-  }, [id]);
 
   // Auto-scroll on new messages
   useEffect(() => {

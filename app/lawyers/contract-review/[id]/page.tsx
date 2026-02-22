@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { useParams } from "next/navigation";
 import Link from "next/link";
 import {
@@ -31,8 +31,7 @@ import { AIProgressSteps } from "@/components/judges/shared/ai-progress-steps";
 import { ExportMenu } from "@/components/judges/shared/export-menu";
 import { RiskBadge } from "@/components/lawyers/shared/risk-badge";
 import { useAISimulation } from "@/hooks/use-ai-simulation";
-import { getContractReviewById } from "@/lib/mock-lawyer/api";
-import type { ContractReview, ContractClause } from "@/lib/mock-lawyer/types";
+import type { ContractReview, ContractClause } from "@/lib/types/lawyer-portal";
 import { cn } from "@/lib/utils/cn";
 import { toast } from "sonner";
 
@@ -77,21 +76,9 @@ export default function ContractReviewDetailPage() {
   const id = params.id as string;
 
   const [review, setReview] = useState<ContractReview | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
 
   const simulation = useAISimulation(aiSteps);
-
-  // Load review
-  useEffect(() => {
-    if (!id) return;
-    getContractReviewById(id).then((data) => {
-      if (data) {
-        setReview(data);
-        simulation.start();
-      }
-      setLoading(false);
-    });
-  }, [id]);
 
   if (loading) {
     return (

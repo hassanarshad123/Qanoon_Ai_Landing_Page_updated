@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { User, Briefcase, Clock, ChevronRight } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
-import type { Client } from "@/lib/mock-lawyer/types";
+import type { Client } from "@/lib/types/lawyer-portal";
 
 interface ClientCardProps {
   client: Client;

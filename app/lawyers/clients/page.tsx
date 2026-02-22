@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { Search, UserPlus } from "lucide-react";
 import { toast } from "sonner";
 import { Input } from "@/components/ui/input";
@@ -8,20 +8,12 @@ import { Button } from "@/components/ui/button";
 import { PageHeader } from "@/components/judges/shared/page-header";
 import { ClientCard } from "@/components/lawyers/shared/client-card";
 import { EmptyState } from "@/components/judges/shared/empty-state";
-import { getClients } from "@/lib/mock-lawyer/api";
-import type { Client } from "@/lib/mock-lawyer/types";
+import type { Client } from "@/lib/types/lawyer-portal";
 
 export default function ClientsPage() {
-  const [clients, setClients] = useState<Client[]>([]);
+  const [clients] = useState<Client[]>([]);
   const [search, setSearch] = useState("");
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    getClients().then((data) => {
-      setClients(data);
-      setLoading(false);
-    });
-  }, []);
+  const [loading] = useState(false);
 
   const filtered = search
     ? clients.filter(

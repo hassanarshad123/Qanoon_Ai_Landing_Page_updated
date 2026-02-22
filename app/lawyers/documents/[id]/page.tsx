@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useParams } from "next/navigation";
 import Link from "next/link";
 import {
@@ -21,22 +21,14 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { EmptyState } from "@/components/judges/shared/empty-state";
-import { getLawyerDocumentById } from "@/lib/mock-lawyer/api";
-import type { LawyerDocument } from "@/lib/mock-lawyer/types";
+import type { LawyerDocument } from "@/lib/types/lawyer-portal";
 
 export default function DocumentDetailPage() {
   const params = useParams();
   const docId = params.id as string;
 
   const [doc, setDoc] = useState<LawyerDocument | null>(null);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    getLawyerDocumentById(docId).then((data) => {
-      setDoc(data ?? null);
-      setLoading(false);
-    });
-  }, [docId]);
+  const [loading, setLoading] = useState(false);
 
   if (loading) {
     return (

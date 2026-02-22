@@ -1,7 +1,7 @@
 "use client";
 
 import { Badge } from "@/components/ui/badge";
-import type { ContractRiskLevel, AmendmentImpact } from "@/lib/mock-lawyer/types";
+import type { ContractRiskLevel, AmendmentImpact } from "@/lib/types/lawyer-portal";
 
 const styles: Record<string, string> = {
   High: "bg-red-100 text-red-700 hover:bg-red-100",

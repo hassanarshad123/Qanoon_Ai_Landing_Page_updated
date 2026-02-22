@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useMemo } from "react";
+import { useState, useMemo } from "react";
 import Link from "next/link";
 import {
   DollarSign,
@@ -21,19 +21,11 @@ import {
 } from "@/components/ui/table";
 import { PageHeader } from "@/components/judges/shared/page-header";
 import { InvoiceStatusBadge } from "@/components/lawyers/shared/invoice-status-badge";
-import { getInvoices } from "@/lib/mock-lawyer/api";
-import type { Invoice } from "@/lib/mock-lawyer/types";
+import type { Invoice } from "@/lib/types/lawyer-portal";
 
 export default function BillingPage() {
-  const [invoices, setInvoices] = useState<Invoice[]>([]);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    getInvoices().then((data) => {
-      setInvoices(data);
-      setLoading(false);
-    });
-  }, []);
+  const [invoices] = useState<Invoice[]>([]);
+  const [loading] = useState(false);
 
   const stats = useMemo(() => {
     const totalBilled = invoices.reduce((sum, i) => sum + i.total, 0);

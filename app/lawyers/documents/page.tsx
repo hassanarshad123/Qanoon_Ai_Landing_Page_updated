@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { Search, FileText, Grid3X3, List, File } from "lucide-react";
 import Link from "next/link";
 import { Input } from "@/components/ui/input";
@@ -25,8 +25,7 @@ import {
 import { PageHeader } from "@/components/judges/shared/page-header";
 import { DocumentUploadZone } from "@/components/judges/shared/document-upload-zone";
 import { EmptyState } from "@/components/judges/shared/empty-state";
-import { getLawyerDocuments } from "@/lib/mock-lawyer/api";
-import type { LawyerDocument } from "@/lib/mock-lawyer/types";
+import type { LawyerDocument } from "@/lib/types/lawyer-portal";
 
 const docTypeIcon: Record<string, string> = {
   Petition: "text-blue-600 bg-blue-50",
@@ -41,18 +40,11 @@ const docTypeIcon: Record<string, string> = {
 };
 
 export default function DocumentsPage() {
-  const [documents, setDocuments] = useState<LawyerDocument[]>([]);
+  const [documents] = useState<LawyerDocument[]>([]);
   const [search, setSearch] = useState("");
   const [typeFilter, setTypeFilter] = useState("all");
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    getLawyerDocuments().then((data) => {
-      setDocuments(data);
-      setLoading(false);
-    });
-  }, []);
+  const [loading] = useState(false);
 
   const types = Array.from(new Set(documents.map((d) => d.type))).sort();
 

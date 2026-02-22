@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useParams } from "next/navigation";
 import Link from "next/link";
 import {
@@ -15,8 +15,7 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { toast } from "sonner";
-import { getLegalFormById } from "@/lib/mock-lawyer/api";
-import type { LegalForm, FormCategory } from "@/lib/mock-lawyer/types";
+import type { LegalForm, FormCategory } from "@/lib/types/lawyer-portal";
 
 const categoryBadgeStyles: Record<FormCategory, string> = {
   "Court Forms": "bg-blue-100 text-blue-700 hover:bg-blue-100",
@@ -30,14 +29,7 @@ export default function LegalFormDetailPage() {
   const id = params.id as string;
 
   const [form, setForm] = useState<LegalForm | null>(null);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    getLegalFormById(id).then((data) => {
-      if (data) setForm(data);
-      setLoading(false);
-    });
-  }, [id]);
+  const [loading, setLoading] = useState(false);
 
   if (loading || !form) {
     return (

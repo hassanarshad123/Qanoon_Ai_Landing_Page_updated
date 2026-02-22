@@ -20,12 +20,11 @@ import { Badge } from "@/components/ui/badge";
 import { ExportMenu } from "@/components/judges/shared/export-menu";
 import { ConversationInput } from "@/components/judges/shared/conversation-input";
 import { CitationBadge } from "@/components/judges/shared/citation-badge";
-import { getResearchConversationById } from "@/lib/mock-lawyer/api";
 import type {
   ResearchConversation,
   ResearchMessage,
   Citation,
-} from "@/lib/mock-lawyer/types";
+} from "@/lib/types/lawyer-portal";
 import { cn } from "@/lib/utils/cn";
 import { toast } from "sonner";
 
@@ -312,22 +311,10 @@ export default function LawyerResearchConversationPage() {
   const [conversation, setConversation] =
     useState<ResearchConversation | null>(null);
   const [messages, setMessages] = useState<ResearchMessage[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
   const [isTyping, setIsTyping] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
   const bottomRef = useRef<HTMLDivElement>(null);
-
-  // Load conversation
-  useEffect(() => {
-    if (!id) return;
-    getResearchConversationById(id).then((data) => {
-      if (data) {
-        setConversation(data);
-        setMessages(data.messages);
-      }
-      setLoading(false);
-    });
-  }, [id]);
 
   // Auto-scroll to bottom when new messages or typing
   useEffect(() => {

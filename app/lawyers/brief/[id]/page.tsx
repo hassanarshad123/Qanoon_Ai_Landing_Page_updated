@@ -27,8 +27,7 @@ import { AIProgressSteps } from "@/components/judges/shared/ai-progress-steps";
 import { ConversationThread } from "@/components/judges/shared/conversation-thread";
 import { ConversationInput } from "@/components/judges/shared/conversation-input";
 import { useAIResponse } from "@/hooks/use-ai-response";
-import { getBriefById } from "@/lib/mock-lawyer/api";
-import type { LawyerBrief, BriefConversationMessage } from "@/lib/mock-lawyer/types";
+import type { LawyerBrief, BriefConversationMessage } from "@/lib/types/lawyer-portal";
 
 // ---------------------------------------------------------------------------
 // AI Generation Steps
@@ -102,7 +101,7 @@ export default function LawyerBriefDetailPage() {
   const id = params.id as string;
 
   const [brief, setBrief] = useState<LawyerBrief | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
   const [showGeneration, setShowGeneration] = useState(false);
   const [conversationMessages, setConversationMessages] = useState<
     BriefConversationMessage[]
@@ -115,22 +114,6 @@ export default function LawyerBriefDetailPage() {
     20,
     4
   );
-
-  // -------------------------------------------------------------------------
-  // Load brief data
-  // -------------------------------------------------------------------------
-  useEffect(() => {
-    getBriefById(id).then((data) => {
-      if (data) {
-        setBrief(data);
-        setConversationMessages(data.conversation);
-        if (data.status === "Generating") {
-          setShowGeneration(true);
-        }
-      }
-      setLoading(false);
-    });
-  }, [id]);
 
   // Start generation when flag is set
   useEffect(() => {

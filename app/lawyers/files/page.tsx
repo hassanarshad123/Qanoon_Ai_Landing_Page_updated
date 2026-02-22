@@ -1,23 +1,15 @@
 "use client";
 
-import { useState, useEffect, useMemo } from "react";
+import { useState, useMemo } from "react";
 import { Folder, FileText } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { PageHeader } from "@/components/judges/shared/page-header";
 import { FolderTree } from "@/components/lawyers/shared/folder-tree";
-import { getFileItems } from "@/lib/mock-lawyer/api";
-import type { FileItem } from "@/lib/mock-lawyer/types";
+import type { FileItem } from "@/lib/types/lawyer-portal";
 
 export default function FilesPage() {
-  const [items, setItems] = useState<FileItem[]>([]);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    getFileItems().then((data) => {
-      setItems(data);
-      setLoading(false);
-    });
-  }, []);
+  const [items] = useState<FileItem[]>([]);
+  const [loading] = useState(false);
 
   const rootFolders = useMemo(
     () => items.filter((i) => i.parentId === null && i.type === "folder"),

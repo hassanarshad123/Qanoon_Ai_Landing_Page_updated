@@ -26,8 +26,7 @@ import { Separator } from "@/components/ui/separator";
 import { ExportMenu } from "@/components/judges/shared/export-menu";
 import { AIProgressSteps } from "@/components/judges/shared/ai-progress-steps";
 import { useAIResponse } from "@/hooks/use-ai-response";
-import { getPetitionById } from "@/lib/mock-lawyer/api";
-import type { Petition } from "@/lib/mock-lawyer/types";
+import type { Petition } from "@/lib/types/lawyer-portal";
 
 // ---------------------------------------------------------------------------
 // AI Generation Steps
@@ -71,7 +70,7 @@ export default function PetitionDetailPage() {
   const id = params.id as string;
 
   const [petition, setPetition] = useState<Petition | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
   const [showGeneration, setShowGeneration] = useState(false);
   const [editingSectionId, setEditingSectionId] = useState<string | null>(null);
   const [editedContent, setEditedContent] = useState<Record<string, string>>(
@@ -85,22 +84,6 @@ export default function PetitionDetailPage() {
     20,
     4
   );
-
-  // -------------------------------------------------------------------------
-  // Load petition data
-  // -------------------------------------------------------------------------
-  useEffect(() => {
-    getPetitionById(id).then((data) => {
-      if (data) {
-        setPetition(data);
-        // If petition is a newly generated draft, show generation animation
-        if (data.status === "Draft" && data.sections.length === 0) {
-          setShowGeneration(true);
-        }
-      }
-      setLoading(false);
-    });
-  }, [id]);
 
   // Start generation when flag is set
   useEffect(() => {

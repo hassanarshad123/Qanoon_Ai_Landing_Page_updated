@@ -1,4 +1,4 @@
-import type { LawyerTool } from "./types";
+import type { LawyerTool } from "@/lib/types/lawyer-portal";
 
 export const lawyerTools: LawyerTool[] = [
   // ── AI Tools (6) ─────────────────────────────────────────

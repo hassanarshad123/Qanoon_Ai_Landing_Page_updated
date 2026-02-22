@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useMemo } from "react";
+import { useState, useMemo } from "react";
 import { Search, Building2 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import {
@@ -13,8 +13,7 @@ import {
 import { PageHeader } from "@/components/judges/shared/page-header";
 import { EmptyState } from "@/components/judges/shared/empty-state";
 import { CourtCard } from "@/components/lawyers/shared/court-card";
-import { getCourts } from "@/lib/mock-lawyer/api";
-import type { CourtEntry, Province, CourtLevel } from "@/lib/mock-lawyer/types";
+import type { CourtEntry, Province, CourtLevel } from "@/lib/types/lawyer-portal";
 
 const provinces: Province[] = [
   "Federal",
@@ -34,14 +33,10 @@ const courtLevels: CourtLevel[] = [
 ];
 
 export default function CourtDirectoryPage() {
-  const [courts, setCourts] = useState<CourtEntry[]>([]);
+  const [courts] = useState<CourtEntry[]>([]);
   const [search, setSearch] = useState("");
   const [province, setProvince] = useState<string>("all");
   const [level, setLevel] = useState<string>("all");
-
-  useEffect(() => {
-    getCourts().then(setCourts);
-  }, []);
 
   const filtered = useMemo(() => {
     return courts.filter((court) => {

@@ -1,7 +1,7 @@
 "use client";
 
 import { Badge } from "@/components/ui/badge";
-import type { InvoiceStatus } from "@/lib/mock-lawyer/types";
+import type { InvoiceStatus } from "@/lib/types/lawyer-portal";
 
 const styles: Record<InvoiceStatus, string> = {
   Paid: "bg-emerald-100 text-emerald-700 hover:bg-emerald-100",

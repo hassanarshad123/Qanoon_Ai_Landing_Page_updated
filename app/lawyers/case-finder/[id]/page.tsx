@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { useParams } from "next/navigation";
 import Link from "next/link";
 import {
@@ -22,11 +22,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
-import {
-  getCaseFinderResultById,
-  getCaseFinderResults,
-} from "@/lib/mock-lawyer/api";
-import type { CaseFinderResult } from "@/lib/mock-lawyer/types";
+import type { CaseFinderResult } from "@/lib/types/lawyer-portal";
 import { toast } from "sonner";
 
 export default function CaseDetailPage() {
@@ -35,25 +31,7 @@ export default function CaseDetailPage() {
 
   const [caseData, setCaseData] = useState<CaseFinderResult | null>(null);
   const [relatedCases, setRelatedCases] = useState<CaseFinderResult[]>([]);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    if (!id) return;
-
-    Promise.all([getCaseFinderResultById(id), getCaseFinderResults()]).then(
-      ([data, allResults]) => {
-        if (data) {
-          setCaseData(data);
-          // Find related cases
-          const related = allResults.filter((r) =>
-            data.relatedCaseIds.includes(r.id)
-          );
-          setRelatedCases(related);
-        }
-        setLoading(false);
-      }
-    );
-  }, [id]);
+  const [loading, setLoading] = useState(false);
 
   if (loading) {
     return (

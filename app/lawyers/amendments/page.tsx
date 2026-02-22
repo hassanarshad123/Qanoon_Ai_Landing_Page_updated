@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useMemo } from "react";
+import { useState, useMemo } from "react";
 import Link from "next/link";
 import { Settings, Bell } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -14,17 +14,12 @@ import {
 import { PageHeader } from "@/components/judges/shared/page-header";
 import { EmptyState } from "@/components/judges/shared/empty-state";
 import { AmendmentAlertCard } from "@/components/lawyers/shared/amendment-alert-card";
-import { getAmendments } from "@/lib/mock-lawyer/api";
-import type { Amendment, AmendmentImpact } from "@/lib/mock-lawyer/types";
+import type { Amendment, AmendmentImpact } from "@/lib/types/lawyer-portal";
 
 export default function AmendmentsPage() {
-  const [amendments, setAmendments] = useState<Amendment[]>([]);
+  const [amendments] = useState<Amendment[]>([]);
   const [statuteFilter, setStatuteFilter] = useState<string>("all");
   const [impactFilter, setImpactFilter] = useState<string>("all");
-
-  useEffect(() => {
-    getAmendments().then(setAmendments);
-  }, []);
 
   // Derive unique statute names from the data
   const statuteNames = useMemo(() => {

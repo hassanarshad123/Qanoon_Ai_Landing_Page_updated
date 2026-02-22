@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useMemo } from "react";
+import { useState, useMemo } from "react";
 import Link from "next/link";
 import { Search, Plus, Scale } from "lucide-react";
 import { Input } from "@/components/ui/input";
@@ -23,9 +23,8 @@ import {
 } from "@/components/ui/table";
 import { PageHeader } from "@/components/judges/shared/page-header";
 import { EmptyState } from "@/components/judges/shared/empty-state";
-import { getTrackedCases } from "@/lib/mock-lawyer/api";
 import { useToast } from "@/hooks/use-toast";
-import type { TrackedCase, LawyerCaseStatus } from "@/lib/mock-lawyer/types";
+import type { TrackedCase, LawyerCaseStatus } from "@/lib/types/lawyer-portal";
 
 const statusStyles: Record<string, string> = {
   Active: "bg-emerald-100 text-emerald-700 hover:bg-emerald-100",
@@ -48,14 +47,10 @@ const statuses: LawyerCaseStatus[] = [
 ];
 
 export default function CaseTrackerPage() {
-  const [cases, setCases] = useState<TrackedCase[]>([]);
+  const [cases] = useState<TrackedCase[]>([]);
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const { toast } = useToast();
-
-  useEffect(() => {
-    getTrackedCases().then(setCases);
-  }, []);
 
   const filtered = useMemo(() => {
     return cases.filter((c) => {

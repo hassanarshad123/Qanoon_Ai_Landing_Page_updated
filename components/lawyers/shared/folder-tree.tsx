@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { Folder, FileText, ChevronRight } from "lucide-react";
-import type { FileItem } from "@/lib/mock-lawyer/types";
+import type { FileItem } from "@/lib/types/lawyer-portal";
 
 interface FolderTreeProps {
   items: FileItem[];

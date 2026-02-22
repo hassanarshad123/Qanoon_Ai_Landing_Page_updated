@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useMemo } from "react";
+import { useState, useMemo } from "react";
 import { useParams } from "next/navigation";
 import Link from "next/link";
 import {
@@ -17,22 +17,14 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { FolderTree } from "@/components/lawyers/shared/folder-tree";
 import { EmptyState } from "@/components/judges/shared/empty-state";
-import { getFileItems } from "@/lib/mock-lawyer/api";
-import type { FileItem } from "@/lib/mock-lawyer/types";
+import type { FileItem } from "@/lib/types/lawyer-portal";
 
 export default function FolderPage() {
   const params = useParams();
   const folderId = params.id as string;
 
   const [items, setItems] = useState<FileItem[]>([]);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    getFileItems().then((data) => {
-      setItems(data);
-      setLoading(false);
-    });
-  }, []);
+  const [loading, setLoading] = useState(false);
 
   const currentFolder = useMemo(
     () => items.find((i) => i.id === folderId),

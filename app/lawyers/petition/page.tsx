@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import Link from "next/link";
 import { FilePen, ChevronRight } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
@@ -10,8 +10,7 @@ import { Separator } from "@/components/ui/separator";
 import { PageHeader } from "@/components/judges/shared/page-header";
 import { EmptyState } from "@/components/judges/shared/empty-state";
 import { PetitionTypeSelector } from "@/components/lawyers/shared/petition-type-selector";
-import { getPetitions, getLawyerCases } from "@/lib/mock-lawyer/api";
-import type { Petition, PetitionType, LawyerCase } from "@/lib/mock-lawyer/types";
+import type { Petition, PetitionType, LawyerCase } from "@/lib/types/lawyer-portal";
 
 // ---------------------------------------------------------------------------
 // Status badge styles
@@ -54,19 +53,11 @@ function LawyerCaseSelect({
 // PAGE COMPONENT
 // ===========================================================================
 export default function PetitionListPage() {
-  const [petitions, setPetitions] = useState<Petition[]>([]);
-  const [cases, setCases] = useState<LawyerCase[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [petitions] = useState<Petition[]>([]);
+  const [cases] = useState<LawyerCase[]>([]);
+  const [loading] = useState(false);
   const [selectedType, setSelectedType] = useState<PetitionType | undefined>();
   const [selectedCase, setSelectedCase] = useState<string>("");
-
-  useEffect(() => {
-    Promise.all([getPetitions(), getLawyerCases()]).then(([p, c]) => {
-      setPetitions(p);
-      setCases(c);
-      setLoading(false);
-    });
-  }, []);
 
   const formatDate = (dateStr: string) =>
     new Date(dateStr).toLocaleDateString("en-US", {

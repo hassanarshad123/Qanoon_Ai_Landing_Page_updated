@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useMemo } from "react";
+import { useState, useMemo } from "react";
 import Link from "next/link";
 import { Search, FileText, Download, ArrowRight } from "lucide-react";
 import { Input } from "@/components/ui/input";
@@ -9,8 +9,7 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { PageHeader } from "@/components/judges/shared/page-header";
 import { EmptyState } from "@/components/judges/shared/empty-state";
-import { getLegalForms } from "@/lib/mock-lawyer/api";
-import type { LegalForm, FormCategory } from "@/lib/mock-lawyer/types";
+import type { LegalForm, FormCategory } from "@/lib/types/lawyer-portal";
 
 const categories: ("All" | FormCategory)[] = [
   "All",
@@ -28,19 +27,12 @@ const categoryBadgeStyles: Record<FormCategory, string> = {
 };
 
 export default function LegalFormsPage() {
-  const [forms, setForms] = useState<LegalForm[]>([]);
+  const [forms] = useState<LegalForm[]>([]);
   const [search, setSearch] = useState("");
   const [activeCategory, setActiveCategory] = useState<"All" | FormCategory>(
     "All"
   );
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    getLegalForms().then((data) => {
-      setForms(data);
-      setLoading(false);
-    });
-  }, []);
+  const [loading] = useState(false);
 
   const filtered = useMemo(() => {
     return forms.filter((f) => {

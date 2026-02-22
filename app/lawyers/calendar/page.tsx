@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useMemo } from "react";
+import { useState, useMemo } from "react";
 import {
   ChevronLeft,
   ChevronRight,
@@ -19,8 +19,7 @@ import {
 } from "@/components/ui/tabs";
 import { PageHeader } from "@/components/judges/shared/page-header";
 import { CalendarEventCard } from "@/components/lawyers/shared/calendar-event-card";
-import { getCalendarEvents } from "@/lib/mock-lawyer/api";
-import type { CalendarEvent } from "@/lib/mock-lawyer/types";
+import type { CalendarEvent } from "@/lib/types/lawyer-portal";
 
 const DAYS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 const HOURS = Array.from({ length: 14 }, (_, i) => i + 7); // 7 AM to 8 PM
@@ -66,20 +65,13 @@ function formatDateStr(d: Date) {
 }
 
 export default function CalendarPage() {
-  const [events, setEvents] = useState<CalendarEvent[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [events] = useState<CalendarEvent[]>([]);
+  const [loading] = useState(false);
   const [currentDate, setCurrentDate] = useState(new Date());
   const [selectedDay, setSelectedDay] = useState<Date>(new Date());
 
   const year = currentDate.getFullYear();
   const month = currentDate.getMonth();
-
-  useEffect(() => {
-    getCalendarEvents().then((data) => {
-      setEvents(data);
-      setLoading(false);
-    });
-  }, []);
 
   const eventsByDate = useMemo(() => {
     const map: Record<string, CalendarEvent[]> = {};

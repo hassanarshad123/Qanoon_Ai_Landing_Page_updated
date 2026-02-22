@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useParams } from "next/navigation";
 import Link from "next/link";
 import {
@@ -20,8 +20,7 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { toast } from "sonner";
-import { getCaseFinderResultById, getCaseFinderResults } from "@/lib/mock-lawyer/api";
-import type { CaseFinderResult } from "@/lib/mock-lawyer/types";
+import type { CaseFinderResult } from "@/lib/types/lawyer-portal";
 
 export default function CaseLawDetailPage() {
   const params = useParams();
@@ -29,23 +28,7 @@ export default function CaseLawDetailPage() {
 
   const [caseData, setCaseData] = useState<CaseFinderResult | null>(null);
   const [relatedCases, setRelatedCases] = useState<CaseFinderResult[]>([]);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    getCaseFinderResultById(id).then((data) => {
-      if (data) {
-        setCaseData(data);
-        // Fetch related cases
-        getCaseFinderResults().then((all) => {
-          const related = all.filter((c) =>
-            data.relatedCaseIds.includes(c.id)
-          );
-          setRelatedCases(related);
-        });
-      }
-      setLoading(false);
-    });
-  }, [id]);
+  const [loading, setLoading] = useState(false);
 
   if (loading || !caseData) {
     return (

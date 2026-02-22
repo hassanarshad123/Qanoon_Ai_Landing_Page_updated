@@ -3,7 +3,7 @@
 import { MapPin, Phone, Scale } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import type { CourtEntry } from "@/lib/mock-lawyer/types";
+import type { CourtEntry } from "@/lib/types/lawyer-portal";
 
 const levelColors: Record<string, string> = {
   "Supreme Court": "bg-[#2563EB]/10 text-[#2563EB]",

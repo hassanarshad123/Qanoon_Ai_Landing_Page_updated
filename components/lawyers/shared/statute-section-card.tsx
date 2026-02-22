@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { BookOpen, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import type { StatuteSection } from "@/lib/mock-lawyer/types";
+import type { StatuteSection } from "@/lib/types/lawyer-portal";
 
 interface StatuteSectionCardProps {
   section: StatuteSection;

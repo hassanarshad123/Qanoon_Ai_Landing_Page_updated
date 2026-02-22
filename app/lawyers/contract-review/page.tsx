@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import Link from "next/link";
 import {
   FileCheck,
@@ -14,20 +14,12 @@ import { PageHeader } from "@/components/judges/shared/page-header";
 import { EmptyState } from "@/components/judges/shared/empty-state";
 import { DocumentUploadZone } from "@/components/judges/shared/document-upload-zone";
 import { RiskBadge } from "@/components/lawyers/shared/risk-badge";
-import { getContractReviews } from "@/lib/mock-lawyer/api";
-import type { ContractReview } from "@/lib/mock-lawyer/types";
+import type { ContractReview } from "@/lib/types/lawyer-portal";
 import { toast } from "sonner";
 
 export default function ContractReviewPage() {
-  const [reviews, setReviews] = useState<ContractReview[]>([]);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    getContractReviews().then((data) => {
-      setReviews(data);
-      setLoading(false);
-    });
-  }, []);
+  const [reviews] = useState<ContractReview[]>([]);
+  const [loading] = useState(false);
 
   const handleUploadComplete = (doc: { id: string; fileName: string; blobUrl: string }) => {
     toast.success("Contract uploaded successfully", {

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { Search, MessageSquare, Clock } from "lucide-react";
@@ -8,8 +8,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { PageHeader } from "@/components/judges/shared/page-header";
-import { getResearchConversations } from "@/lib/mock-lawyer/api";
-import type { ResearchConversation } from "@/lib/mock-lawyer/types";
+import type { ResearchConversation } from "@/lib/types/lawyer-portal";
 
 const suggestions = [
   "What is the test for granting bail in non-bailable offences?",
@@ -23,17 +22,8 @@ const suggestions = [
 export default function LawyerResearchListPage() {
   const router = useRouter();
   const [query, setQuery] = useState("");
-  const [conversations, setConversations] = useState<ResearchConversation[]>(
-    []
-  );
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    getResearchConversations().then((data) => {
-      setConversations(data);
-      setLoading(false);
-    });
-  }, []);
+  const [conversations] = useState<ResearchConversation[]>([]);
+  const [loading] = useState(false);
 
   const handleSubmit = () => {
     if (!query.trim()) return;

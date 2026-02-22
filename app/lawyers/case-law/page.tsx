@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useMemo } from "react";
+import { useState, useMemo } from "react";
 import Link from "next/link";
 import {
   Search,
@@ -32,8 +32,7 @@ import {
 } from "@/components/ui/table";
 import { PageHeader } from "@/components/judges/shared/page-header";
 import { EmptyState } from "@/components/judges/shared/empty-state";
-import { getCaseFinderResults } from "@/lib/mock-lawyer/api";
-import type { CaseFinderResult } from "@/lib/mock-lawyer/types";
+import type { CaseFinderResult } from "@/lib/types/lawyer-portal";
 
 const courts = [
   "All Courts",
@@ -78,20 +77,13 @@ function matchesYearRange(dateStr: string, range: string): boolean {
 }
 
 export default function CaseLawPage() {
-  const [cases, setCases] = useState<CaseFinderResult[]>([]);
+  const [cases] = useState<CaseFinderResult[]>([]);
   const [search, setSearch] = useState("");
   const [courtFilter, setCourtFilter] = useState("All Courts");
   const [yearFilter, setYearFilter] = useState("All Years");
   const [typeFilter, setTypeFilter] = useState("All Types");
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    getCaseFinderResults().then((data) => {
-      setCases(data);
-      setLoading(false);
-    });
-  }, []);
+  const [loading] = useState(false);
 
   const filtered = useMemo(() => {
     return cases.filter((c) => {

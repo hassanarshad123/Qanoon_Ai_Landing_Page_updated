@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useParams } from "next/navigation";
 import Link from "next/link";
 import {
@@ -25,22 +25,14 @@ import {
 import { InvoiceStatusBadge } from "@/components/lawyers/shared/invoice-status-badge";
 import { ExportMenu } from "@/components/judges/shared/export-menu";
 import { EmptyState } from "@/components/judges/shared/empty-state";
-import { getInvoiceById } from "@/lib/mock-lawyer/api";
-import type { Invoice } from "@/lib/mock-lawyer/types";
+import type { Invoice } from "@/lib/types/lawyer-portal";
 
 export default function InvoiceDetailPage() {
   const params = useParams();
   const invoiceId = params.id as string;
 
   const [invoice, setInvoice] = useState<Invoice | null>(null);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    getInvoiceById(invoiceId).then((data) => {
-      setInvoice(data ?? null);
-      setLoading(false);
-    });
-  }, [invoiceId]);
+  const [loading, setLoading] = useState(false);
 
   if (loading) {
     return (

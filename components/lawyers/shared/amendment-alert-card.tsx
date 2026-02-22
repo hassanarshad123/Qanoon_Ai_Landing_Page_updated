@@ -5,7 +5,7 @@ import { AlertTriangle, ArrowRight } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { RiskBadge } from "./risk-badge";
-import type { Amendment } from "@/lib/mock-lawyer/types";
+import type { Amendment } from "@/lib/types/lawyer-portal";
 
 interface AmendmentAlertCardProps {
   amendment: Amendment;

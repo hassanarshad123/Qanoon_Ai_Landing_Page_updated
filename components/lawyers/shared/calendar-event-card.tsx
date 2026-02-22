@@ -2,7 +2,7 @@
 
 import { Clock, MapPin, Scale } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
-import type { CalendarEvent } from "@/lib/mock-lawyer/types";
+import type { CalendarEvent } from "@/lib/types/lawyer-portal";
 
 const typeColors: Record<string, string> = {
   Hearing: "bg-[#2563EB]/10 text-[#2563EB]",

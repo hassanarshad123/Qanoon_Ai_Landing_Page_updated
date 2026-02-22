@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useMemo, useRef } from "react";
+import { useState, useMemo, useRef } from "react";
 import { useParams } from "next/navigation";
 import Link from "next/link";
 import { ArrowLeft, Search, BookOpen, ChevronRight } from "lucide-react";
@@ -10,30 +10,17 @@ import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
 import { StatuteSectionCard } from "@/components/lawyers/shared/statute-section-card";
-import { getStatuteById } from "@/lib/mock-lawyer/api";
-import type { Statute } from "@/lib/mock-lawyer/types";
+import type { Statute } from "@/lib/types/lawyer-portal";
 
 export default function StatuteDetailPage() {
   const params = useParams();
   const id = params.id as string;
 
   const [statute, setStatute] = useState<Statute | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
   const [search, setSearch] = useState("");
   const [activeSection, setActiveSection] = useState<string | null>(null);
   const sectionRefs = useRef<Record<string, HTMLDivElement | null>>({});
-
-  useEffect(() => {
-    getStatuteById(id).then((data) => {
-      if (data) {
-        setStatute(data);
-        if (data.sections.length > 0) {
-          setActiveSection(data.sections[0].id);
-        }
-      }
-      setLoading(false);
-    });
-  }, [id]);
 
   const filteredSections = useMemo(() => {
     if (!statute) return [];

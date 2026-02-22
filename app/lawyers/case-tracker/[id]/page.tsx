@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useMemo } from "react";
+import { useState, useMemo } from "react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import {
@@ -20,9 +20,8 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { PageHeader } from "@/components/judges/shared/page-header";
 import { CaseTimeline } from "@/components/lawyers/shared/case-timeline";
-import { getTrackedCaseById } from "@/lib/mock-lawyer/api";
 import { useToast } from "@/hooks/use-toast";
-import type { TrackedCase } from "@/lib/mock-lawyer/types";
+import type { TrackedCase } from "@/lib/types/lawyer-portal";
 
 const statusStyles: Record<string, string> = {
   Active: "bg-emerald-100 text-emerald-700 hover:bg-emerald-100",
@@ -37,16 +36,8 @@ const statusStyles: Record<string, string> = {
 export default function CaseDetailPage() {
   const { id } = useParams<{ id: string }>();
   const [caseData, setCaseData] = useState<TrackedCase | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
   const { toast } = useToast();
-
-  useEffect(() => {
-    if (id) {
-      getTrackedCaseById(id)
-        .then((data) => setCaseData(data ?? null))
-        .finally(() => setLoading(false));
-    }
-  }, [id]);
 
   const daysUntilNextDate = useMemo(() => {
     if (!caseData) return 0;

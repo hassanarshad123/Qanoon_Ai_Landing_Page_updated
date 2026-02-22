@@ -1,4 +1,4 @@
-// All types for the lawyer portal mock data
+// Domain types for the lawyer portal
 
 export type LawyerCaseStatus = "Active" | "Pending" | "Closed" | "Urgent" | "Adjourned" | "Disposed" | "Reserved";
 export type PetitionType = "Writ" | "Civil Suit" | "Criminal Complaint" | "Appeal" | "Review" | "Family" | "Bail" | "Miscellaneous";

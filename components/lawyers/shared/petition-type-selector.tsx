@@ -5,7 +5,7 @@ import {
   Heart, Unlock, MoreHorizontal,
 } from "lucide-react";
 import { cn } from "@/lib/utils/cn";
-import type { PetitionType } from "@/lib/mock-lawyer/types";
+import type { PetitionType } from "@/lib/types/lawyer-portal";
 
 const petitionTypes: { type: PetitionType; icon: React.ElementType; description: string }[] = [
   { type: "Writ", icon: FileText, description: "Constitutional writ petition" },

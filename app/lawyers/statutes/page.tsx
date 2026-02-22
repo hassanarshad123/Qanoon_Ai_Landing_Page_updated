@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useMemo } from "react";
+import { useState, useMemo } from "react";
 import Link from "next/link";
 import {
   Search,
@@ -15,20 +15,12 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { PageHeader } from "@/components/judges/shared/page-header";
 import { EmptyState } from "@/components/judges/shared/empty-state";
-import { getStatutes } from "@/lib/mock-lawyer/api";
-import type { Statute } from "@/lib/mock-lawyer/types";
+import type { Statute } from "@/lib/types/lawyer-portal";
 
 export default function StatutesPage() {
-  const [statutes, setStatutes] = useState<Statute[]>([]);
+  const [statutes] = useState<Statute[]>([]);
   const [search, setSearch] = useState("");
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    getStatutes().then((data) => {
-      setStatutes(data);
-      setLoading(false);
-    });
-  }, []);
+  const [loading] = useState(false);
 
   const filtered = useMemo(() => {
     if (!search) return statutes;

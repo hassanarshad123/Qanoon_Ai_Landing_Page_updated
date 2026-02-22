@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useParams } from "next/navigation";
 import Link from "next/link";
 import {
@@ -34,18 +34,12 @@ import {
 } from "@/components/ui/table";
 import { InvoiceStatusBadge } from "@/components/lawyers/shared/invoice-status-badge";
 import { EmptyState } from "@/components/judges/shared/empty-state";
-import {
-  getClientById,
-  getTrackedCases,
-  getLawyerDocuments,
-  getInvoices,
-} from "@/lib/mock-lawyer/api";
 import type {
   Client,
   TrackedCase,
   LawyerDocument,
   Invoice,
-} from "@/lib/mock-lawyer/types";
+} from "@/lib/types/lawyer-portal";
 
 const statusColors: Record<string, string> = {
   Active: "bg-emerald-100 text-emerald-700",
@@ -65,22 +59,7 @@ export default function ClientDetailPage() {
   const [cases, setCases] = useState<TrackedCase[]>([]);
   const [documents, setDocuments] = useState<LawyerDocument[]>([]);
   const [invoices, setInvoices] = useState<Invoice[]>([]);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    Promise.all([
-      getClientById(clientId),
-      getTrackedCases(),
-      getLawyerDocuments(),
-      getInvoices(),
-    ]).then(([clientData, allCases, allDocs, allInvoices]) => {
-      setClient(clientData ?? null);
-      setCases(allCases.filter((c) => c.clientId === clientId));
-      setDocuments(allDocs.filter((d) => d.clientId === clientId));
-      setInvoices(allInvoices.filter((i) => i.clientId === clientId));
-      setLoading(false);
-    });
-  }, [clientId]);
+  const [loading, setLoading] = useState(false);
 
   if (loading) {
     return (

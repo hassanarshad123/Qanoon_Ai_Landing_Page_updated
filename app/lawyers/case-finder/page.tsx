@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import Link from "next/link";
 import {
   Search,
@@ -23,8 +23,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { PageHeader } from "@/components/judges/shared/page-header";
-import { getCaseFinderResults } from "@/lib/mock-lawyer/api";
-import type { CaseFinderResult } from "@/lib/mock-lawyer/types";
+import type { CaseFinderResult } from "@/lib/types/lawyer-portal";
 
 const courtOptions = [
   "All Courts",
@@ -81,70 +80,19 @@ export default function CaseFinderPage() {
   const [statuteFilter, setStatuteFilter] = useState("");
   const [caseType, setCaseType] = useState("All Types");
   const [results, setResults] = useState<CaseFinderResult[]>([]);
-  const [allResults, setAllResults] = useState<CaseFinderResult[]>([]);
   const [hasSearched, setHasSearched] = useState(false);
   const [searching, setSearching] = useState(false);
-
-  useEffect(() => {
-    getCaseFinderResults().then((data) => {
-      setAllResults(data);
-    });
-  }, []);
 
   const handleSearch = () => {
     if (!keyword.trim()) return;
     setSearching(true);
     setHasSearched(true);
 
-    // Simulate search delay
+    // TODO: Replace with real API search
     setTimeout(() => {
-      // Filter mock results based on keyword (simple text match for demo)
-      let filtered = allResults.filter(
-        (r) =>
-          r.title.toLowerCase().includes(keyword.toLowerCase()) ||
-          r.summary.toLowerCase().includes(keyword.toLowerCase()) ||
-          r.keyHoldings.some((h) =>
-            h.toLowerCase().includes(keyword.toLowerCase())
-          ) ||
-          r.statutes.some((s) =>
-            s.toLowerCase().includes(keyword.toLowerCase())
-          )
-      );
-
-      // Court filter
-      if (court !== "All Courts") {
-        filtered = filtered.filter((r) => r.court === court);
-      }
-
-      // Year range filter
-      if (yearFrom) {
-        filtered = filtered.filter(
-          (r) => new Date(r.date).getFullYear() >= parseInt(yearFrom)
-        );
-      }
-      if (yearTo) {
-        filtered = filtered.filter(
-          (r) => new Date(r.date).getFullYear() <= parseInt(yearTo)
-        );
-      }
-
-      // Statute filter
-      if (statuteFilter.trim()) {
-        filtered = filtered.filter((r) =>
-          r.statutes.some((s) =>
-            s.toLowerCase().includes(statuteFilter.toLowerCase())
-          )
-        );
-      }
-
-      // If no matches, show first few results as fallback
-      if (filtered.length === 0) {
-        filtered = allResults.slice(0, 4);
-      }
-
-      setResults(filtered);
+      setResults([]);
       setSearching(false);
-    }, 800);
+    }, 500);
   };
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
@@ -156,13 +104,7 @@ export default function CaseFinderPage() {
   const handleRecentSearchClick = (query: string, searchCourt: string) => {
     setKeyword(query);
     setCourt(searchCourt);
-    setSearching(true);
-    setHasSearched(true);
-
-    setTimeout(() => {
-      setResults(allResults.slice(0, 5));
-      setSearching(false);
-    }, 800);
+    handleSearch();
   };
 
   const formatDate = (dateStr: string) => {
