@@ -93,7 +93,7 @@ async def get_messages(
     conv_id: str,
     user: Annotated[SessionUser, Depends(get_current_user)],
 ):
-    return await research_repo.get_messages(conv_id)
+    return await research_repo.get_messages(conv_id, user.id)
 
 
 # --------------- Streaming / AI endpoints ---------------
@@ -203,7 +203,7 @@ async def research_follow_up(
     if not conv:
         raise HTTPException(status_code=404, detail="Conversation not found")
 
-    existing_messages = await research_repo.get_messages(body.conversation_id)
+    existing_messages = await research_repo.get_messages(body.conversation_id, user.id)
 
     # 2. Save user message
     await research_repo.save_message(body.conversation_id, "user", body.question)

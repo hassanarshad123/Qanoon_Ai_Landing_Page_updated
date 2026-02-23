@@ -1,6 +1,9 @@
 import json
+import logging
 
 from app.repositories.base import fetch_one, fetch_all, execute
+
+logger = logging.getLogger("qanoonai")
 
 
 # ---------------------------------------------------------------------------
@@ -250,6 +253,7 @@ def _parse_json(val) -> dict:
         try:
             return json.loads(val)
         except (json.JSONDecodeError, TypeError):
+            logger.warning("Failed to parse JSON in profiles repo: %.100s", val)
             return {}
     if isinstance(val, dict):
         return val

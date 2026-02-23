@@ -7,17 +7,26 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     gcc \
     && rm -rf /var/lib/apt/lists/*
 
-# Install Python dependencies
+# Create non-root user
+RUN useradd -m -u 1000 appuser
+
+# Install Python dependencies (before code copy for better layer caching)
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
 # Copy application code and gunicorn config
-COPY app/ app/
-COPY gunicorn.conf.py .
+COPY --chown=appuser:appuser app/ app/
+COPY --chown=appuser:appuser gunicorn.conf.py .
+
+# Switch to non-root user
+USER appuser
 
 # Expose port
 EXPOSE 8000
 
+# Health check
+HEALTHCHECK --interval=30s --timeout=5s --start-period=10s --retries=3 \
+    CMD python -c "import urllib.request; urllib.request.urlopen('http://localhost:8000/api/v1/health')" || exit 1
+
 # Run with gunicorn (uvicorn workers) for production
-# Override bind to 0.0.0.0 since Docker handles network isolation
 CMD ["gunicorn", "app.main:app", "-c", "gunicorn.conf.py", "--bind", "0.0.0.0:8000"]

@@ -25,6 +25,9 @@ class Settings(BaseSettings):
     aws_s3_bucket: str = "qanoonai-uploads"
     aws_s3_region: str = "ap-south-1"
 
+    # Frontend
+    frontend_url: str = "https://qanoon.ai"
+
     # CORS
     cors_origins: str = "http://localhost:3000"
 

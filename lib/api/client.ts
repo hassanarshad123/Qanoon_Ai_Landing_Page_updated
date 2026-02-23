@@ -119,7 +119,7 @@ export async function* apiStream<T = { text: string }>(
         try {
           yield JSON.parse(payload) as T;
         } catch {
-          // skip malformed JSON
+          console.error("[apiStream] Malformed JSON in SSE payload:", payload.slice(0, 200));
         }
       }
     }

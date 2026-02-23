@@ -1,3 +1,5 @@
+import logging
+
 import bcrypt
 from fastapi import APIRouter
 
@@ -10,6 +12,8 @@ from app.models.auth import (
 from app.repositories import users as users_repo
 from app.repositories import password_reset as pr_repo
 from app.services.email_service import send_password_reset_email
+
+logger = logging.getLogger("qanoonai")
 
 router = APIRouter(prefix="/auth", tags=["auth"])
 
@@ -38,7 +42,8 @@ async def forgot_password(body: ForgotPasswordRequest):
         token = await pr_repo.create_token(user["id"])
         await send_password_reset_email(user["email"], token)
     except Exception:
-        pass  # Swallow — don't reveal if email exists
+        # Log for debugging but don't reveal email existence to the client
+        logger.exception("Failed to send password reset email for user %s", user["id"])
 
     return ActionResult(success=True)
 

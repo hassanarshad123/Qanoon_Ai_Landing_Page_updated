@@ -6,7 +6,7 @@ from app.config import settings
 
 
 async def send_password_reset_email(email: str, token: str) -> None:
-    base_url = "https://qanoon.ai"  # Overridable via env if needed
+    base_url = settings.frontend_url
     reset_url = f"{base_url}/reset-password?token={token}"
 
     msg = MIMEMultipart("alternative")

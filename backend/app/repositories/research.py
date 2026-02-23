@@ -1,6 +1,9 @@
 import json
+import logging
 
 from app.repositories.base import fetch_one, fetch_all, execute
+
+logger = logging.getLogger("qanoonai")
 
 
 def _pj(val):
@@ -8,6 +11,7 @@ def _pj(val):
         try:
             return json.loads(val)
         except (json.JSONDecodeError, TypeError):
+            logger.warning("Failed to parse JSON in research repo: %.100s", val)
             return []
     return val if val is not None else []
 
@@ -97,7 +101,15 @@ async def update_meta(conv_id: str, user_id: str, legal_areas: list[str] | None,
         )
 
 
-async def get_messages(conv_id: str) -> list[dict]:
+async def get_messages(conv_id: str, user_id: str) -> list[dict]:
+    # Verify conversation belongs to user before returning messages
+    owner = await fetch_one(
+        "SELECT id FROM research_conversations WHERE id = $1 AND user_id = $2",
+        conv_id, user_id,
+    )
+    if not owner:
+        return []
+
     rows = await fetch_all(
         "SELECT * FROM research_messages WHERE conversation_id = $1 ORDER BY created_at",
         conv_id,

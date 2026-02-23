@@ -116,5 +116,5 @@ async def delete_folder(
 # ---------------------------------------------------------------------------
 
 @router.get("/tags")
-async def get_tags():
+async def get_tags(user: Annotated[SessionUser, Depends(get_current_user)]):
     return await notes_repo.get_tags()
