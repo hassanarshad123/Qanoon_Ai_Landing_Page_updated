@@ -12,9 +12,11 @@ async def init_redis() -> aioredis.Redis | None:
     token = settings.upstash_redis_rest_token
     if not url or not token:
         return None
-    # Upstash REST-compatible Redis URL
+    # Upstash provides HTTPS REST URLs, but the redis-py library needs
+    # rediss:// (TLS) scheme for direct socket connections.
+    redis_url = url.replace("https://", "rediss://").replace("http://", "redis://")
     _redis = aioredis.from_url(
-        url,
+        redis_url,
         password=token,
         decode_responses=True,
         socket_connect_timeout=5,
