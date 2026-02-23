@@ -8,6 +8,8 @@
     "start": "next start",
     "lint": "next lint",
     "typecheck": "tsc --noEmit",
+    "dev:api": "cd backend && uvicorn app.main:app --reload --port 8000",
+    "dev:all": "npx concurrently -n next,api -c blue,green \"npm run dev\" \"npm run dev:api\"",
     "postinstall": "cp node_modules/pdfjs-dist/build/pdf.worker.min.mjs public/pdf.worker.min.mjs"
   },
   "dependencies": {
