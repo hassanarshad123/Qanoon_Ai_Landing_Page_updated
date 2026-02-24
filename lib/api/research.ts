@@ -1,7 +1,32 @@
 import { apiFetch, apiStream } from "./client";
 
+export interface ResearchConversationSummary {
+  id: string;
+  title: string;
+  caseId: string | null;
+  mode: string | null;
+  pinned: boolean;
+  legalAreas: string[];
+  messageCount: number;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface ResearchConversationDetail extends ResearchConversationSummary {
+  messages: ResearchMessageDB[];
+}
+
+export interface ResearchMessageDB {
+  id: string;
+  role: string;
+  content: string;
+  citations: unknown[];
+  metadata: Record<string, unknown>;
+  createdAt: string;
+}
+
 export const researchApi = {
-  listConversations(search?: string, limit = 50): Promise<unknown[]> {
+  listConversations(search?: string, limit = 50): Promise<ResearchConversationSummary[]> {
     const params = new URLSearchParams();
     if (search) params.set("search", search);
     params.set("limit", String(limit));
@@ -16,7 +41,7 @@ export const researchApi = {
     return apiFetch("/research/conversations", { method: "POST", body: data });
   },
 
-  getConversation(id: string): Promise<unknown> {
+  getConversation(id: string): Promise<ResearchConversationDetail> {
     return apiFetch(`/research/conversations/${id}`);
   },
 
@@ -32,7 +57,7 @@ export const researchApi = {
     return apiFetch(`/research/conversations/${id}/meta`, { method: "PATCH", body: meta });
   },
 
-  getMessages(conversationId: string): Promise<unknown[]> {
+  getMessages(conversationId: string): Promise<ResearchMessageDB[]> {
     return apiFetch(`/research/conversations/${conversationId}/messages`);
   },
 

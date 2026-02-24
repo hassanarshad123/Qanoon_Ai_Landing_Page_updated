@@ -1,9 +1,9 @@
 "use server";
 
 import { sql } from "@/lib/db";
+import type { EntityType, ActionType, ActivityEntry } from "@/lib/types/shared";
 
-export type EntityType = "brief" | "judgment" | "research" | "note" | "document";
-export type ActionType = "created" | "updated" | "deleted" | "finalized" | "viewed";
+export type { EntityType, ActionType, ActivityEntry } from "@/lib/types/shared";
 
 export async function logActivity(
   userId: string,
@@ -30,16 +30,6 @@ export async function logActivity(
     // Non-critical — don't break the main operation
     console.error("Failed to log activity:", err);
   }
-}
-
-export interface ActivityEntry {
-  id: string;
-  action: ActionType;
-  entityType: EntityType;
-  entityId: string | null;
-  entityTitle: string | null;
-  metadata: Record<string, unknown>;
-  createdAt: string;
 }
 
 export async function getRecentActivity(

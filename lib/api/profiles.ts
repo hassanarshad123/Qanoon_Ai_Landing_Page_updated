@@ -1,41 +1,11 @@
 import { apiFetch } from "./client";
+import type {
+  JudgeProfile,
+  LawyerProfile,
+  LawyerTourState,
+} from "@/lib/types/shared";
 
-export interface JudgeProfile {
-  id: string;
-  user_id: string;
-  full_name: string | null;
-  email: string | null;
-  phone: string | null;
-  court_level: string | null;
-  designation: string | null;
-  province: string | null;
-  city: string | null;
-  court_name: string | null;
-  tour_completed: boolean;
-  created_at: string;
-  updated_at: string;
-}
-
-export interface LawyerProfile {
-  id: string;
-  user_id: string;
-  full_name: string | null;
-  email: string | null;
-  phone: string | null;
-  bar_council_number: string | null;
-  years_of_experience: string | null;
-  practice_areas: string[];
-  province: string | null;
-  city: string | null;
-  primary_court: string | null;
-  firm_type: string | null;
-  firm_name: string | null;
-  tour_completed: boolean;
-  created_at: string;
-  updated_at: string;
-}
-
-export type LawyerTourState = Record<string, unknown>;
+export type { LawyerTourState } from "@/lib/types/shared";
 
 export const profilesApi = {
   // --- Judge ---
@@ -47,7 +17,7 @@ export const profilesApi = {
     return apiFetch("/profiles/judge", { method: "PUT", body: data });
   },
 
-  getJudgeTourStatus(): Promise<{ tour_completed: boolean }> {
+  getJudgeTourStatus(): Promise<{ tourCompleted: boolean }> {
     return apiFetch("/profiles/judge/tour-status");
   },
 

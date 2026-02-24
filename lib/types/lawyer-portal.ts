@@ -1,5 +1,8 @@
 // Domain types for the lawyer portal
 
+import type { Citation } from "./portal";
+export type { Citation } from "./portal";
+
 export type LawyerCaseStatus = "Active" | "Pending" | "Closed" | "Urgent" | "Adjourned" | "Disposed" | "Reserved";
 export type PetitionType = "Writ" | "Civil Suit" | "Criminal Complaint" | "Appeal" | "Review" | "Family" | "Bail" | "Miscellaneous";
 export type BriefStatus = "Generating" | "Complete" | "Draft";
@@ -95,16 +98,6 @@ export interface Petition {
   createdAt: string;
   sections: PetitionSection[];
   suggestions: string[];
-}
-
-export interface Citation {
-  id: string;
-  caseName: string;
-  citation: string;
-  court: string;
-  year: string;
-  relevance: string;
-  snippet: string;
 }
 
 export interface ResearchMessage {

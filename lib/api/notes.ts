@@ -1,29 +1,7 @@
 import { apiFetch } from "./client";
+import type { Note, Folder, Tag } from "@/lib/types/portal";
 
-export interface Note {
-  id: string;
-  title: string;
-  content: string;
-  folder: string;
-  tags: string[];
-  source_id?: string;
-  source_type?: string;
-  source_label?: string;
-  created_at: string;
-  updated_at: string;
-}
-
-export interface Folder {
-  id: string;
-  name: string;
-  count: number;
-}
-
-export interface Tag {
-  id: string;
-  name: string;
-  color: string;
-}
+export type { Note, Folder, Tag } from "@/lib/types/portal";
 
 export const notesApi = {
   create(data: {
@@ -46,11 +24,11 @@ export const notesApi = {
     return apiFetch(`/notes/${id}`);
   },
 
-  updateContent(id: string, content: string): Promise<{ updated_at: string }> {
+  updateContent(id: string, content: string): Promise<{ updatedAt: string }> {
     return apiFetch(`/notes/${id}/content`, { method: "PATCH", body: { content } });
   },
 
-  updateTitle(id: string, title: string): Promise<{ updated_at: string }> {
+  updateTitle(id: string, title: string): Promise<{ updatedAt: string }> {
     return apiFetch(`/notes/${id}/title`, { method: "PATCH", body: { title } });
   },
 

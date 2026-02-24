@@ -34,6 +34,8 @@ const features = [
   },
 ];
 
+const BRIEF_LINE_WIDTHS = [72, 85, 60, 90, 55, 78, 65, 88, 70, 82];
+
 function FeaturePreview({ activeFeature }: { activeFeature: string }) {
   return (
     <div className="bg-gray-50 rounded-2xl p-6 md:p-8 h-full min-h-[400px] flex items-center justify-center">
@@ -43,11 +45,11 @@ function FeaturePreview({ activeFeature }: { activeFeature: string }) {
             <div className="flex gap-4">
               <div className="bg-white border border-gray-200 rounded-lg shadow-sm p-4 w-32 h-44">
                 <div className="space-y-2">
-                  {Array.from({ length: 10 }).map((_, i) => (
+                  {BRIEF_LINE_WIDTHS.map((w, i) => (
                     <div
                       key={i}
                       className="h-1.5 bg-gray-200 rounded"
-                      style={{ width: `${50 + Math.random() * 40}%` }}
+                      style={{ width: `${w}%` }}
                     />
                   ))}
                 </div>
@@ -154,7 +156,7 @@ export default function ProductSection() {
   const [activeFeature, setActiveFeature] = useState("brief");
 
   return (
-    <section className="w-full bg-white py-20 md:py-28">
+    <section id="platform" className="w-full bg-white py-20 md:py-28">
       <div className="max-w-6xl mx-auto px-6">
         <div className="text-center mb-16">
           <div className="flex items-center justify-center gap-2 mb-6">

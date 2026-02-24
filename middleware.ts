@@ -7,6 +7,11 @@ const PUBLIC_PATHS = [
   "/signup",
   "/forgot-password",
   "/reset-password",
+  "/privacy",
+  "/terms",
+  "/data-security",
+  "/acceptable-use",
+  "/contact",
 ];
 
 const PUBLIC_PREFIXES = [

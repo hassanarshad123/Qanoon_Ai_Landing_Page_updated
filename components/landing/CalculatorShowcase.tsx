@@ -1,81 +1,102 @@
 "use client";
 
 import Link from "next/link";
-import { Calculator, ArrowRight } from "lucide-react";
+import {
+  Calculator,
+  ArrowRight,
+  Proportions,
+  Clock,
+  HandCoins,
+  Receipt,
+  ReceiptText,
+  TrendingUp,
+  ShoppingCart,
+  Package,
+  AlertTriangle,
+  Scale,
+  CalendarDays,
+  type LucideIcon,
+} from "lucide-react";
 
-const calculators = [
+const calculators: {
+  icon: LucideIcon;
+  name: string;
+  basis: string;
+  href: string;
+  active: boolean;
+}[] = [
   {
-    icon: "📐",
+    icon: Proportions,
     name: "Inheritance Calculator",
     basis: "Muslim Personal Law (Shariat) Application Act 1962",
     href: "/calculators/inheritance",
     active: true,
   },
   {
-    icon: "⏰",
+    icon: Clock,
     name: "Limitation Period Calculator",
     basis: "Limitation Act 1908",
     href: "/calculators/limitation",
     active: true,
   },
   {
-    icon: "💰",
+    icon: HandCoins,
     name: "Zakat Calculator",
     basis: "Zakat & Ushr Ordinance 1980",
     href: "/calculators/zakat",
     active: true,
   },
   {
-    icon: "💵",
+    icon: Receipt,
     name: "Income Tax Calculator",
     basis: "Income Tax Ordinance 2001",
     href: "/calculators/income-tax",
     active: true,
   },
   {
-    icon: "💸",
+    icon: ReceiptText,
     name: "Withholding Tax Calculator",
     basis: "Income Tax Ordinance 2001",
     href: "/calculators/withholding-tax",
     active: true,
   },
   {
-    icon: "📊",
+    icon: TrendingUp,
     name: "Capital Gains Tax",
     basis: "Income Tax Ordinance 2001",
     href: "/calculators/capital-gains-tax",
     active: true,
   },
   {
-    icon: "🛒",
+    icon: ShoppingCart,
     name: "Sales Tax Calculator",
     basis: "Sales Tax Act 1990",
     href: "/calculators/sales-tax",
     active: true,
   },
   {
-    icon: "🛃",
+    icon: Package,
     name: "Customs Duty Calculator",
     basis: "Customs Act 1969",
     href: "/calculators/customs-duty",
     active: true,
   },
   {
-    icon: "⚠️",
+    icon: AlertTriangle,
     name: "Tax Penalties Calculator",
     basis: "Income Tax Ordinance 2001",
     href: "/calculators/tax-penalties",
     active: true,
   },
   {
-    icon: "⚖️",
+    icon: Scale,
     name: "Damages Calculator",
     basis: "Civil Procedure Code & Case Law",
     href: "/calculators/damages",
     active: true,
   },
   {
-    icon: "📅",
+    icon: CalendarDays,
     name: "Iddat Period Calculator",
     basis: "Muslim Family Laws Ordinance 1961",
     href: "/calculators/iddat",
@@ -85,7 +106,7 @@ const calculators = [
 
 export default function CalculatorShowcase() {
   return (
-    <section className="w-full bg-white py-20 md:py-28">
+    <section id="calculators" className="w-full bg-white py-20 md:py-28">
       <div className="max-w-6xl mx-auto px-6">
         <div className="text-center mb-16">
           <div className="flex items-center justify-center gap-2 mb-6">
@@ -115,7 +136,7 @@ export default function CalculatorShowcase() {
                     : "opacity-60 cursor-default"
                 }`}
               >
-                <div className="text-2xl mb-3">{calc.icon}</div>
+                <calc.icon className="w-6 h-6 text-[#059669] mb-3" />
                 <h3
                   className={`font-semibold text-gray-900 text-sm mb-1 transition-colors ${
                     calc.active ? "group-hover:text-[#059669]" : ""

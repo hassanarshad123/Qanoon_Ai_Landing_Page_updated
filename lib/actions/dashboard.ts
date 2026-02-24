@@ -2,27 +2,11 @@
 
 import { sql } from "@/lib/db";
 import { getUserId } from "@/lib/auth/session";
-import { getOrCreateProfile, type JudgeProfile } from "@/lib/actions/judge-profile";
-import { getRecentActivity, type ActivityEntry } from "@/lib/actions/activity";
+import { getOrCreateProfile } from "@/lib/actions/judge-profile";
+import { getRecentActivity } from "@/lib/actions/activity";
+import type { DashboardData } from "@/lib/types/shared";
 
-export interface DashboardData {
-  profile: JudgeProfile;
-  stats: {
-    totalBriefs: number;
-    totalResearch: number;
-    totalNotes: number;
-    totalJudgments: number;
-    totalDocuments: number;
-  };
-  recentActivity: ActivityEntry[];
-  recentWork: {
-    id: string;
-    type: "brief" | "judgment";
-    title: string;
-    status: string;
-    createdAt: string;
-  }[];
-}
+export type { DashboardData } from "@/lib/types/shared";
 
 export async function getDashboardData(): Promise<DashboardData> {
   const userId = await getUserId();

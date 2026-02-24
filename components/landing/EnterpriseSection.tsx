@@ -69,7 +69,7 @@ const features = [
 export default function EnterpriseSection() {
   const router = useRouter();
   return (
-    <section className="w-full bg-[#1F1520] py-20 md:py-28">
+    <section id="enterprise" className="w-full bg-[#1F1520] py-20 md:py-28">
       <div className="max-w-6xl mx-auto px-6">
         <div className="text-center mb-16">
           <div className="flex justify-center mb-6">

@@ -1,5 +1,42 @@
 import { apiFetch, apiStream } from "./client";
 
+export interface JudgmentSummary {
+  id: string;
+  caseTitle: string;
+  caseNumber: string | null;
+  court: string | null;
+  status: string;
+  briefId: string | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface JudgmentSection {
+  id: string;
+  sectionKey: string;
+  title: string;
+  content: string;
+  order: number;
+  reviewStatus: string | null;
+  flagNote: string | null;
+  regenerationCount: number;
+}
+
+export interface JudgmentChatMessage {
+  id: string;
+  role: string;
+  content: string;
+  citations: unknown[];
+  createdAt: string;
+}
+
+export interface JudgmentDetail extends JudgmentSummary {
+  caseData: Record<string, unknown> | null;
+  ragResults: Record<string, unknown>[];
+  sections: JudgmentSection[];
+  chatMessages: JudgmentChatMessage[];
+}
+
 export const judgmentsApi = {
   create(data: {
     case_title: string;
@@ -13,11 +50,11 @@ export const judgmentsApi = {
     return apiFetch("/judgments", { method: "POST", body: data });
   },
 
-  list(): Promise<unknown[]> {
+  list(): Promise<JudgmentSummary[]> {
     return apiFetch("/judgments");
   },
 
-  get(id: string): Promise<unknown> {
+  get(id: string): Promise<JudgmentDetail> {
     return apiFetch(`/judgments/${id}`);
   },
 

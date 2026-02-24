@@ -20,17 +20,45 @@ type RequestOptions = {
   body?: unknown;
   headers?: Record<string, string>;
   signal?: AbortSignal;
+  /** Skip the snake_case → camelCase transform on the response */
+  rawResponse?: boolean;
 };
+
+// ── snake_case → camelCase transform ────────────────────────────────
+
+function snakeToCamel(str: string): string {
+  return str.replace(/_([a-z])/g, (_, c) => c.toUpperCase());
+}
+
+/**
+ * Recursively converts all object keys from snake_case to camelCase.
+ * Arrays are traversed; primitives pass through unchanged.
+ */
+export function toCamelCase<T>(data: unknown): T {
+  if (Array.isArray(data)) {
+    return data.map((item) => toCamelCase(item)) as T;
+  }
+  if (data !== null && typeof data === "object" && !(data instanceof Date)) {
+    const result: Record<string, unknown> = {};
+    for (const [key, value] of Object.entries(data as Record<string, unknown>)) {
+      result[snakeToCamel(key)] = toCamelCase(value);
+    }
+    return result as T;
+  }
+  return data as T;
+}
+
+// ── JSON fetch ──────────────────────────────────────────────────────
 
 /**
  * Base fetch wrapper that handles JSON serialization, error extraction,
- * and passes cookies through (for NextAuth session token).
+ * snake→camel conversion, and passes cookies through (for NextAuth session token).
  */
 export async function apiFetch<T = unknown>(
   path: string,
   options: RequestOptions = {}
 ): Promise<T> {
-  const { method = "GET", body, headers = {}, signal } = options;
+  const { method = "GET", body, headers = {}, signal, rawResponse } = options;
 
   const fetchOptions: RequestInit = {
     method,
@@ -65,8 +93,48 @@ export async function apiFetch<T = unknown>(
   // Handle 204 No Content
   if (res.status === 204) return undefined as T;
 
-  return res.json();
+  const json = await res.json();
+  return rawResponse ? json : toCamelCase<T>(json);
 }
+
+// ── FormData fetch ──────────────────────────────────────────────────
+
+/**
+ * Fetch helper for multipart/form-data uploads.
+ * Omits Content-Type so the browser sets the multipart boundary automatically.
+ */
+export async function apiFetchFormData<T = unknown>(
+  path: string,
+  formData: FormData,
+  options: { method?: string; signal?: AbortSignal; rawResponse?: boolean } = {}
+): Promise<T> {
+  const { method = "POST", signal, rawResponse } = options;
+
+  const res = await fetch(`${API_BASE}${path}`, {
+    method,
+    credentials: "include",
+    body: formData,
+    signal,
+  });
+
+  if (!res.ok) {
+    let message = `Request failed with status ${res.status}`;
+    try {
+      const json = await res.json();
+      message = json.error || json.detail || message;
+    } catch {
+      // response wasn't JSON
+    }
+    throw new ApiError(res.status, message);
+  }
+
+  if (res.status === 204) return undefined as T;
+
+  const json = await res.json();
+  return rawResponse ? json : toCamelCase<T>(json);
+}
+
+// ── SSE streaming ───────────────────────────────────────────────────
 
 /**
  * Helper for SSE (Server-Sent Events) streaming endpoints.

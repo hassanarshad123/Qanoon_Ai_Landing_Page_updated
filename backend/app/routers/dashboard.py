@@ -71,7 +71,27 @@ async def lawyer_dashboard(user: Annotated[SessionUser, Depends(get_current_user
     profile = await profiles_repo.get_or_create_lawyer_profile(uid)
     recent_activity = await activity_repo.get_recent_activity(uid, 10)
 
+    # Stats — mirror the Next.js server action in lib/actions/lawyer-dashboard.ts
+    brief_row = await fetch_one("SELECT COUNT(*) as count FROM briefs WHERE user_id = $1", uid)
+    research_row = await fetch_one(
+        "SELECT COUNT(*) as count FROM research_conversations WHERE user_id = $1", uid
+    )
+    note_row = await fetch_one("SELECT COUNT(*) as count FROM notes WHERE user_id = $1", uid)
+
+    doc_count = 0
+    try:
+        d_row = await fetch_one("SELECT COUNT(*) as count FROM documents WHERE user_id = $1", uid)
+        doc_count = int(d_row["count"]) if d_row else 0
+    except Exception:
+        pass
+
     return {
         "profile": profile,
+        "stats": {
+            "total_briefs": int(brief_row["count"]) if brief_row else 0,
+            "total_research": int(research_row["count"]) if research_row else 0,
+            "total_notes": int(note_row["count"]) if note_row else 0,
+            "total_documents": doc_count,
+        },
         "recent_activity": recent_activity,
     }

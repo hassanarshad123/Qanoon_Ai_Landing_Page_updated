@@ -79,7 +79,7 @@ const steps = [
     icon: Cpu,
     title: "AI generates with citations",
     description:
-      "GPT-4o synthesizes the retrieved judgments into structured, useful output — briefs, drafts, research memos — with every claim linked to a real source.",
+      "Our AI engine synthesizes the retrieved judgments into structured, useful output — briefs, drafts, research memos — with every claim linked to a real source.",
   },
   {
     number: "03",
@@ -92,7 +92,7 @@ const steps = [
 
 export default function HowItWorksSection() {
   return (
-    <section className="w-full bg-gray-50 py-20 md:py-28">
+    <section id="how-it-works" className="w-full bg-gray-50 py-20 md:py-28">
       <div className="max-w-6xl mx-auto px-6">
         <div className="text-center mb-16">
           <div className="flex items-center justify-center gap-2 mb-6">

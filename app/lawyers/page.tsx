@@ -114,8 +114,8 @@ export default function LawyerDashboard() {
               </div>
             </div>
             <div className="mt-3">
-              <p className="text-2xl font-bold text-gray-900">0</p>
-              <p className="text-sm text-gray-500">Active Cases</p>
+              <p className="text-2xl font-bold text-gray-900">{dashboardData?.stats.totalBriefs ?? 0}</p>
+              <p className="text-sm text-gray-500">Briefs</p>
             </div>
           </CardContent>
         </Card>
@@ -128,8 +128,8 @@ export default function LawyerDashboard() {
               </div>
             </div>
             <div className="mt-3">
-              <p className="text-2xl font-bold text-gray-900">0</p>
-              <p className="text-sm text-gray-500">Upcoming Hearings</p>
+              <p className="text-2xl font-bold text-gray-900">{dashboardData?.stats.totalResearch ?? 0}</p>
+              <p className="text-sm text-gray-500">Research Sessions</p>
             </div>
           </CardContent>
         </Card>
@@ -142,8 +142,8 @@ export default function LawyerDashboard() {
               </div>
             </div>
             <div className="mt-3">
-              <p className="text-2xl font-bold text-gray-900">0</p>
-              <p className="text-sm text-gray-500">Pending Drafts</p>
+              <p className="text-2xl font-bold text-gray-900">{dashboardData?.stats.totalDocuments ?? 0}</p>
+              <p className="text-sm text-gray-500">Documents</p>
             </div>
           </CardContent>
         </Card>
@@ -152,12 +152,12 @@ export default function LawyerDashboard() {
           <CardContent className="pt-6">
             <div className="flex items-center justify-between">
               <div className="h-10 w-10 rounded-xl bg-emerald-50 flex items-center justify-center">
-                <Users className="h-5 w-5 text-emerald-600" />
+                <BookOpen className="h-5 w-5 text-emerald-600" />
               </div>
             </div>
             <div className="mt-3">
-              <p className="text-2xl font-bold text-gray-900">0</p>
-              <p className="text-sm text-gray-500">Clients</p>
+              <p className="text-2xl font-bold text-gray-900">{dashboardData?.stats.totalNotes ?? 0}</p>
+              <p className="text-sm text-gray-500">Notes</p>
             </div>
           </CardContent>
         </Card>

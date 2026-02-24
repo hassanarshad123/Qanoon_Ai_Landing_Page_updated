@@ -72,7 +72,7 @@ export default function HeroSection() {
         </div>
 
         <div
-          className={`mt-10 md:mt-12 flex flex-wrap items-center justify-center gap-3 md:gap-6 text-sm text-gray-400 transition-all duration-700 delay-400 ${
+          className={`mt-10 md:mt-12 flex flex-wrap items-center justify-center gap-3 md:gap-6 text-sm text-gray-400 transition-all duration-700 delay-[400ms] ${
             isVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-8"
           }`}
         >

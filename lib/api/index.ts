@@ -1,4 +1,4 @@
-export { apiFetch, apiStream, ApiError } from "./client";
+export { apiFetch, apiFetchFormData, apiStream, ApiError, toCamelCase } from "./client";
 export { authApi } from "./auth";
 export { profilesApi } from "./profiles";
 export { onboardingApi } from "./onboarding";

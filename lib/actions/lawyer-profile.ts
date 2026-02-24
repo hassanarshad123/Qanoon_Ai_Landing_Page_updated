@@ -1,25 +1,9 @@
 "use server";
 
 import { sql } from "@/lib/db";
+import type { LawyerProfile } from "@/lib/types/shared";
 
-export interface LawyerProfile {
-  id: string;
-  userId: string;
-  fullName: string | null;
-  email: string | null;
-  phone: string | null;
-  barCouncilNumber: string | null;
-  yearsOfExperience: string | null;
-  practiceAreas: string[];
-  province: string | null;
-  city: string | null;
-  primaryCourt: string | null;
-  firmType: string | null;
-  firmName: string | null;
-  tourCompleted: boolean;
-  createdAt: string;
-  updatedAt: string;
-}
+export type { LawyerProfile } from "@/lib/types/shared";
 
 function parsePracticeAreas(val: unknown): string[] {
   if (Array.isArray(val)) return val;

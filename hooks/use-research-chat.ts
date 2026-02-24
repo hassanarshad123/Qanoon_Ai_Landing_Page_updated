@@ -7,6 +7,14 @@ import type { Citation } from "@/lib/types/portal";
 import type { RAGSearchResult } from "@/lib/rag/types";
 import { getMessages } from "@/lib/research/actions";
 
+// -- Endpoint configuration --------------------------------------------------
+// Currently uses Next.js API routes for AI streaming. When FastAPI backend is
+// validated, switch these to use researchApi from "@/lib/api" instead.
+const ENDPOINTS = {
+  query: "/api/research/query",
+  followUp: "/api/research/follow-up",
+} as const;
+
 export function useResearchChat() {
   const [messages, setMessages] = useState<ResearchMessageDB[]>([]);
   const [isStreaming, setIsStreaming] = useState(false);
@@ -89,56 +97,58 @@ export function useResearchChat() {
   // -------------------------------------------------------------------------
   async function readSSEStream(
     response: Response,
-    onMeta?: (meta: any) => void
+    onMeta?: (meta: Record<string, unknown>) => void
   ) {
     const reader = response.body?.getReader();
     if (!reader) throw new Error("No response stream");
 
     const decoder = new TextDecoder();
     let fullText = "";
-    let completeMeta: any = null;
+    let completeMeta: Record<string, unknown> | null = null;
 
-    while (true) {
-      const { done, value } = await reader.read();
-      if (done) break;
+    try {
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
 
-      const chunk = decoder.decode(value, { stream: true });
-      const lines = chunk.split("\n");
+        const chunk = decoder.decode(value, { stream: true });
+        const lines = chunk.split("\n");
 
-      for (const line of lines) {
-        if (!line.startsWith("data: ")) continue;
-        const payload = line.slice(6);
-        if (payload === "[DONE]") continue;
+        for (const line of lines) {
+          if (!line.startsWith("data: ")) continue;
+          const payload = line.slice(6);
+          if (payload === "[DONE]") continue;
 
-        try {
-          const parsed = JSON.parse(payload);
+          try {
+            const parsed = JSON.parse(payload);
 
-          if (parsed.meta) {
-            onMeta?.(parsed.meta);
-            continue;
-          }
+            if (parsed.meta) {
+              onMeta?.(parsed.meta);
+              continue;
+            }
 
-          if (parsed.text) {
-            fullText += parsed.text;
-            setStreamingText(fullText);
-            setParsedSections(parseStructuredResponse(fullText));
-          }
+            if (parsed.text) {
+              fullText += parsed.text;
+              setStreamingText(fullText);
+              setParsedSections(parseStructuredResponse(fullText));
+            }
 
-          if (parsed.complete) {
-            completeMeta = parsed.complete;
-          }
+            if (parsed.complete) {
+              completeMeta = parsed.complete;
+            }
 
-          if (parsed.error) {
-            throw new Error(parsed.error);
-          }
-        } catch (e) {
-          if (e instanceof Error && e.message !== "Unexpected end of JSON input") {
-            if ((e as any).message && !(e as any).message.includes("JSON")) {
+            if (parsed.error) {
+              throw new Error(parsed.error);
+            }
+          } catch (e) {
+            if (e instanceof Error && !e.message.includes("JSON")) {
               throw e;
             }
           }
         }
       }
+    } finally {
+      reader.releaseLock();
     }
 
     return { fullText, completeMeta };
@@ -150,7 +160,7 @@ export function useResearchChat() {
   const sendQuery = useCallback(
     async (
       question: string,
-      options?: { caseId?: string; caseContext?: any }
+      options?: { caseId?: string; caseContext?: Record<string, unknown> }
     ) => {
       setError(null);
       setIsStreaming(true);
@@ -171,7 +181,7 @@ export function useResearchChat() {
       setMessages((prev) => [...prev, userMsg]);
 
       try {
-        const response = await fetch("/api/research/query", {
+        const response = await fetch(ENDPOINTS.query, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
@@ -189,8 +199,8 @@ export function useResearchChat() {
         const { fullText, completeMeta } = await readSSEStream(
           response,
           (meta) => {
-            if (meta.conversationId) setConversationId(meta.conversationId);
-            if (meta.ragResults) setRagResults(meta.ragResults);
+            if (meta.conversationId) setConversationId(meta.conversationId as string);
+            if (meta.ragResults) setRagResults(meta.ragResults as RAGSearchResult[]);
           }
         );
 
@@ -199,7 +209,7 @@ export function useResearchChat() {
         const citations = extractCitations(fullText);
 
         const assistantMsg: ResearchMessageDB = {
-          id: completeMeta?.messageId || `msg-${Date.now()}`,
+          id: (completeMeta?.messageId as string) || `msg-${Date.now()}`,
           conversationId: conversationId || "",
           role: "assistant",
           content: fullText,
@@ -215,7 +225,7 @@ export function useResearchChat() {
         setMessages((prev) => [...prev, assistantMsg]);
 
         if (completeMeta?.title) {
-          setConversationTitle(completeMeta.title);
+          setConversationTitle(completeMeta.title as string);
         }
       } catch (err) {
         setError(err instanceof Error ? err.message : "Query failed");
@@ -232,7 +242,7 @@ export function useResearchChat() {
   // Send follow-up
   // -------------------------------------------------------------------------
   const sendFollowUp = useCallback(
-    async (question: string, caseContext?: any) => {
+    async (question: string, caseContext?: Record<string, unknown>) => {
       if (!conversationId) return;
 
       setError(null);
@@ -253,7 +263,7 @@ export function useResearchChat() {
       setMessages((prev) => [...prev, userMsg]);
 
       try {
-        const response = await fetch("/api/research/follow-up", {
+        const response = await fetch(ENDPOINTS.followUp, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
@@ -270,7 +280,7 @@ export function useResearchChat() {
         const { fullText, completeMeta } = await readSSEStream(
           response,
           (meta) => {
-            if (meta.ragResults) setRagResults(meta.ragResults);
+            if (meta.ragResults) setRagResults(meta.ragResults as RAGSearchResult[]);
           }
         );
 
@@ -278,7 +288,7 @@ export function useResearchChat() {
         const citations = extractCitations(fullText);
 
         const assistantMsg: ResearchMessageDB = {
-          id: completeMeta?.messageId || `msg-${Date.now()}`,
+          id: (completeMeta?.messageId as string) || `msg-${Date.now()}`,
           conversationId,
           role: "assistant",
           content: fullText,
@@ -314,7 +324,7 @@ export function useResearchChat() {
       try {
         const msgs = await getMessages(id);
         setMessages(msgs);
-      } catch (err) {
+      } catch {
         setError("Failed to load conversation");
       }
     },

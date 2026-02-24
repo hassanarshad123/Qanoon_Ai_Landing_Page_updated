@@ -87,7 +87,7 @@ export default function PricingSection() {
   const [isAnnual, setIsAnnual] = useState(true);
 
   return (
-    <section className="w-full bg-gray-50 py-20 md:py-28">
+    <section id="pricing" className="w-full bg-gray-50 py-20 md:py-28">
       <div className="max-w-7xl mx-auto px-6">
         <div className="text-center mb-12">
           <div className="flex items-center justify-center gap-2 mb-6">
@@ -137,7 +137,7 @@ export default function PricingSection() {
               key={plan.name}
               className={`relative bg-white rounded-2xl p-6 transition-all duration-200 ${
                 plan.highlight
-                  ? "border-2 border-[#A21CAF] shadow-xl shadow-[#A21CAF]/10 scale-[1.02] lg:scale-105"
+                  ? "border-2 border-[#A21CAF] shadow-xl shadow-[#A21CAF]/10 scale-[1.02] lg:scale-[1.03]"
                   : "border border-gray-200 hover:border-gray-300 hover:shadow-lg"
               }`}
             >

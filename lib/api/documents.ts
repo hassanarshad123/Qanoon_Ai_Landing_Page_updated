@@ -1,47 +1,36 @@
-import { apiFetch } from "./client";
+import { apiFetch, apiFetchFormData } from "./client";
 
 export interface DocumentRecord {
   id: string;
-  user_id: string;
+  userId: string;
   title: string;
-  file_name: string;
-  file_type: string;
-  file_size: number;
-  page_count: number;
-  document_type: string;
-  blob_url: string;
-  blob_pathname: string;
-  brief_id: string | null;
-  judgment_id: string | null;
+  fileName: string;
+  fileType: string;
+  fileSize: number;
+  pageCount: number;
+  documentType: string;
+  blobUrl: string;
+  blobPathname: string;
+  briefId: string | null;
+  judgmentId: string | null;
   metadata: Record<string, unknown>;
-  created_at: string;
-  updated_at: string;
+  createdAt: string;
+  updatedAt: string;
 }
 
 export const documentsApi = {
-  async upload(file: File, title?: string, documentType?: string): Promise<{ id: string; blob_url: string; file_name: string }> {
+  upload(file: File, title?: string, documentType?: string): Promise<{ id: string; blobUrl: string; fileName: string }> {
     const formData = new FormData();
     formData.append("file", file);
     if (title) formData.append("title", title);
     if (documentType) formData.append("document_type", documentType);
 
-    const res = await fetch("/api/v1/documents/upload", {
-      method: "POST",
-      credentials: "include",
-      body: formData,
-    });
-
-    if (!res.ok) {
-      const err = await res.json().catch(() => ({ error: "Upload failed" }));
-      throw new Error(err.error || err.detail || "Upload failed");
-    }
-
-    return res.json();
+    return apiFetchFormData("/documents/upload", formData);
   },
 
-  list(filters?: { document_type?: string; search?: string }): Promise<DocumentRecord[]> {
+  list(filters?: { documentType?: string; search?: string }): Promise<DocumentRecord[]> {
     const params = new URLSearchParams();
-    if (filters?.document_type) params.set("document_type", filters.document_type);
+    if (filters?.documentType) params.set("document_type", filters.documentType);
     if (filters?.search) params.set("search", filters.search);
     const qs = params.toString();
     return apiFetch(`/documents${qs ? `?${qs}` : ""}`);
@@ -55,7 +44,10 @@ export const documentsApi = {
     return apiFetch(`/documents/${id}`, { method: "DELETE" });
   },
 
-  link(id: string, links: { brief_id?: string; judgment_id?: string }): Promise<{ success: boolean }> {
-    return apiFetch(`/documents/${id}/link`, { method: "PATCH", body: links });
+  link(id: string, links: { briefId?: string; judgmentId?: string }): Promise<{ success: boolean }> {
+    return apiFetch(`/documents/${id}/link`, {
+      method: "PATCH",
+      body: { brief_id: links.briefId, judgment_id: links.judgmentId },
+    });
   },
 };

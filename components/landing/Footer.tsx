@@ -1,40 +1,56 @@
 "use client";
 
+import Link from "next/link";
+
 const platformLinks = [
-  { label: "Judicial Tools", href: "#" },
-  { label: "Lawyer Tools", href: "#" },
-  { label: "Legal Database", href: "#" },
-  { label: "Calculators", href: "#" },
-  { label: "Pricing", href: "#" },
+  { label: "Judicial Tools", href: "/#use-cases" },
+  { label: "Lawyer Tools", href: "/#use-cases" },
+  { label: "Legal Database", href: "/#how-it-works" },
+  { label: "Calculators", href: "/#calculators" },
+  { label: "Pricing", href: "/#pricing" },
 ];
 
 const companyLinks = [
-  { label: "About", href: "#" },
-  { label: "Blog", href: "#" },
-  { label: "Careers", href: "#" },
-  { label: "Contact", href: "#" },
-  { label: "Support", href: "#" },
+  { label: "About", href: "/#platform" },
+  { label: "Contact", href: "/contact" },
+  { label: "Support", href: "/#faq" },
 ];
 
+// TODO: Replace with real social URLs when available
 const socialLinks = [
   { label: "X/Twitter", href: "#" },
   { label: "LinkedIn", href: "#" },
 ];
 
 const usersLinks: { label: string; href: string; secondLine?: string }[] = [
-  { label: "Judges", href: "#" },
-  { label: "Lawyers", href: "#" },
-  { label: "Law Students", href: "#" },
-  { label: "Citizens", href: "#" },
-  { label: "Firms &", href: "#", secondLine: "Institutions" },
+  { label: "Judges", href: "/onboarding" },
+  { label: "Lawyers", href: "/onboarding" },
+  { label: "Law Students", href: "/onboarding" },
+  { label: "Citizens", href: "/onboarding" },
+  { label: "Firms &", href: "/onboarding", secondLine: "Institutions" },
 ];
 
 const legalLinks = [
-  { label: "Privacy Policy", href: "#" },
-  { label: "Terms of Service", href: "#" },
-  { label: "Data Security", href: "#" },
-  { label: "Acceptable Use", href: "#" },
+  { label: "Privacy Policy", href: "/privacy" },
+  { label: "Terms of Service", href: "/terms" },
+  { label: "Data Security", href: "/data-security" },
+  { label: "Acceptable Use", href: "/acceptable-use" },
 ];
+
+function FooterLink({ href, children }: { href: string; children: React.ReactNode }) {
+  if (href.startsWith("/") && !href.startsWith("/#")) {
+    return (
+      <Link href={href} className="text-gray-300 hover:text-white text-sm transition-colors">
+        {children}
+      </Link>
+    );
+  }
+  return (
+    <a href={href} className="text-gray-300 hover:text-white text-sm transition-colors">
+      {children}
+    </a>
+  );
+}
 
 export default function Footer() {
   return (
@@ -51,46 +67,44 @@ export default function Footer() {
           </div>
 
           <div>
+            <h4 className="font-medium mb-4 text-white">Platform</h4>
             <ul className="space-y-2">
               {platformLinks.map((link) => (
                 <li key={link.label}>
-                  <a href={link.href} className="text-gray-300 hover:text-white text-sm transition-colors">
-                    {link.label}
-                  </a>
+                  <FooterLink href={link.href}>{link.label}</FooterLink>
                 </li>
               ))}
             </ul>
           </div>
 
           <div>
+            <h4 className="font-medium mb-4 text-white">Company</h4>
             <ul className="space-y-2">
               {companyLinks.map((link) => (
                 <li key={link.label}>
-                  <a href={link.href} className="text-gray-300 hover:text-white text-sm transition-colors">
-                    {link.label}
-                  </a>
+                  <FooterLink href={link.href}>{link.label}</FooterLink>
                 </li>
               ))}
             </ul>
           </div>
 
           <div>
+            <h4 className="font-medium mb-4 text-white">Social</h4>
             <ul className="space-y-2">
               {socialLinks.map((link) => (
                 <li key={link.label}>
-                  <a href={link.href} className="text-gray-300 hover:text-white text-sm transition-colors">
-                    {link.label}
-                  </a>
+                  <FooterLink href={link.href}>{link.label}</FooterLink>
                 </li>
               ))}
             </ul>
           </div>
 
           <div>
+            <h4 className="font-medium mb-4 text-white">Users</h4>
             <ul className="space-y-2">
               {usersLinks.map((link) => (
                 <li key={link.label}>
-                  <a href={link.href} className="text-gray-300 hover:text-white text-sm transition-colors">
+                  <FooterLink href={link.href}>
                     {link.label}
                     {link.secondLine && (
                       <>
@@ -98,7 +112,7 @@ export default function Footer() {
                         {link.secondLine}
                       </>
                     )}
-                  </a>
+                  </FooterLink>
                 </li>
               ))}
             </ul>
@@ -110,9 +124,7 @@ export default function Footer() {
           <ul className="space-y-2">
             {legalLinks.map((link) => (
               <li key={link.label}>
-                <a href={link.href} className="text-gray-300 hover:text-white text-sm transition-colors">
-                  {link.label}
-                </a>
+                <FooterLink href={link.href}>{link.label}</FooterLink>
               </li>
             ))}
           </ul>

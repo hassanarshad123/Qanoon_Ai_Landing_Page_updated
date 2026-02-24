@@ -46,25 +46,25 @@ export default function Header() {
 
         <nav className="hidden md:flex items-center gap-8">
           <a
-            href="#"
+            href="#platform"
             className="text-gray-600 hover:text-gray-900 text-sm font-medium transition-colors"
           >
             Platform
           </a>
           <a
-            href="#"
+            href="#use-cases"
             className="text-gray-600 hover:text-gray-900 text-sm font-medium transition-colors"
           >
             For Judges
           </a>
           <a
-            href="#"
+            href="#use-cases"
             className="text-gray-600 hover:text-gray-900 text-sm font-medium transition-colors"
           >
             For Lawyers
           </a>
           <a
-            href="#"
+            href="#pricing"
             className="text-gray-600 hover:text-gray-900 text-sm font-medium transition-colors"
           >
             Pricing
@@ -115,16 +115,16 @@ export default function Header() {
       {isMobileMenuOpen && (
         <div className="md:hidden border-t border-gray-100 bg-white">
           <nav className="flex flex-col px-6 py-4 gap-4">
-            <a href="#" className="text-gray-600 hover:text-gray-900 text-sm font-medium py-2">
+            <a href="#platform" onClick={() => setIsMobileMenuOpen(false)} className="text-gray-600 hover:text-gray-900 text-sm font-medium py-2">
               Platform
             </a>
-            <a href="#" className="text-gray-600 hover:text-gray-900 text-sm font-medium py-2">
+            <a href="#use-cases" onClick={() => setIsMobileMenuOpen(false)} className="text-gray-600 hover:text-gray-900 text-sm font-medium py-2">
               For Judges
             </a>
-            <a href="#" className="text-gray-600 hover:text-gray-900 text-sm font-medium py-2">
+            <a href="#use-cases" onClick={() => setIsMobileMenuOpen(false)} className="text-gray-600 hover:text-gray-900 text-sm font-medium py-2">
               For Lawyers
             </a>
-            <a href="#" className="text-gray-600 hover:text-gray-900 text-sm font-medium py-2">
+            <a href="#pricing" onClick={() => setIsMobileMenuOpen(false)} className="text-gray-600 hover:text-gray-900 text-sm font-medium py-2">
               Pricing
             </a>
             <div className="border-t border-gray-100 pt-4 mt-2 flex flex-col gap-3">

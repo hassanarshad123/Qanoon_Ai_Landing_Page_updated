@@ -1,5 +1,58 @@
 import { apiFetch, apiStream } from "./client";
 
+export interface BriefSummary {
+  id: string;
+  caseTitle: string;
+  caseNumber: string | null;
+  court: string | null;
+  status: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface BriefSection {
+  id: string;
+  title: string;
+  content: string;
+  reviewStatus: string | null;
+  flagNote: string | null;
+  regenerationCount: number;
+}
+
+export interface BriefChatMessage {
+  id: string;
+  role: string;
+  content: string;
+  citations: unknown[];
+  createdAt: string;
+}
+
+export interface BriefDetail extends BriefSummary {
+  extractedData: Record<string, unknown> | null;
+  uploadedDocuments: Record<string, unknown>[];
+  ragResults: Record<string, unknown>[];
+  sections: BriefSection[];
+  chatMessages: BriefChatMessage[];
+}
+
+export interface ExtractedCaseData {
+  parties: Record<string, unknown>[];
+  facts: Record<string, unknown>[];
+  legalIssues: Record<string, unknown>[];
+  statuteRefs: Record<string, unknown>[];
+  arguments: Record<string, unknown>[];
+  courtInfo: Record<string, unknown> | null;
+}
+
+export interface RAGResult {
+  id: string;
+  caseName: string;
+  citation: string;
+  court: string;
+  relevanceScore: number;
+  summary: string;
+}
+
 export const briefsApi = {
   create(data: {
     case_title: string;
@@ -13,11 +66,11 @@ export const briefsApi = {
     return apiFetch("/briefs", { method: "POST", body: data });
   },
 
-  list(): Promise<unknown[]> {
+  list(): Promise<BriefSummary[]> {
     return apiFetch("/briefs");
   },
 
-  get(id: string): Promise<unknown> {
+  get(id: string): Promise<BriefDetail> {
     return apiFetch(`/briefs/${id}`);
   },
 
@@ -104,7 +157,7 @@ export const briefsApi = {
     }, signal);
   },
 
-  analyze(documents: { fileName: string; text: string }[]): Promise<Record<string, unknown>> {
+  analyze(documents: { fileName: string; text: string }[]): Promise<ExtractedCaseData> {
     return apiFetch("/briefs/analyze", { method: "POST", body: { documents } });
   },
 
@@ -112,14 +165,14 @@ export const briefsApi = {
     documents: { fileName: string; text: string }[],
     chunkIndex?: number,
     totalChunks?: number
-  ): Promise<Record<string, unknown>> {
+  ): Promise<ExtractedCaseData> {
     return apiFetch("/briefs/analyze-chunk", {
       method: "POST",
       body: { documents, chunk_index: chunkIndex, total_chunks: totalChunks },
     });
   },
 
-  findPrecedents(extractedData: Record<string, unknown>): Promise<unknown[]> {
+  findPrecedents(extractedData: Record<string, unknown>): Promise<RAGResult[]> {
     return apiFetch("/briefs/precedents", {
       method: "POST",
       body: { extracted_data: extractedData },

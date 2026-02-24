@@ -1,22 +1,9 @@
 "use server";
 
 import { sql } from "@/lib/db";
+import type { JudgeProfile } from "@/lib/types/shared";
 
-export interface JudgeProfile {
-  id: string;
-  userId: string;
-  fullName: string | null;
-  email: string | null;
-  phone: string | null;
-  courtLevel: string | null;
-  designation: string | null;
-  province: string | null;
-  city: string | null;
-  courtName: string | null;
-  tourCompleted: boolean;
-  createdAt: string;
-  updatedAt: string;
-}
+export type { JudgeProfile } from "@/lib/types/shared";
 
 function mapRow(row: any): JudgeProfile {
   return {

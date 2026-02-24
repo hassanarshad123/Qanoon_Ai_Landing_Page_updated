@@ -11,14 +11,13 @@ const userTypes = [
   { id: "firms", label: "Firms & Institutions", icon: Building2 },
 ];
 
-const useCaseContent: Record<string, { smallLabel: string; title: string; description: string; cta: string; href: string }> = {
+const useCaseContent: Record<string, { smallLabel: string; title: string; description: string; cta: string }> = {
   judges: {
     smallLabel: "Judicial Intelligence",
     title: "For Judges",
     description:
       "Upload a 300-page case file and receive a neutral 5-page brief in minutes. AI-powered research that presents authorities from both sides. Judgment structuring assistance that helps with format — never with decisions. A private, isolated workspace with zero advocacy influence.",
     cta: "Explore Judicial Tools",
-    href: "https://www.zensbots.site/judges",
   },
   lawyers: {
     smallLabel: "Legal Practice",
@@ -26,7 +25,6 @@ const useCaseContent: Record<string, { smallLabel: string; title: string; descri
     description:
       "Draft petitions in 45 minutes instead of 6 hours. Research across 300,000+ judgments with AI that understands legal concepts, not just keywords. Manage your practice with a digital diary, file management, and limitation tracking — all in one platform.",
     cta: "Explore Lawyer Tools",
-    href: "https://www.zensbots.site/lawyers",
   },
   citizens: {
     smallLabel: "Public Access",
@@ -34,7 +32,6 @@ const useCaseContent: Record<string, { smallLabel: string; title: string; descri
     description:
       "Free legal guidance in Urdu and English. Understand your rights as a tenant, employee, consumer, or family member. Simplify complex court decisions into plain language. Access 17 legal calculators for inheritance, court fees, tax, and more — completely free.",
     cta: "Access Free Tools",
-    href: "https://www.zensbots.site/calculators",
   },
   firms: {
     smallLabel: "Enterprise",
@@ -42,7 +39,6 @@ const useCaseContent: Record<string, { smallLabel: string; title: string; descri
     description:
       "Custom integrations, dedicated support, and institutional onboarding for law firms and judicial offices. API access for bulk operations. Complete data isolation for judicial institutions. Training and change management included.",
     cta: "Contact Us",
-    href: "#",
   },
 };
 
@@ -103,7 +99,7 @@ export default function UseCasesSection() {
   const [activeUserType, setActiveUserType] = useState("judges");
 
   return (
-    <section className="w-full bg-white py-24">
+    <section id="use-cases" className="w-full bg-white py-24">
       <div className="max-w-6xl mx-auto px-6">
         <div className="text-center mb-16">
           <div className="flex items-center justify-center gap-2 mb-6">

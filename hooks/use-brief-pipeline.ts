@@ -36,8 +36,65 @@ const PHASE_LABELS: Record<string, string> = {
   complete: "Brief generation complete",
 };
 
+// -- Endpoint configuration --------------------------------------------------
+// Currently uses Next.js API routes for AI calls. When FastAPI backend is
+// validated, switch these to use briefsApi from "@/lib/api" instead.
+const ENDPOINTS = {
+  analyze: "/api/brief/analyze",
+  analyzeChunk: "/api/brief/analyze-chunk",
+  precedents: "/api/brief/precedents",
+  generate: "/api/brief/generate",
+} as const;
+
 /** Small delay helper to space out API calls and avoid rate limits */
 const delay = (ms: number) => new Promise<void>((resolve) => setTimeout(resolve, ms));
+
+// ---------------------------------------------------------------------------
+// Shared SSE stream reader
+// ---------------------------------------------------------------------------
+async function readSSEStream(
+  response: Response,
+  onText: (text: string) => void
+): Promise<string> {
+  const reader = response.body?.getReader();
+  if (!reader) throw new Error("No response stream");
+
+  const decoder = new TextDecoder();
+  let fullText = "";
+
+  try {
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+
+      const chunk = decoder.decode(value, { stream: true });
+      const lines = chunk.split("\n");
+
+      for (const line of lines) {
+        if (!line.startsWith("data: ")) continue;
+        const payload = line.slice(6);
+        if (payload === "[DONE]") break;
+        let parsed: { text?: string; error?: string };
+        try {
+          parsed = JSON.parse(payload);
+        } catch {
+          continue;
+        }
+        if (parsed.error) {
+          throw new Error(parsed.error);
+        }
+        if (parsed.text) {
+          fullText += parsed.text;
+          onText(fullText);
+        }
+      }
+    }
+  } finally {
+    reader.releaseLock();
+  }
+
+  return fullText;
+}
 
 // ---------------------------------------------------------------------------
 // Parse streamed sections from Claude's XML-delimited output
@@ -102,7 +159,7 @@ export function useBriefPipeline() {
         }
 
         const endpoint =
-          chunks.length > 1 ? "/api/brief/analyze-chunk" : "/api/brief/analyze";
+          chunks.length > 1 ? ENDPOINTS.analyzeChunk : ENDPOINTS.analyze;
 
         const controller = new AbortController();
         const timeout = setTimeout(() => controller.abort(), 120_000);
@@ -156,7 +213,7 @@ export function useBriefPipeline() {
       const precedentTimeout = setTimeout(() => precedentController.abort(), 55_000);
       let precedentRes: Response;
       try {
-        precedentRes = await fetch("/api/brief/precedents", {
+        precedentRes = await fetch(ENDPOINTS.precedents, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           signal: precedentController.signal,
@@ -180,7 +237,7 @@ export function useBriefPipeline() {
       setPhase("generating_sections");
       setProgress({ step: 3, total: 5, label: PHASE_LABELS.generating_sections });
 
-      const generateRes = await fetch("/api/brief/generate", {
+      const generateRes = await fetch(ENDPOINTS.generate, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ extractedData: data, ragResults: results }),
@@ -190,49 +247,17 @@ export function useBriefPipeline() {
         throw new Error("Section generation failed");
       }
 
-      // Read the SSE stream
-      const reader = generateRes.body?.getReader();
-      if (!reader) throw new Error("No response stream");
-
-      const decoder = new TextDecoder();
-      let fullText = "";
-
-      while (true) {
-        const { done, value } = await reader.read();
-        if (done) break;
-
-        const chunk = decoder.decode(value, { stream: true });
-        const lines = chunk.split("\n");
-
-        for (const line of lines) {
-          if (line.startsWith("data: ")) {
-            const payload = line.slice(6);
-            if (payload === "[DONE]") break;
-            let parsed: any;
-            try {
-              parsed = JSON.parse(payload);
-            } catch {
-              // Ignore partial JSON chunks — expected with SSE
-              continue;
-            }
-            if (parsed.error) {
-              throw new Error(parsed.error);
-            }
-            if (parsed.text) {
-              fullText += parsed.text;
-              const currentSections = parseSections(fullText);
-              if (currentSections.length > 0) {
-                setGeneratedSections(currentSections);
-                setProgress({
-                  step: 3,
-                  total: 5,
-                  label: `Generating sections... (${currentSections.length}/10)`,
-                });
-              }
-            }
-          }
+      const fullText = await readSSEStream(generateRes, (text) => {
+        const currentSections = parseSections(text);
+        if (currentSections.length > 0) {
+          setGeneratedSections(currentSections);
+          setProgress({
+            step: 3,
+            total: 5,
+            label: `Generating sections... (${currentSections.length}/10)`,
+          });
         }
-      }
+      });
 
       // Final parse of complete text
       const finalSections = parseSections(fullText);

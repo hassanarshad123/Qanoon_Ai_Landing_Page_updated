@@ -1,13 +1,58 @@
 import { apiFetch } from "./client";
 
+export interface AdminStats {
+  totalUsers: number;
+  activeUsers: number;
+  inactiveUsers: number;
+  newThisWeek: number;
+  byRole: { role: string; count: number }[];
+}
+
+export interface AdminUser {
+  id: string;
+  email: string;
+  name: string | null;
+  role: string;
+  isActive: boolean;
+  createdAt: string;
+  lastLoginAt: string | null;
+}
+
+export interface AdminUserDetail extends AdminUser {
+  profileData: Record<string, unknown> | null;
+  activityCount: number;
+  lastActivity: string | null;
+}
+
+export interface RAGHealthStatus {
+  status: string;
+  totalPrecedents: number;
+  totalChunks: number;
+  embeddingDim: number;
+  indexHealth: string;
+}
+
+export interface RAGInfo {
+  totalPrecedents: number;
+  totalChunks: number;
+  courts: string[];
+  jurisdictions: string[];
+}
+
+export interface RAGIngestResult {
+  success: boolean;
+  jobId: string;
+  message: string;
+}
+
+export interface RAGQueryResult {
+  results: Record<string, unknown>[];
+  total: number;
+  query: string;
+}
+
 export const adminApi = {
-  getStats(): Promise<{
-    totalUsers: number;
-    activeUsers: number;
-    inactiveUsers: number;
-    newThisWeek: number;
-    byRole: { role: string; count: number }[];
-  }> {
+  getStats(): Promise<AdminStats> {
     return apiFetch("/admin/stats");
   },
 
@@ -18,7 +63,7 @@ export const adminApi = {
     page?: number;
     pageSize?: number;
   }): Promise<{
-    users: unknown[];
+    users: AdminUser[];
     total: number;
     page: number;
     pageSize: number;
@@ -33,7 +78,7 @@ export const adminApi = {
     return apiFetch(`/admin/users?${qs}`);
   },
 
-  getUserDetail(userId: string): Promise<unknown> {
+  getUserDetail(userId: string): Promise<AdminUserDetail> {
     return apiFetch(`/admin/users/${userId}`);
   },
 
@@ -53,18 +98,18 @@ export const adminApi = {
 
   // --- RAG management ---
 
-  ragIngest(records: Record<string, unknown>[]): Promise<unknown> {
+  ragIngest(records: Record<string, unknown>[]): Promise<RAGIngestResult> {
     return apiFetch("/admin/rag/ingest", { method: "POST", body: { records } });
   },
 
-  ragIngestStatus(jobId: string): Promise<unknown> {
+  ragIngestStatus(jobId: string): Promise<{ status: string; progress: number; message: string }> {
     return apiFetch(`/admin/rag/ingest?jobId=${jobId}`);
   },
 
   ragIngestBulk(
     records: Record<string, unknown>[],
     jurisdiction?: string
-  ): Promise<{ success: boolean; jobId: string; message: string }> {
+  ): Promise<RAGIngestResult> {
     return apiFetch("/admin/rag/ingest/bulk", {
       method: "POST",
       body: { records, jurisdiction },
@@ -76,7 +121,7 @@ export const adminApi = {
     filters?: Record<string, unknown>;
     limit?: number;
     includeChunks?: boolean;
-  }): Promise<unknown> {
+  }): Promise<RAGQueryResult> {
     return apiFetch("/admin/rag/query", {
       method: "POST",
       body: {
@@ -88,11 +133,11 @@ export const adminApi = {
     });
   },
 
-  ragHealth(): Promise<unknown> {
+  ragHealth(): Promise<RAGHealthStatus> {
     return apiFetch("/admin/rag/health");
   },
 
-  ragInfo(): Promise<unknown> {
+  ragInfo(): Promise<RAGInfo> {
     return apiFetch("/admin/rag/info");
   },
 };
